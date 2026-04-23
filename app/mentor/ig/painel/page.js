@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { auth } from '@/lib/firebase';
@@ -86,7 +86,7 @@ function getMsgConsistencia(hist) {
 }
 
 // ─── Página principal ─────────────────────────────────────────────────────────
-export default function ExportarAcompanhamento() {
+function ExportarAcompanhamento() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const cardRef = useRef(null);
@@ -346,5 +346,13 @@ export default function ExportarAcompanhamento() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <ExportarAcompanhamento />
+    </Suspense>
   );
 }
