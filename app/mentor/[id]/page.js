@@ -3,10 +3,103 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
+// ── Colunas do histórico (índices da array retornada pelo backend) ──────────
+// [0]Semana [1]Mês [2]Data [3]Meta [4]Horas [5]Domínio [6]Progresso [7]Revisões
+// [8]Estresse [9]Ansiedade [10]Motivação [11]Sono
+// [12]D.BIO [13]P.BIO [14]D.QUI [15]P.QUI [16]D.FIS [17]P.FIS [18]D.MAT [19]P.MAT
+
+const VISOES = [
+  { id: 'geral',      label: 'Geral',       cols: [0, 3, 4, 5, 6, 7] },
+  { id: 'emocional',  label: 'Emocional',   cols: [0, 8, 9, 10, 11] },
+  { id: 'disciplinas',label: 'Disciplinas', cols: [0, 12, 13, 14, 15, 16, 17, 18, 19] },
+];
+
+const COL_LABELS = [
+  'Semana','Mês','Data','Meta','Horas','Domínio (%)','Progresso (%)','Revisões Atras.',
+  'Estresse','Ansiedade','Motivação','Sono',
+  'D. BIO','P. BIO','D. QUI','P. QUI','D. FIS','P. FIS','D. MAT','P. MAT',
+];
+
+const COL_COLORS = [
+  '','','','','','','','',
+  'text-red-500','text-orange-500','text-emerald-600','text-blue-500',
+  'text-emerald-600','text-emerald-600','text-blue-500','text-blue-500',
+  'text-orange-500','text-orange-500','text-purple-500','text-purple-500',
+];
+
+function valorColor(colIdx, val) {
+  const n = parseFloat(String(val).replace(',', '.'));
+  if (isNaN(n)) return '';
+  // Estresse/Ansiedade: menor = melhor
+  if (colIdx === 8 || colIdx === 9) return n <= 4 ? 'text-emerald-600' : n <= 7 ? 'text-amber-600' : 'text-red-600';
+  // Motivação/Sono: maior = melhor
+  if (colIdx === 10 || colIdx === 11) return n >= 7 ? 'text-emerald-600' : n >= 5 ? 'text-amber-600' : 'text-red-600';
+  return '';
+}
+
+function HistoricoAnalitico({ registros, cardClass }) {
+  const [visao, setVisao] = useState('geral');
+  const cols = VISOES.find(v => v.id === visao)?.cols || VISOES[0].cols;
+
+  if (!registros || registros.length === 0) {
+    return (
+      <div className={cardClass + ' text-center py-12 text-slate-400 text-sm font-medium'}>
+        Nenhum registro encontrado.
+      </div>
+    );
+  }
+
+  return (
+    <div className={cardClass + ' overflow-hidden animate-in fade-in'}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 border-b pb-4">
+        <h2 className="text-sm font-bold text-intento-blue">Histórico Analítico</h2>
+        {/* Toggle de visão */}
+        <div className="flex bg-slate-100 rounded-lg p-1 gap-1">
+          {VISOES.map(v => (
+            <button key={v.id} onClick={() => setVisao(v.id)}
+              className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${visao === v.id ? 'bg-white text-intento-blue shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              {v.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200">
+              {cols.map(ci => (
+                <th key={ci} className={`p-3 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${ci === 0 ? 'sticky left-0 bg-slate-50' : ''} ${COL_COLORS[ci] || 'text-slate-400'}`}>
+                  {COL_LABELS[ci]}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {registros.map((reg, i) => (
+              <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                {cols.map((ci, j) => (
+                  <td key={ci} className={`p-3 whitespace-nowrap ${ci === 0 ? 'sticky left-0 bg-white font-bold text-intento-blue text-xs' : `font-medium ${valorColor(ci, reg[ci]) || 'text-slate-600'}`}`}>
+                    {reg[ci] ?? '—'}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="text-[10px] text-slate-400 font-medium mt-3 text-right">
+        {registros.length} semana{registros.length !== 1 ? 's' : ''} registrada{registros.length !== 1 ? 's' : ''}
+      </p>
+    </div>
+  );
+}
+
 // --- ESTÉTICA INTENTO ---
 const cardClass = "bg-white rounded-xl border border-slate-200 p-6 shadow-sm transition-colors";
-const inputClass = "w-full p-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-[#060242] transition-all font-medium text-[#060242]";
-const labelClass = "block text-[11px] font-medium text-slate-400 uppercase mb-2 tracking-wider";
+const inputClass = "w-full p-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-intento-blue transition-all font-medium text-intento-blue";
+const labelClass = "block text-xs font-medium text-slate-400 uppercase mb-2 tracking-wider";
 
 // --- CONSTANTES ---
 const DIAS = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
@@ -31,7 +124,7 @@ const StarRating = ({ rating, setRating, readOnly = false }) => {
           key={star}
           type="button"
           onClick={() => !readOnly && setRating(star)}
-          className={`text-3xl transition-transform ${star <= rating ? 'text-[#D4B726]' : 'text-slate-200'} ${readOnly ? 'cursor-default' : 'cursor-pointer hover:scale-110'}`}
+          className={`text-3xl transition-transform ${star <= rating ? 'text-intento-yellow' : 'text-slate-200'} ${readOnly ? 'cursor-default' : 'cursor-pointer hover:scale-110'}`}
         >
           ★
         </button>
@@ -83,6 +176,12 @@ export default function GestaoIndividualAluno() {
   // =========================================================================
   // CARREGAR DADOS DO GOOGLE
   // =========================================================================
+  useEffect(() => {
+    const handleEsc = (e) => { if (e.key === 'Escape' && modalAberto) setModalAberto(false); };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [modalAberto]);
+
   useEffect(() => {
     const carregarDados = async () => {
       setCarregando(true);
@@ -234,7 +333,7 @@ export default function GestaoIndividualAluno() {
     finally { setSalvandoRotina(false); }
   };
 
-  if (carregando) return <div className="p-8 text-center text-[#060242] font-medium animate-pulse text-sm">Carregando dados...</div>;
+  if (carregando) return <div className="p-8 text-center text-intento-blue font-medium animate-pulse text-sm">Carregando dados...</div>;
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 lg:p-8 font-sans" onMouseUp={finalizarSelecao}>
@@ -242,16 +341,16 @@ export default function GestaoIndividualAluno() {
         
         {/* HEADER GERAL */}
         <div className="flex justify-between items-center">
-          <button onClick={() => router.push('/mentor')} className="text-sm font-medium text-slate-400 hover:text-[#060242] transition-colors">← Voltar ao Painel Global</button>
+          <button onClick={() => router.push('/mentor')} className="text-sm font-medium text-slate-400 hover:text-intento-blue transition-colors">← Voltar ao Painel Global</button>
           <div className="flex gap-2">
-            <button onClick={() => setAbaInterna('diario')} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'diario' ? 'bg-[#060242] text-white' : 'bg-white text-slate-400 border border-slate-200 hover:border-slate-300'}`}>Diário de Bordo</button>
-            <button onClick={() => setAbaInterna('semana')} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'semana' ? 'bg-[#060242] text-white' : 'bg-white text-slate-400 border border-slate-200 hover:border-slate-300'}`}>Semana Padrão</button>
-            <button onClick={() => setAbaInterna('registros')} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'registros' ? 'bg-[#060242] text-white' : 'bg-white text-slate-400 border border-slate-200 hover:border-slate-300'}`}>Histórico Analítico</button>
-            <button onClick={() => { setAbaInterna('onboarding'); carregarOnboarding(); }} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'onboarding' ? 'bg-[#060242] text-white' : 'bg-white text-slate-400 border border-slate-200 hover:border-slate-300'}`}>Onboarding</button>
+            <button onClick={() => setAbaInterna('diario')} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'diario' ? 'bg-intento-blue text-white' : 'bg-white text-slate-400 border border-slate-200 hover:border-intento-blue/30 hover:text-intento-blue'}`}>Diário de Bordo</button>
+            <button onClick={() => setAbaInterna('semana')} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'semana' ? 'bg-intento-blue text-white' : 'bg-white text-slate-400 border border-slate-200 hover:border-intento-blue/30 hover:text-intento-blue'}`}>Semana Padrão</button>
+            <button onClick={() => setAbaInterna('registros')} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'registros' ? 'bg-intento-blue text-white' : 'bg-white text-slate-400 border border-slate-200 hover:border-intento-blue/30 hover:text-intento-blue'}`}>Histórico Analítico</button>
+            <button onClick={() => { setAbaInterna('onboarding'); carregarOnboarding(); }} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'onboarding' ? 'bg-intento-blue text-white' : 'bg-white text-slate-400 border border-slate-200 hover:border-intento-blue/30 hover:text-intento-blue'}`}>Onboarding</button>
           </div>
         </div>
 
-        <div className="bg-[#060242] text-white p-6 rounded-xl flex justify-between items-center shadow-sm">
+        <div className="bg-intento-blue text-white p-6 rounded-xl flex justify-between items-center shadow-sm">
           <h1 className="text-2xl font-semibold">{nomeAluno || "Gestão Individual"}</h1>
         </div>
 
@@ -261,29 +360,37 @@ export default function GestaoIndividualAluno() {
         {abaInterna === 'diario' && (
           <div className="space-y-8 animate-in fade-in duration-500">
             
-            {/* O BOTÃO E A TRAVA */}
-            {avaliacaoPendente ? (
-              <div className="bg-red-50 border-2 border-red-300 p-8 rounded-2xl shadow-sm">
-                <div className="flex items-center gap-4 mb-6 border-b border-red-200 pb-4">
-                  <span className="bg-red-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-semibold text-sm">!</span>
-                  <div>
-                    <h2 className="text-lg font-semibold text-red-700">Revisão Obrigatória Pendente</h2>
-                    <p className="text-red-600 font-medium">Você precisa avaliar a execução do encontro do dia <b>{new Date(encontroPendente.data).toLocaleDateString('pt-PT')}</b> para liberar o novo diário.</p>
+            {/* AVALIAÇÃO PENDENTE — alerta não bloqueante */}
+            {avaliacaoPendente && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="p-5 flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className="w-8 h-8 bg-amber-500 text-white rounded-full flex items-center justify-center shrink-0 mt-0.5 text-sm font-bold">!</div>
+                    <div>
+                      <h2 className="text-sm font-bold text-amber-800">Revisão pendente — encontro de {new Date(encontroPendente.data).toLocaleDateString('pt-BR')}</h2>
+                      <p className="text-xs text-amber-700 font-medium mt-0.5">Avalie as tarefas do encontro anterior antes de registrar um novo.</p>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => setModalAberto(true)}
+                    className="shrink-0 bg-intento-yellow hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition-all text-xs"
+                  >
+                    + Novo Diário
+                  </button>
                 </div>
-                
-                <div className="space-y-4">
+
+                <div className="border-t border-amber-200 p-5 space-y-3">
                   {encontroPendente.acoes.map((acao, idx) => {
-                    if (!acao || String(acao).trim() === "") return null;
+                    if (!acao || String(acao).trim() === '') return null;
                     return (
-                      <div key={idx} className="bg-white p-5 rounded-xl border border-red-100 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-                        <span className="font-bold text-slate-800 flex-1">{idx + 1}. {acao}</span>
-                        <select 
-                          className="p-3 border-2 border-slate-200 rounded-lg outline-none focus:ring-red-400 focus:border-red-400 bg-slate-50 font-bold text-slate-600 min-w-[250px]"
+                      <div key={idx} className="bg-white p-4 rounded-xl border border-amber-100 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+                        <span className="font-semibold text-slate-700 flex-1 text-sm">{idx + 1}. {acao}</span>
+                        <select
+                          className="p-2.5 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-amber-400 bg-slate-50 font-semibold text-slate-600 text-sm md:min-w-[220px]"
                           value={formAvaliacao[idx]}
                           onChange={(e) => { const novo = [...formAvaliacao]; novo[idx] = e.target.value; setFormAvaliacao(novo); }}
                         >
-                          <option value="">Selecione o Resultado...</option>
+                          <option value="">Selecione o resultado...</option>
                           <option value="Não realizado">Não realizado</option>
                           <option value="Realizado Parcialmente">Realizado Parcialmente</option>
                           <option value="Realizado">Realizado</option>
@@ -291,21 +398,23 @@ export default function GestaoIndividualAluno() {
                       </div>
                     );
                   })}
+                  <button onClick={enviarAvaliacao}
+                    className="w-full mt-2 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-lg shadow-sm transition-all text-sm">
+                    Salvar Revisão
+                  </button>
                 </div>
-                <button onClick={enviarAvaliacao} className="w-full mt-6 bg-red-600 text-white font-semibold py-3 rounded-lg shadow-sm hover:bg-red-700 transition-all text-sm">
-                  Salvar Revisão e Liberar Novo Diário
-                </button>
               </div>
-            ) : (
+            )}
+
+            {/* BOTÃO NOVO DIÁRIO — visível sempre */}
+            {!avaliacaoPendente && (
               <div className="flex justify-between items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <div>
-                  <h2 className="text-base font-semibold text-[#060242]">Diário Liberado</h2>
-                  <p className="text-slate-400 text-sm">O último encontro foi avaliado com sucesso.</p>
+                  <h2 className="text-sm font-bold text-intento-blue">Diário de Bordo</h2>
+                  <p className="text-slate-400 text-xs font-medium mt-0.5">Último encontro avaliado.</p>
                 </div>
-                <button
-                  onClick={() => setModalAberto(true)}
-                  className="bg-[#D4B726] hover:bg-yellow-500 text-white font-semibold py-2.5 px-6 rounded-lg shadow-sm transition-all text-sm"
-                >
+                <button onClick={() => setModalAberto(true)}
+                  className="bg-intento-yellow hover:bg-yellow-500 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition-all text-sm">
                   + Novo Diário
                 </button>
               </div>
@@ -313,7 +422,7 @@ export default function GestaoIndividualAluno() {
 
             {/* O ACORDÃO (SANFONA) DO HISTÓRICO - AGORA COM TUDO! */}
             <div className="pt-4">
-              <h3 className="text-base font-semibold text-[#060242] mb-5">Histórico Completo de Encontros</h3>
+              <h3 className="text-base font-semibold text-intento-blue mb-5">Histórico Completo de Encontros</h3>
               
               {historicoDiarios.length === 0 ? (
                 <div className="p-8 border-2 border-dashed rounded-xl text-center text-slate-400 font-bold">Nenhum encontro registrado.</div>
@@ -327,7 +436,7 @@ export default function GestaoIndividualAluno() {
                         className="w-full text-left p-5 flex justify-between items-center hover:bg-slate-50 transition-colors"
                       >
                         <div className="flex items-center gap-6">
-                          <span className="bg-[#060242] text-white px-3 py-1.5 rounded-lg text-xs font-medium min-w-[110px] text-center">
+                          <span className="bg-intento-blue text-white px-3 py-1.5 rounded-lg text-xs font-medium min-w-[110px] text-center">
                             {new Date(enc.data).toLocaleDateString('pt-PT')}
                           </span>
                           <div>
@@ -399,12 +508,12 @@ export default function GestaoIndividualAluno() {
 
         {/* MODAL: NOVO DIÁRIO (PERSISTENTE) */}
         {modalAberto && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#060242]/40 backdrop-blur-sm p-4 animate-in fade-in">
+          <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-intento-blue/40 backdrop-blur-sm p-4 animate-in fade-in">
             <div className="bg-slate-50 w-full max-w-6xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
               
               {/* Header do Modal */}
               <div className="bg-white px-8 py-5 border-b border-slate-200 flex justify-between items-center">
-                <h2 className="text-base font-semibold text-[#060242]">Novo Encontro</h2>
+                <h2 className="text-base font-semibold text-intento-blue">Novo Encontro</h2>
                 <button onClick={() => setModalAberto(false)} className="text-slate-400 hover:text-red-500 transition-colors">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -437,7 +546,7 @@ export default function GestaoIndividualAluno() {
                     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
                       <div>
                         <label className={labelClass}>Categoria do Desafio Atual</label>
-                        <select className={inputClass + " bg-slate-50 font-bold text-[#060242]"} value={formDiario.categoriaDesafio} onChange={e => setFormDiario({...formDiario, categoriaDesafio: e.target.value})}>
+                        <select className={inputClass + " bg-slate-50 font-bold text-intento-blue"} value={formDiario.categoriaDesafio} onChange={e => setFormDiario({...formDiario, categoriaDesafio: e.target.value})}>
                           {CATEGORIAS_DESAFIO.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                       </div>
@@ -452,8 +561,8 @@ export default function GestaoIndividualAluno() {
                       </div>
                     </div>
 
-                    <div className="bg-[#060242] p-6 rounded-xl shadow-lg border-4 border-blue-900/20">
-                      <label className="block text-[11px] font-medium text-blue-200 uppercase mb-4 tracking-wider">O Plano de Ação</label>
+                    <div className="bg-intento-blue p-6 rounded-xl shadow-lg border-4 border-blue-900/20">
+                      <label className="block text-xs font-medium text-blue-200 uppercase mb-4 tracking-wider">O Plano de Ação</label>
                       <div className="space-y-3">
                         {formDiario.planosAcao.map((p, i) => (
                           <div key={i} className="flex gap-3">
@@ -473,7 +582,7 @@ export default function GestaoIndividualAluno() {
                 <button onClick={() => setModalAberto(false)} className="px-6 py-2.5 font-medium text-slate-400 hover:text-slate-700 transition-colors text-sm">
                   Minimizar
                 </button>
-                <button onClick={salvarNovoEncontro} className="bg-[#D4B726] hover:bg-yellow-500 text-white font-semibold px-8 py-2.5 rounded-lg shadow-sm transition-all text-sm">
+                <button onClick={salvarNovoEncontro} className="bg-intento-yellow hover:bg-yellow-500 text-white font-semibold px-8 py-2.5 rounded-lg shadow-sm transition-all text-sm">
                   Salvar Encontro
                 </button>
               </div>
@@ -489,8 +598,8 @@ export default function GestaoIndividualAluno() {
             {/* Seu código da semana... */}
              <div className="space-y-4">
               {selecaoAtual.length > 0 ? (
-                <div className={cardClass + " border-2 border-[#060242] shadow-xl sticky top-8"}>
-                  <h3 className="font-bold text-[#060242] mb-4">Editando {selecaoAtual.length} horários</h3>
+                <div className={cardClass + " border-2 border-intento-blue shadow-xl sticky top-8"}>
+                  <h3 className="font-bold text-intento-blue mb-4">Editando {selecaoAtual.length} horários</h3>
                   <div className="space-y-4">
                     <div>
                       <label className={labelClass}>Cluster</label>
@@ -499,8 +608,8 @@ export default function GestaoIndividualAluno() {
                       </select>
                     </div>
                     <div><label className={labelClass}>Detalhe</label><input type="text" className={inputClass} value={configSemana.detalhe} onChange={e => setConfigSemana({...configSemana, detalhe: e.target.value})} /></div>
-                    <label className="flex items-center gap-2 cursor-pointer p-3 bg-slate-50 rounded-lg"><input type="checkbox" checked={configSemana.foco} onChange={e => setConfigSemana({...configSemana, foco: e.target.checked})} className="w-5 h-5 accent-[#060242]"/><span className="text-sm font-bold text-[#060242]"> Modo Foco</span></label>
-                    <button onClick={aplicarCarimbo} className="w-full bg-[#060242] text-white font-bold py-3 rounded-lg hover:bg-blue-900 transition-all">Aplicar Atividade</button>
+                    <label className="flex items-center gap-2 cursor-pointer p-3 bg-slate-50 rounded-lg"><input type="checkbox" checked={configSemana.foco} onChange={e => setConfigSemana({...configSemana, foco: e.target.checked})} className="w-5 h-5 accent-intento-blue"/><span className="text-sm font-bold text-intento-blue"> Modo Foco</span></label>
+                    <button onClick={aplicarCarimbo} className="w-full bg-intento-blue text-white font-bold py-3 rounded-lg hover:bg-blue-900 transition-all">Aplicar Atividade</button>
                     <button onClick={limparHorarios} className="w-full border border-red-500 text-red-500 font-bold py-2 rounded-lg hover:bg-red-50 transition-all"> Limpar Seleção</button>
                   </div>
                 </div>
@@ -509,7 +618,7 @@ export default function GestaoIndividualAluno() {
                   <p className="text-slate-400 font-medium px-4">Clique e arraste na grade ao lado para preencher.</p>
                 </div>
               )}
-              <button onClick={salvarSemana} disabled={salvandoRotina} className="w-full bg-[#D4B726] text-white font-semibold py-3 rounded-lg shadow-sm hover:bg-yellow-500 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-70">
+              <button onClick={salvarSemana} disabled={salvandoRotina} className="w-full bg-intento-yellow text-white font-semibold py-3 rounded-lg shadow-sm hover:bg-yellow-500 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-70">
                 {salvandoRotina && <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>}
                 {salvandoRotina ? 'Sincronizando...' : 'Sincronizar Rotina'}
               </button>
@@ -517,7 +626,7 @@ export default function GestaoIndividualAluno() {
 
             <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl overflow-x-auto shadow-sm select-none">
               <table className="w-full text-xs border-collapse min-w-[800px]">
-                <thead><tr className="bg-slate-50 border-b border-slate-200"><th className="p-3 w-16 text-slate-400 font-medium border-r">Hora</th>{DIAS.map(dia => <th key={dia} className="p-3 font-semibold text-[#060242] border-r last:border-0">{dia.split('-')[0]}</th>)}</tr></thead>
+                <thead><tr className="bg-slate-50 border-b border-slate-200"><th className="p-3 w-16 text-slate-400 font-medium border-r">Hora</th>{DIAS.map(dia => <th key={dia} className="p-3 font-semibold text-intento-blue border-r last:border-0">{dia.split('-')[0]}</th>)}</tr></thead>
                 <tbody>
                   {HORARIOS.map(hora => (
                     <tr key={hora} className="border-b border-slate-100 last:border-0">
@@ -531,7 +640,14 @@ export default function GestaoIndividualAluno() {
                             key={id} onMouseDown={() => iniciarSelecao(id)} onMouseEnter={() => passarMouse(id)}
                             className={`p-1 border-r last:border-0 cursor-crosshair transition-all duration-75 min-w-[100px] h-12 ${isSelected ? 'bg-blue-50 ring-2 ring-inset ring-blue-400' : 'hover:bg-slate-50'}`}
                           >
-                            {item && <div className={`h-full w-full p-2 rounded-lg font-bold flex items-center justify-center text-center leading-tight shadow-sm border ${CATEGORIAS[item.categoria]?.cor || 'bg-slate-200'}`}>{item.label}</div>}
+                            {item && (
+                              <div className={`h-full w-full p-1.5 rounded-lg font-semibold flex flex-col items-center justify-center text-center leading-tight shadow-sm border ${CATEGORIAS[item.categoria]?.cor || 'bg-slate-200'}`}>
+                                <span className="text-[9px] font-bold uppercase tracking-wider opacity-60 leading-none">{item.categoria}</span>
+                                {item.label.replace(/\[.*?\]\s*-?\s*/, '').trim() && (
+                                  <span className="text-[10px] mt-0.5 leading-tight">{item.label.replace(/\[.*?\]\s*-?\s*/, '').trim()}</span>
+                                )}
+                              </div>
+                            )}
                           </td>
                         );
                       })}
@@ -564,7 +680,7 @@ export default function GestaoIndividualAluno() {
               const campo = (label, valor) => valor ? (
                 <div key={label}>
                   <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">{label}</p>
-                  <p className="text-sm font-medium text-[#060242]">{String(valor)}</p>
+                  <p className="text-sm font-medium text-intento-blue">{String(valor)}</p>
                 </div>
               ) : null;
 
@@ -575,7 +691,7 @@ export default function GestaoIndividualAluno() {
                     <p className="text-xs text-slate-600 flex-1">{label}</p>
                     <div className="flex gap-1 shrink-0">
                       {[1,2,3,4,5].map(i => (
-                        <div key={i} className={`w-4 h-4 rounded-full ${i <= n ? 'bg-[#060242]' : 'bg-slate-200'}`} />
+                        <div key={i} className={`w-4 h-4 rounded-full ${i <= n ? 'bg-intento-blue' : 'bg-slate-200'}`} />
                       ))}
                     </div>
                   </div>
@@ -603,7 +719,7 @@ export default function GestaoIndividualAluno() {
                 <>
                   {/* Dados Pessoais */}
                   <div className={cardClass}>
-                    <h2 className="text-base font-semibold text-[#060242] mb-4 border-b pb-3">Dados Pessoais</h2>
+                    <h2 className="text-base font-semibold text-intento-blue mb-4 border-b pb-3">Dados Pessoais</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4">
                       {campo('Nome Completo', ob.Nome_Completo)}
                       {campo('Data de Nascimento', ob.Data_Nascimento)}
@@ -618,7 +734,7 @@ export default function GestaoIndividualAluno() {
 
                   {/* Perfil Acadêmico */}
                   <div className={cardClass}>
-                    <h2 className="text-base font-semibold text-[#060242] mb-4 border-b pb-3">Perfil Acadêmico</h2>
+                    <h2 className="text-base font-semibold text-intento-blue mb-4 border-b pb-3">Perfil Acadêmico</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4 mb-5">
                       {campo('Escolaridade', ob.Escolaridade)}
                       {campo('Origem do Ensino Médio', ob.Origem_Ensino_Medio)}
@@ -637,7 +753,7 @@ export default function GestaoIndividualAluno() {
 
                   {/* Notas Anteriores */}
                   <div className={cardClass}>
-                    <h2 className="text-base font-semibold text-[#060242] mb-4 border-b pb-3">Notas Anteriores (ENEM)</h2>
+                    <h2 className="text-base font-semibold text-intento-blue mb-4 border-b pb-3">Notas Anteriores (ENEM)</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                       {[
                         ['Linguagens', ob.Nota_Linguagens],
@@ -648,7 +764,7 @@ export default function GestaoIndividualAluno() {
                       ].map(([label, val]) => (
                         <div key={label} className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
                           <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">{label}</p>
-                          <p className="text-2xl font-bold text-[#060242]">{val || '—'}</p>
+                          <p className="text-2xl font-bold text-intento-blue">{val || '—'}</p>
                         </div>
                       ))}
                     </div>
@@ -656,13 +772,13 @@ export default function GestaoIndividualAluno() {
 
                   {/* Hábitos */}
                   <div className={cardClass}>
-                    <h2 className="text-base font-semibold text-[#060242] mb-5 border-b pb-3">Hábitos de Estudo</h2>
+                    <h2 className="text-base font-semibold text-intento-blue mb-5 border-b pb-3">Hábitos de Estudo</h2>
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                       {/* Codificação */}
                       <div>
                         <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
-                          <p className="text-xs font-bold text-[#060242] uppercase tracking-wider">Codificação</p>
+                          <p className="text-xs font-bold text-intento-blue uppercase tracking-wider">Codificação</p>
                           {badgeMedia(mediaCodificacao)}
                         </div>
                         <div className="space-y-3">
@@ -685,7 +801,7 @@ export default function GestaoIndividualAluno() {
                       {/* Revisão */}
                       <div>
                         <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
-                          <p className="text-xs font-bold text-[#060242] uppercase tracking-wider">Revisão</p>
+                          <p className="text-xs font-bold text-intento-blue uppercase tracking-wider">Revisão</p>
                           {badgeMedia(mediaRevisao)}
                         </div>
                         <div className="space-y-3">
@@ -702,7 +818,7 @@ export default function GestaoIndividualAluno() {
                       {/* Hábitos de Vida */}
                       <div>
                         <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
-                          <p className="text-xs font-bold text-[#060242] uppercase tracking-wider">Hábitos de Vida</p>
+                          <p className="text-xs font-bold text-intento-blue uppercase tracking-wider">Hábitos de Vida</p>
                           {badgeMedia(mediaVida)}
                         </div>
                         <div className="space-y-3">
@@ -728,44 +844,7 @@ export default function GestaoIndividualAluno() {
         )}
 
         {abaInterna === 'registros' && (
-          <div className={cardClass + " overflow-hidden animate-in fade-in"}>
-              <h2 className="text-base font-semibold text-[#060242] mb-5 border-b pb-4">Histórico Analítico</h2>
-              <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse min-w-[1500px]">
-                  <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="p-3 text-[10px] font-medium text-slate-400 uppercase tracking-wider sticky left-0 bg-slate-50">Semana</th>
-                      <th className="p-3 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Mês</th>
-                      <th className="p-3 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Data</th>
-                      <th className="p-3 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Meta</th>
-                      <th className="p-3 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Horas</th>
-                      <th className="p-3 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Domínio</th>
-                      <th className="p-3 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Progresso</th>
-                      <th className="p-3 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Revisões</th>
-                      <th className="p-3 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Estresse</th>
-                      <th className="p-3 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Ansiedade</th>
-                      <th className="p-3 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Motivação</th>
-                      <th className="p-3 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Sono</th>
-                      <th className="p-3 text-[10px] font-medium text-blue-500 uppercase tracking-wider">D. BIO</th><th className="p-3 text-[10px] font-medium text-blue-500 uppercase tracking-wider">P. BIO</th>
-                      <th className="p-3 text-[10px] font-medium text-emerald-500 uppercase tracking-wider">D. QUI</th><th className="p-3 text-[10px] font-medium text-emerald-500 uppercase tracking-wider">P. QUI</th>
-                      <th className="p-3 text-[10px] font-medium text-orange-500 uppercase tracking-wider">D. FIS</th><th className="p-3 text-[10px] font-medium text-orange-500 uppercase tracking-wider">P. FIS</th>
-                      <th className="p-3 text-[10px] font-medium text-purple-500 uppercase tracking-wider">D. MAT</th><th className="p-3 text-[10px] font-medium text-purple-500 uppercase tracking-wider">P. MAT</th>
-                  </tr>
-                  </thead>
-                  <tbody>
-                  {historicoRegistros.map((reg, i) => (
-                      <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-                      {reg.map((coluna, j) => (
-                          <td key={j} className={`p-3 text-slate-600 ${j === 0 ? 'sticky left-0 bg-white font-bold text-[#060242]' : ''}`}>
-                          {coluna}
-                          </td>
-                      ))}
-                      </tr>
-                  ))}
-                  </tbody>
-              </table>
-              </div>
-          </div>
+          <HistoricoAnalitico registros={historicoRegistros} cardClass={cardClass} />
         )}
       </div>
 

@@ -28,12 +28,6 @@ export default function ProfileTab({ sessao }) {
   return (
     
     <div className="space-y-6 font-ubuntu">
-        {/* MODO RAIO-X: APAGAR DEPOIS */}
-      <div className="bg-slate-900 text-green-400 p-4 rounded-lg overflow-auto text-xs font-mono">
-        <p className="text-white font-bold mb-2">DADOS NA MEMÓRIA DO NAVEGADOR:</p>
-        <pre>{JSON.stringify(sessao, null, 2)}</pre>
-      </div>
-      {/* FIM DO MODO RAIO-X */}
       {/* CARD PRINCIPAL */}
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-8 shadow-sm transition-all border-l-8 border-intento-blue">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">

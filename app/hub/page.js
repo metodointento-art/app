@@ -85,7 +85,7 @@ export default function HubChecklist() {
     <div className="min-h-screen bg-slate-50 font-sans">
 
       {/* ── Header compacto ────────────────────────────────────────────── */}
-      <header className="bg-[#060242] border-b-2 border-[#D4B726] px-4 py-6">
+      <header className="bg-intento-blue border-b-2 border-intento-yellow px-4 py-6">
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <Image src="/simbolo-branco.png" alt="Intento" width={32} height={32} className="shrink-0" />
@@ -96,11 +96,11 @@ export default function HubChecklist() {
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <div className="text-right hidden sm:block">
-              <p className="text-[#D4B726] font-bold text-lg leading-none">{Math.round(porcentagem)}%</p>
+              <p className="text-intento-yellow font-bold text-lg leading-none">{Math.round(porcentagem)}%</p>
               <p className="text-slate-500 text-[10px] font-medium uppercase tracking-wider mt-0.5">{concluidos} de 4 etapas</p>
             </div>
             <div className="w-24 bg-white/10 h-1.5 rounded-full overflow-hidden hidden sm:block">
-              <div className="bg-[#D4B726] h-full transition-all duration-700" style={{ width: `${porcentagem}%` }} />
+              <div className="bg-intento-yellow h-full transition-all duration-700" style={{ width: `${porcentagem}%` }} />
             </div>
           </div>
         </div>
@@ -108,10 +108,10 @@ export default function HubChecklist() {
         <div className="max-w-3xl mx-auto mt-4 sm:hidden">
           <div className="flex justify-between text-xs mb-1.5">
             <span className="text-slate-400 font-medium">{concluidos} de 4 concluídas</span>
-            <span className="text-[#D4B726] font-bold">{Math.round(porcentagem)}%</span>
+            <span className="text-intento-yellow font-bold">{Math.round(porcentagem)}%</span>
           </div>
           <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-[#D4B726] h-full transition-all duration-700" style={{ width: `${porcentagem}%` }} />
+            <div className="bg-intento-yellow h-full transition-all duration-700" style={{ width: `${porcentagem}%` }} />
           </div>
         </div>
       </header>
@@ -127,7 +127,7 @@ export default function HubChecklist() {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#060242]">Todas as etapas concluídas!</p>
+              <p className="text-sm font-semibold text-intento-blue">Todas as etapas concluídas!</p>
               <p className="text-sm text-slate-500 mt-1 leading-relaxed">
                 Seu mentor já recebeu suas informações e entrará em contato pelo WhatsApp assim que o acesso for liberado.
               </p>
@@ -146,7 +146,7 @@ export default function HubChecklist() {
                 concluido
                   ? 'border-emerald-200'
                   : desbloqueado
-                    ? 'border-slate-200 hover:border-[#060242]/25'
+                    ? 'border-slate-200 hover:border-intento-blue/25'
                     : 'border-slate-100 opacity-50'
               }`}
             >
@@ -155,7 +155,7 @@ export default function HubChecklist() {
                 {/* Indicador de estado */}
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${
                   concluido    ? 'bg-emerald-500'
-                  : desbloqueado ? 'bg-[#060242]'
+                  : desbloqueado ? 'bg-intento-blue'
                   : 'bg-slate-100'
                 }`}>
                   {concluido ? (
@@ -164,11 +164,11 @@ export default function HubChecklist() {
                     </svg>
                   ) : desbloqueado ? (
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d={item.icone} />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icone} />
                     </svg>
                   ) : (
                     <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   )}
                 </div>
@@ -177,7 +177,7 @@ export default function HubChecklist() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{idx + 1}</span>
-                    <h3 className={`text-sm font-semibold ${concluido ? 'text-slate-400' : desbloqueado ? 'text-[#060242]' : 'text-slate-300'}`}>
+                    <h3 className={`text-sm font-semibold ${concluido ? 'text-slate-400' : desbloqueado ? 'text-intento-blue' : 'text-slate-300'}`}>
                       {item.titulo}
                     </h3>
                     {concluido && (
@@ -186,7 +186,7 @@ export default function HubChecklist() {
                   </div>
                   <p className={`text-xs leading-relaxed ${desbloqueado ? 'text-slate-400' : 'text-slate-300'}`}>{item.descricao}</p>
                   {!desbloqueado && (
-                    <p className="text-[11px] text-amber-600 font-medium mt-1.5 flex items-center gap-1">
+                    <p className="text-xs text-amber-600 font-medium mt-1.5 flex items-center gap-1">
                       <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -206,7 +206,7 @@ export default function HubChecklist() {
                     className={`shrink-0 text-center px-5 py-2 font-semibold rounded-lg text-sm transition-all ${
                       concluido
                         ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                        : 'bg-[#060242] text-white hover:bg-blue-900'
+                        : 'bg-intento-blue text-white hover:bg-blue-900'
                     }`}>
                     {concluido ? 'Acessar novamente' : item.label}
                   </a>
@@ -215,7 +215,7 @@ export default function HubChecklist() {
                     className={`shrink-0 text-center px-5 py-2 font-semibold rounded-lg text-sm transition-all ${
                       concluido
                         ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                        : 'bg-[#D4B726] text-white hover:bg-yellow-500'
+                        : 'bg-intento-yellow text-white hover:bg-yellow-500'
                     }`}>
                     {concluido ? (item.labelConcluido || item.label) : item.label}
                   </Link>

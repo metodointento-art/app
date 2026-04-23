@@ -237,7 +237,13 @@ function ExportarAcompanhamento() {
 
       {/* ── Card exportável ────────────────────────────────────────── */}
       {dadosPainel && !carregando && (
-        <div className="py-10 flex justify-center">
+        <div className="py-10 flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-sm">
+            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span className="text-xs font-semibold text-slate-500">Preview em escala reduzida · exportado em <b className="text-slate-700">1360 × proporcional px</b> (2×)</span>
+          </div>
           <div
             ref={cardRef}
             style={{
@@ -343,7 +349,8 @@ function ExportarAcompanhamento() {
               <p style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>@metodointento</p>
             </div>
           </div>
-        </div>
+        </div>{/* cardRef */}
+        </div>{/* wrapper flex col */}
       )}
     </div>
   );

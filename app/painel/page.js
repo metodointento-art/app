@@ -16,12 +16,12 @@ ChartJS.defaults.plugins.legend.position = 'bottom';
 ChartJS.defaults.plugins.legend.labels.usePointStyle = true;
 
 const cardClass = "bg-white rounded-xl border border-slate-200 p-6 shadow-sm transition-colors";
-const inputClass = "w-full p-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-[#060242] transition-all font-medium text-[#060242]";
-const labelClass = "block text-[11px] font-medium text-slate-400 uppercase mb-2 tracking-wider";
+const inputClass = "w-full p-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-intento-blue transition-all font-medium text-intento-blue";
+const labelClass = "block text-xs font-medium text-slate-400 uppercase mb-2 tracking-wider";
 
 // Hierarquia de botões
-const btnPrimary = "bg-[#060242] hover:bg-blue-900 text-white font-semibold px-6 py-3 rounded-lg transition-all text-sm";
-const btnCTA     = "bg-[#D4B726] hover:bg-yellow-500 text-white font-semibold px-6 py-3 rounded-lg transition-all text-sm";
+const btnPrimary = "bg-intento-blue hover:bg-blue-900 text-white font-semibold px-6 py-3 rounded-lg transition-all text-sm";
+const btnCTA     = "bg-intento-yellow hover:bg-yellow-500 text-white font-semibold px-6 py-3 rounded-lg transition-all text-sm";
 const btnGhost   = "bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-medium px-6 py-3 rounded-lg transition-all text-sm";
 
 // =========================================================================
@@ -48,7 +48,7 @@ const RenderMiniCards = ({ dataArray, isFirstWeek, fullBorder }) => {
     const diff = parseFloat(currStr) - parseFloat(prevStr);
     
     const invertido = (item.name || '').toLowerCase().includes('atrasad');
-    let valCol = "text-[#060242]"; let arrow = ""; let positivo = null;
+    let valCol = "text-intento-blue"; let arrow = ""; let positivo = null;
     if (!isFirstWeek && diff !== 0) {
       const subiu = diff > 0;
       positivo = invertido ? !subiu : subiu;
@@ -62,7 +62,7 @@ const RenderMiniCards = ({ dataArray, isFirstWeek, fullBorder }) => {
 
     return (
       <div key={idx} className={cardClasses}>
-        <span className={`text-[11px] font-medium uppercase mb-3 tracking-wide ${titleColor}`}>{item.name || ''}</span>
+        <span className={`text-xs font-medium uppercase mb-3 tracking-wide ${titleColor}`}>{item.name || ''}</span>
         {isFirstWeek ? (
           <span className={`text-3xl font-bold ${valCol}`}>{item.curr || '0'}</span>
         ) : (
@@ -72,7 +72,7 @@ const RenderMiniCards = ({ dataArray, isFirstWeek, fullBorder }) => {
             <div className="flex items-baseline gap-2">
               <span className={`text-3xl font-bold ${valCol}`}>{item.curr || '0'}</span>
               {diff !== 0 && (
-                <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full leading-none ${positivo ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full leading-none ${positivo ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                   {diff > 0 ? '+' : ''}{diff % 1 === 0 ? diff.toFixed(0) : diff.toFixed(1)}{arrow}
                 </span>
               )}
@@ -401,7 +401,7 @@ export default function PainelDoAluno() {
   };
 
   const getBadge = (val) => {
-    if (val >= 90) return <span className="inline-flex items-center px-2.5 py-1 bg-[#060242] text-[#D4B726] text-[10px] uppercase tracking-wide font-medium rounded-full mt-2">Elite</span>;
+    if (val >= 90) return <span className="inline-flex items-center px-2.5 py-1 bg-intento-blue text-intento-yellow text-[10px] uppercase tracking-wide font-medium rounded-full mt-2">Elite</span>;
     if (val >= 80) return <span className="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] uppercase tracking-wide font-medium rounded-full mt-2">Core</span>;
     if (val >= 70) return <span className="inline-flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] uppercase tracking-wide font-medium rounded-full mt-2">Starter</span>;
     return null;
@@ -541,14 +541,14 @@ export default function PainelDoAluno() {
       )}
 
       {/* SIDEBAR (MENU LATERAL) */}
-      {menuMobileAberto && <div className="fixed inset-0 bg-[#060242]/40 z-30 md:hidden backdrop-blur-sm" onClick={() => setMenuMobileAberto(false)}></div>}
+      {menuMobileAberto && <div className="fixed inset-0 bg-intento-blue/40 z-30 md:hidden backdrop-blur-sm" onClick={() => setMenuMobileAberto(false)}></div>}
 
       <aside className={`fixed inset-y-0 left-0 z-40 bg-white border-r border-slate-200 transform transition-all duration-300 flex flex-col md:translate-x-0 ${menuMobileAberto ? 'translate-x-0' : '-translate-x-full'} md:static ${sidebarColapsada ? 'md:w-16' : 'md:w-72'} w-72`}>
         {/* Header */}
         <div className={`border-b border-slate-100 flex items-center ${sidebarColapsada ? 'justify-center p-3' : 'justify-between p-6'}`}>
           <div className="flex items-center gap-3 min-w-0">
             <img src="/simbolo-azul.png" alt="Símbolo Intento" className="w-8 h-8 object-contain shrink-0" />
-            {!sidebarColapsada && <span className="font-semibold text-[#060242] text-base whitespace-nowrap">Mentoria Intento</span>}
+            {!sidebarColapsada && <span className="font-semibold text-intento-blue text-base whitespace-nowrap">Mentoria Intento</span>}
           </div>
           <button className="md:hidden text-slate-400 text-xl" onClick={() => setMenuMobileAberto(false)}>✕</button>
         </div>
@@ -561,7 +561,7 @@ export default function PainelDoAluno() {
               {fotoUsuario ? (
                 <img src={fotoUsuario} alt="Foto do aluno" className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0" referrerPolicy="no-referrer" />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-[#060242] flex items-center justify-center shrink-0 border border-slate-200">
+                <div className="w-9 h-9 rounded-full bg-intento-blue flex items-center justify-center shrink-0 border border-slate-200">
                   <span className="text-white font-semibold text-sm">{nomeAluno.charAt(0).toUpperCase()}</span>
                 </div>
               )}
@@ -574,7 +574,7 @@ export default function PainelDoAluno() {
             {fotoUsuario ? (
               <img src={fotoUsuario} alt="Foto do aluno" className="w-8 h-8 rounded-full object-cover border border-slate-200" referrerPolicy="no-referrer" title={nomeAluno} />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-[#060242] flex items-center justify-center border border-slate-200" title={nomeAluno}>
+              <div className="w-8 h-8 rounded-full bg-intento-blue flex items-center justify-center border border-slate-200" title={nomeAluno}>
                 <span className="text-white font-semibold text-xs">{nomeAluno.charAt(0).toUpperCase()}</span>
               </div>
             )}
@@ -588,7 +588,7 @@ export default function PainelDoAluno() {
               key={item.id}
               onClick={() => { setAbaAtiva(item.id); setSimuladoAnalise(null); setMenuMobileAberto(false); }}
               title={sidebarColapsada ? item.nome : undefined}
-              className={`w-full flex items-center rounded-lg font-medium text-sm transition-all text-left leading-tight ${sidebarColapsada ? 'justify-center p-2.5' : 'gap-3 px-4 py-2.5'} ${abaAtiva === item.id && !simuladoAnalise ? 'bg-[#060242] text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
+              className={`w-full flex items-center rounded-lg font-medium text-sm transition-all text-left leading-tight ${sidebarColapsada ? 'justify-center p-2.5' : 'gap-3 px-4 py-2.5'} ${abaAtiva === item.id && !simuladoAnalise ? 'bg-intento-blue text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
             >
               <svg className="w-4 h-4 shrink-0" style={{ opacity: abaAtiva === item.id && !simuladoAnalise ? 1 : 0.6 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icone}></path></svg>
               {!sidebarColapsada && <span>{item.nome}</span>}
@@ -622,10 +622,10 @@ export default function PainelDoAluno() {
         {/* Topbar Mobile */}
         <div className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
           <div className="flex items-center gap-3">
-            <button onClick={() => setMenuMobileAberto(true)} className="p-2 text-[#060242] bg-slate-50 rounded-lg"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+            <button onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu" className="p-2 text-intento-blue bg-slate-50 rounded-lg"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
             <div className="flex items-center gap-2">
                 <img src="/simbolo-azul.png" alt="Intento" className="w-7 h-7 object-contain shrink-0" />
-                <span className="font-semibold text-[#060242] text-base">Mentoria Intento</span>
+                <span className="font-semibold text-intento-blue text-base">Mentoria Intento</span>
               </div>
           </div>
         </div>
@@ -635,7 +635,7 @@ export default function PainelDoAluno() {
           {/* TÍTULO DA ABA ATIVA */}
           {!simuladoAnalise && (
             <div className="mb-4 animate-in fade-in">
-              <h1 className="text-2xl font-semibold text-[#060242]">{MENU_ITENS.find(m => m.id === abaAtiva)?.nome}</h1>
+              <h1 className="text-2xl font-semibold text-intento-blue">{MENU_ITENS.find(m => m.id === abaAtiva)?.nome}</h1>
             </div>
           )}
 
@@ -650,14 +650,14 @@ export default function PainelDoAluno() {
                     <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                   </button>
                   <div>
-                    <h2 className="text-xl font-semibold text-[#060242]">Análise de Simulado</h2>
+                    <h2 className="text-xl font-semibold text-intento-blue">Análise de Simulado</h2>
                     <p className="text-slate-400 text-sm mt-0.5">{simuladoAnalise.especificacao} · {simuladoAnalise.data}</p>
                   </div>
                 </div>
 
                 <div className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto">
-                  <button onClick={() => setAbaAnalise('Objetiva')} className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${abaAnalise === 'Objetiva' ? 'bg-[#060242] text-white' : 'text-slate-500 hover:text-slate-700'}`}>Objetiva</button>
-                  <button onClick={() => setAbaAnalise('Subjetiva')} className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${abaAnalise === 'Subjetiva' ? 'bg-[#060242] text-white' : 'text-slate-500 hover:text-slate-700'}`}>Subjetiva</button>
+                  <button onClick={() => setAbaAnalise('Objetiva')} className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${abaAnalise === 'Objetiva' ? 'bg-intento-blue text-white' : 'text-slate-500 hover:text-slate-700'}`}>Objetiva</button>
+                  <button onClick={() => setAbaAnalise('Subjetiva')} className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${abaAnalise === 'Subjetiva' ? 'bg-intento-blue text-white' : 'text-slate-500 hover:text-slate-700'}`}>Subjetiva</button>
                 </div>
               </div>
 
@@ -676,7 +676,7 @@ export default function PainelDoAluno() {
                       <p className={`text-[10px] ${corLabel} font-medium uppercase tracking-wide`}>Aproveitamento</p>
                       <p className={`text-4xl font-bold ${corText} mt-1`}>{aproveitamento}%</p>
                     </div>
-                    <div className={`${cardClass} text-center py-6`}><p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Total</p><p className="text-4xl font-bold text-[#060242] mt-2">180</p></div>
+                    <div className={`${cardClass} text-center py-6`}><p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Total</p><p className="text-4xl font-bold text-intento-blue mt-2">180</p></div>
                     <div className={`${cardClass} text-center py-6`}><p className="text-[10px] text-emerald-500 font-medium uppercase tracking-wide">Acertos</p><p className="text-4xl font-bold text-emerald-600 mt-2">{acertosTotais}</p></div>
                     <div className={`${cardClass} text-center py-6 bg-slate-50`}><p className="text-[10px] text-red-400 font-medium uppercase tracking-wide">Erros</p><p className="text-4xl font-bold text-red-500 mt-2">{formAutopsia.erros.length}</p></div>
                   </div>
@@ -687,9 +687,9 @@ export default function PainelDoAluno() {
               {abaAnalise === 'Objetiva' && (
                 <div className="space-y-6 animate-in slide-in-from-bottom-4 fade-in">
                   <div className="flex justify-between items-end mb-4">
-                    <h3 className="text-lg font-semibold text-[#060242]">Classificação de Erros</h3>
+                    <h3 className="text-lg font-semibold text-intento-blue">Classificação de Erros</h3>
                     <p className="text-sm font-medium text-slate-400 bg-white px-4 py-2 rounded-lg border border-slate-200">
-                      <span className="text-[#060242] font-semibold">{formAutopsia.erros.filter(e => e.questao && e.disciplina && e.topico && e.tipo).length}</span> / {formAutopsia.erros.length} classificados
+                      <span className="text-intento-blue font-semibold">{formAutopsia.erros.filter(e => e.questao && e.disciplina && e.topico && e.tipo).length}</span> / {formAutopsia.erros.length} classificados
                     </p>
                   </div>
                   
@@ -726,16 +726,16 @@ export default function PainelDoAluno() {
                         {isExpanded && (
                           <div className="p-6 space-y-4 animate-in fade-in">
                             {errosDaArea.map((erro) => (
-                              <div key={erro.id} className="flex flex-col md:flex-row gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm relative group hover:border-[#D4B726] transition-colors">
+                              <div key={erro.id} className="flex flex-col md:flex-row gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm relative group hover:border-intento-yellow transition-colors">
                                 
                                 <div className="w-full md:w-20 shrink-0">
                                   <label className={labelClass}>Questão</label>
-                                  <input type="number" placeholder="Nº" className="w-full p-3 border border-slate-200 rounded-lg font-black text-slate-700 outline-none focus:border-[#D4B726] text-center bg-white" value={erro.questao} onChange={e => atualizarErro(erro.id, { questao: e.target.value })} />
+                                  <input type="number" placeholder="Nº" className="w-full p-3 border border-slate-200 rounded-lg font-black text-slate-700 outline-none focus:border-intento-yellow text-center bg-white" value={erro.questao} onChange={e => atualizarErro(erro.id, { questao: e.target.value })} />
                                 </div>
 
                                 <div className="w-full md:w-48 shrink-0">
                                   <label className={labelClass}>Disciplina</label>
-                                  <select className="w-full p-3 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-[#D4B726] bg-white appearance-none" value={erro.disciplina} onChange={e => atualizarErro(erro.id, { disciplina: e.target.value, topico: '' })}>
+                                  <select className="w-full p-3 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-intento-yellow bg-white appearance-none" value={erro.disciplina} onChange={e => atualizarErro(erro.id, { disciplina: e.target.value, topico: '' })}>
                                     <option value="">Selecione...</option>
                                     {DISCIPLINAS_ENEM[area].map(d => <option key={d} value={d}>{d}</option>)}
                                   </select>
@@ -743,7 +743,7 @@ export default function PainelDoAluno() {
 
                                 <div className="flex-1">
                                   <label className={labelClass}>Tópico do Currículo</label>
-                                  <select className="w-full p-3 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-[#D4B726] bg-white appearance-none" value={erro.topico} onChange={e => atualizarErro(erro.id, { topico: e.target.value })} disabled={!erro.disciplina}>
+                                  <select className="w-full p-3 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-intento-yellow bg-white appearance-none" value={erro.topico} onChange={e => atualizarErro(erro.id, { topico: e.target.value })} disabled={!erro.disciplina}>
                                     <option value="">{erro.disciplina ? "Selecione o Tópico..." : "Escolha a disciplina primeiro"}</option>
                                     {(topicosDicionario[erro.disciplina] || []).map(t => <option key={t} value={t}>{t}</option>)}
                                   </select>
@@ -751,7 +751,7 @@ export default function PainelDoAluno() {
 
                                 <div className="w-full md:w-48 shrink-0">
                                   <label className={labelClass}>Motivo (Causa Raiz)</label>
-                                  <select className="w-full p-3 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-[#D4B726] bg-white appearance-none" value={erro.tipo} onChange={e => atualizarErro(erro.id, { tipo: e.target.value })}>
+                                  <select className="w-full p-3 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-intento-yellow bg-white appearance-none" value={erro.tipo} onChange={e => atualizarErro(erro.id, { tipo: e.target.value })}>
                                     <option value="">Classificar Erro...</option>
                                     <option value="Atenção">Deslize / Atenção</option>
                                     <option value="Interpretação">Interpretação</option>
@@ -781,21 +781,21 @@ export default function PainelDoAluno() {
               {/* TELA DE ANÁLISE SUBJETIVA */}
               {abaAnalise === 'Subjetiva' && (
                 <div className="space-y-8 animate-in slide-in-from-bottom-4 fade-in pb-10">
-                  <div className="bg-[#060242] p-6 md:p-8 rounded-xl border border-blue-900/30 relative overflow-hidden">
+                  <div className="bg-intento-blue p-6 md:p-8 rounded-xl border border-blue-900/30 relative overflow-hidden">
                     <h3 className="text-lg font-semibold text-white mb-1">Ciclo de Kolb</h3>
                     <p className="text-blue-300/70 text-sm mb-8 max-w-2xl">Documente suas percepções emocionais e estratégicas para traçar uma rota de correção para a próxima semana.</p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
                       <div className="bg-white/5 p-5 rounded-xl border border-white/10">
-                        <label className="block text-[10px] font-medium text-[#D4B726]/80 uppercase mb-3 tracking-wider">1. Experiência</label>
+                        <label className="block text-[10px] font-medium text-intento-yellow/80 uppercase mb-3 tracking-wider">1. Experiência</label>
                         <textarea className="w-full bg-transparent text-white placeholder-blue-300/30 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar" rows="4" placeholder="Como você se sentiu durante a prova? Houve cansaço, nervosismo, ansiedade ou falta de tempo?" value={formAutopsia.kolb.exp} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, exp: e.target.value}})}></textarea>
                       </div>
                       <div className="bg-white/5 p-5 rounded-xl border border-white/10">
-                        <label className="block text-[10px] font-medium text-[#D4B726]/80 uppercase mb-3 tracking-wider">2. Reflexão</label>
+                        <label className="block text-[10px] font-medium text-intento-yellow/80 uppercase mb-3 tracking-wider">2. Reflexão</label>
                         <textarea className="w-full bg-transparent text-white placeholder-blue-300/30 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar" rows="4" placeholder="Olhando para os seus erros, qual foi o seu maior gargalo real?" value={formAutopsia.kolb.ref} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, ref: e.target.value}})}></textarea>
                       </div>
                       <div className="bg-white/5 p-5 rounded-xl border border-white/10">
-                        <label className="block text-[10px] font-medium text-[#D4B726]/80 uppercase mb-3 tracking-wider">3. Conceituação</label>
+                        <label className="block text-[10px] font-medium text-intento-yellow/80 uppercase mb-3 tracking-wider">3. Conceituação</label>
                         <textarea className="w-full bg-transparent text-white placeholder-blue-300/30 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar" rows="4" placeholder="O que você aprendeu com a correção destas questões?" value={formAutopsia.kolb.con} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, con: e.target.value}})}></textarea>
                       </div>
                       <div className="bg-emerald-900/30 p-5 rounded-xl border border-emerald-500/30">
@@ -809,7 +809,7 @@ export default function PainelDoAluno() {
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-9 h-9 bg-purple-50 text-purple-500 rounded-lg flex items-center justify-center shrink-0"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></div>
                       <div>
-                        <h3 className="text-base font-semibold text-[#060242]">Kolb de Redação</h3>
+                        <h3 className="text-base font-semibold text-intento-blue">Kolb de Redação</h3>
                         <p className="text-slate-400 text-sm">Nota: <span className="text-purple-500 font-medium">{simuladoAnalise.redacao}</span></p>
                       </div>
                     </div>
@@ -848,7 +848,7 @@ export default function PainelDoAluno() {
                         {/* LISTA DE TAREFAS */}
                         <div className={`md:col-span-3 ${cardClass} flex flex-col`}>
                           <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-base font-semibold text-[#060242]">Minhas Tarefas</h2>
+                            <h2 className="text-base font-semibold text-intento-blue">Minhas Tarefas</h2>
                             <div className="flex items-center gap-3">
                               <span className="text-xs text-slate-400 font-medium">{tarefas.filter(t => !t.concluida).length} pendentes</span>
                               {tarefas.length > 0 && (
@@ -882,7 +882,7 @@ export default function PainelDoAluno() {
                                     type="checkbox"
                                     checked={t.concluida}
                                     onChange={() => toggleTarefa(t.id)}
-                                    className="w-4 h-4 rounded shrink-0 accent-[#060242]"
+                                    className="w-4 h-4 rounded shrink-0 accent-intento-blue"
                                   />
                                   <span className={`flex-1 text-sm font-medium transition-colors ${t.concluida ? 'line-through text-slate-300' : 'text-slate-700'}`}>
                                     {t.texto}
@@ -897,28 +897,28 @@ export default function PainelDoAluno() {
                         {/* STATS + PLANO DE AÇÃO */}
                         <div className="md:col-span-2 flex flex-col gap-4">
                           <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-[#D4B726] rounded-xl p-5 text-center shadow-sm flex flex-col items-center justify-center">
-                              <p className="text-[11px] font-medium text-white/70 uppercase tracking-wider mb-1">Progresso Geral</p>
+                            <div className="bg-intento-yellow rounded-xl p-5 text-center shadow-sm flex flex-col items-center justify-center">
+                              <p className="text-xs font-medium text-white/70 uppercase tracking-wider mb-1">Progresso Geral</p>
                               <p className="text-5xl font-bold text-white leading-none">{progressoGeral}<span className="text-2xl font-medium text-white/60">%</span></p>
                             </div>
-                            <div className="bg-[#060242] rounded-xl p-5 text-center shadow-sm flex flex-col items-center justify-center">
-                              <p className="text-[11px] font-medium text-white/50 uppercase tracking-wider mb-1">Domínio Geral</p>
+                            <div className="bg-intento-blue rounded-xl p-5 text-center shadow-sm flex flex-col items-center justify-center">
+                              <p className="text-xs font-medium text-white/50 uppercase tracking-wider mb-1">Domínio Geral</p>
                               <p className="text-5xl font-bold text-white leading-none">{dominioGeral}<span className="text-2xl font-medium text-white/40">%</span></p>
                             </div>
                           </div>
                           <div className="bg-white rounded-xl border border-slate-200 px-5 py-3 flex items-center justify-between shadow-sm">
-                            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Dias para o ENEM</p>
+                            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Dias para o ENEM</p>
                             <p className="text-2xl font-bold text-slate-600">{diasEnem}</p>
                           </div>
                           <div className={`${cardClass} flex-1 overflow-y-auto max-h-64`}>
-                            <p className="text-[11px] font-medium text-[#D4B726] uppercase mb-3 tracking-wider">Plano de Ação</p>
+                            <p className="text-xs font-medium text-intento-yellow uppercase mb-3 tracking-wider">Plano de Ação</p>
                             {(plano.acao || []).length === 0 ? (
                               <p className="text-sm text-slate-400 font-medium">Nenhuma ação definida pelo mentor ainda.</p>
                             ) : (
                               <ol className="space-y-2.5">
                                 {(plano.acao || []).map((item, i) => (
                                   <li key={i} className="flex items-start gap-2.5 cursor-pointer group" onClick={() => togglePlanoCheck(i)}>
-                                    <span className={`shrink-0 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center mt-0.5 transition-colors ${planoChecks[i] ? 'bg-emerald-500' : 'bg-[#060242]'}`}>
+                                    <span className={`shrink-0 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center mt-0.5 transition-colors ${planoChecks[i] ? 'bg-emerald-500' : 'bg-intento-blue'}`}>
                                       {planoChecks[i] ? '✓' : i + 1}
                                     </span>
                                     <span className={`text-sm font-medium leading-relaxed transition-colors ${planoChecks[i] ? 'line-through text-slate-300' : 'text-slate-700'}`}>{item}</span>
@@ -954,17 +954,17 @@ export default function PainelDoAluno() {
                           ].map(({ label, color, dom, prog }) => (
                             <div key={label} style={{ borderColor: color + '55', background: color + '0a' }} className="rounded-xl border p-5 flex flex-col gap-3 shadow-sm">
                               <div className="flex items-center justify-between">
-                                <p style={{ color }} className="text-[11px] font-semibold uppercase tracking-wider">{label}</p>
+                                <p style={{ color }} className="text-xs font-semibold uppercase tracking-wider">{label}</p>
                                 {getBadge(dom)}
                               </div>
                               <div>
-                                <p className="text-4xl font-bold text-[#060242] leading-none">{dom}<span className="text-lg font-medium text-slate-300 ml-0.5">%</span></p>
+                                <p className="text-4xl font-bold text-intento-blue leading-none">{dom}<span className="text-lg font-medium text-slate-300 ml-0.5">%</span></p>
                                 <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium mt-1">Domínio</p>
                               </div>
                               <div>
                                 <div className="flex justify-between items-center mb-1.5">
                                   <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Progresso</p>
-                                  <p style={{ color }} className="text-[11px] font-bold">{prog}%</p>
+                                  <p style={{ color }} className="text-xs font-bold">{prog}%</p>
                                 </div>
                                 <div className="w-full bg-slate-100 rounded-full h-1.5">
                                   <div style={{ width: `${prog}%`, background: color }} className="h-1.5 rounded-full transition-all duration-700"></div>
@@ -1045,12 +1045,12 @@ export default function PainelDoAluno() {
               {abaAtiva === 3 && (
                 <div className="space-y-6 animate-in fade-in duration-500">
                   <p className="text-slate-400 text-sm">Atualizado em: <span className="font-medium text-slate-500">{plano.data}</span></p>
-                  <div className={`${cardClass} border-t-2 border-t-[#D4B726] text-center py-12`}>
-                    <p className="text-[10px] font-medium text-[#D4B726] uppercase tracking-wider mb-4">Meta Principal</p>
-                    <p className="text-2xl md:text-4xl font-bold text-[#060242]">{plano.meta}</p>
+                  <div className={`${cardClass} border-t-2 border-t-intento-yellow text-center py-12`}>
+                    <p className="text-[10px] font-medium text-intento-yellow uppercase tracking-wider mb-4">Meta Principal</p>
+                    <p className="text-2xl md:text-4xl font-bold text-intento-blue">{plano.meta}</p>
                   </div>
-                  <div className={`${cardClass} border-t-2 border-t-[#060242]`}>
-                    <h3 className="text-base font-semibold text-[#060242] mb-6">Plano de Ação</h3>
+                  <div className={`${cardClass} border-t-2 border-t-intento-blue`}>
+                    <h3 className="text-base font-semibold text-intento-blue mb-6">Plano de Ação</h3>
                     <ul className="list-decimal pl-6 space-y-4 text-base text-slate-600 font-medium">{(plano.acao || []).map((item, i) => <li key={i} className="whitespace-pre-wrap">{item}</li>)}</ul>
                   </div>
                 </div>
@@ -1089,7 +1089,7 @@ export default function PainelDoAluno() {
                 return (
                   <div className="animate-in fade-in duration-500">
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-base font-semibold text-[#060242]">Semana Padrão</h2>
+                      <h2 className="text-base font-semibold text-intento-blue">Semana Padrão</h2>
                       <button onClick={zerarRotina} className={btnGhost}>Zerar Rotina</button>
                     </div>
 
@@ -1102,8 +1102,8 @@ export default function PainelDoAluno() {
                         const isToday = dayIdx === today;
                         return (
                           <div key={dia} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                            <div className={`px-4 py-2.5 border-b border-slate-100 ${isToday ? 'bg-[#D4B726]/10' : 'bg-slate-50'}`}>
-                              <p className={`text-xs font-semibold uppercase tracking-wider ${isToday ? 'text-[#D4B726]' : 'text-slate-500'}`}>{abbr} — {dia}</p>
+                            <div className={`px-4 py-2.5 border-b border-slate-100 ${isToday ? 'bg-intento-yellow/10' : 'bg-slate-50'}`}>
+                              <p className={`text-xs font-semibold uppercase tracking-wider ${isToday ? 'text-intento-yellow' : 'text-slate-500'}`}>{abbr} — {dia}</p>
                             </div>
                             <div className="divide-y divide-slate-100">
                               {eventos.map((att, attIdx) => {
@@ -1116,7 +1116,7 @@ export default function PainelDoAluno() {
                                     <input type="checkbox" checked={isChecked} onChange={() => toggleTask(tId)} className="w-4 h-4 rounded shrink-0" onClick={e => e.stopPropagation()} />
                                     <div className={`w-2 h-2 rounded-full shrink-0 ${style.dot}`} />
                                     <div className="flex-1 min-w-0">
-                                      <p className={`text-sm font-medium ${isChecked ? 'line-through text-slate-400' : 'text-[#060242]'} truncate`}>{att.atividade}</p>
+                                      <p className={`text-sm font-medium ${isChecked ? 'line-through text-slate-400' : 'text-intento-blue'} truncate`}>{att.atividade}</p>
                                       {att.hora && <p className="text-xs text-slate-400 mt-0.5">{att.hora}</p>}
                                     </div>
                                   </label>
@@ -1138,7 +1138,7 @@ export default function PainelDoAluno() {
                           const isToday = idx === today;
                           return (
                             <div key={dia} className="flex-1 text-center py-3 border-r border-slate-100 last:border-r-0">
-                              <p className={`text-[10px] font-medium uppercase tracking-wider ${isToday ? 'text-[#D4B726]' : 'text-slate-400'}`}>{abbr}</p>
+                              <p className={`text-[10px] font-medium uppercase tracking-wider ${isToday ? 'text-intento-yellow' : 'text-slate-400'}`}>{abbr}</p>
                             </div>
                           );
                         })}
@@ -1204,9 +1204,9 @@ export default function PainelDoAluno() {
                   <div>
                     <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-6">Métricas Gerais</h3>
                     <div className="grid grid-cols-3 gap-4 mb-2">
-                      <div className={`${cardClass} text-center bg-slate-50`}><p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Simulados</p><p className="text-3xl font-bold text-[#060242] mt-1">{simKpi.realizados || 0}</p></div>
-                      <div className={`${cardClass} text-center border-b-2 border-b-[#D4B726]`}><p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Média Acertos</p><p className="text-4xl font-bold text-[#D4B726] mt-1">{simKpi.medAcertos || 0}</p></div>
-                      <div className={`${cardClass} text-center border-b-2 border-b-[#060242]`}><p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Média Redação</p><p className="text-4xl font-bold text-[#060242] mt-1">{simKpi.medRedacao || 0}</p></div>
+                      <div className={`${cardClass} text-center bg-slate-50`}><p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Simulados</p><p className="text-3xl font-bold text-intento-blue mt-1">{simKpi.realizados || 0}</p></div>
+                      <div className={`${cardClass} text-center border-b-2 border-b-intento-yellow`}><p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Média Acertos</p><p className="text-4xl font-bold text-intento-yellow mt-1">{simKpi.medAcertos || 0}</p></div>
+                      <div className={`${cardClass} text-center border-b-2 border-b-intento-blue`}><p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Média Redação</p><p className="text-4xl font-bold text-intento-blue mt-1">{simKpi.medRedacao || 0}</p></div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className={`${cardClass} col-span-1`}><h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-4 text-center">Tipos de Erros</h3><div className="h-64 flex justify-center"><Doughnut data={{ labels: ['Atenção', 'Interpretação', 'Recordação', 'Lacuna'], datasets: [{ data: [simKpi.erros?.atencao || 0, simKpi.erros?.inter || 0, simKpi.erros?.rec || 0, simKpi.erros?.lac || 0], backgroundColor: ['#D4B726', '#3b82f6', '#8b5cf6', '#ef4444'] }] }} options={{ cutout: '65%', maintainAspectRatio: false }} /></div></div>
@@ -1226,11 +1226,11 @@ export default function PainelDoAluno() {
                           )}
                           <div className="p-5 flex-1">
                             <p className="text-xs text-slate-400 font-medium mb-1">{sim.modelo}</p>
-                            <h4 className="text-base font-semibold text-[#060242] mb-1">{sim.especificacao}</h4>
+                            <h4 className="text-base font-semibold text-intento-blue mb-1">{sim.especificacao}</h4>
                             <p className="text-sm text-slate-400 mb-5">Realizado em {sim.data}</p>
                             <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
                               <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">Acertos</span>
-                              <span className="font-bold text-[#060242] text-sm">{parseInt(sim.lg)+parseInt(sim.ch)+parseInt(sim.cn)+parseInt(sim.mat)} <span className="text-xs text-slate-400 font-normal">/ 180</span></span>
+                              <span className="font-bold text-intento-blue text-sm">{parseInt(sim.lg)+parseInt(sim.ch)+parseInt(sim.cn)+parseInt(sim.mat)} <span className="text-xs text-slate-400 font-normal">/ 180</span></span>
                             </div>
                           </div>
                           <div className="p-4 border-t border-slate-100">
@@ -1250,32 +1250,32 @@ export default function PainelDoAluno() {
               {abaAtiva === 6 && (
                 <div className="space-y-6 animate-in fade-in duration-500">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:border-[#060242] transition-colors group">
+                    <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:border-intento-blue transition-colors group">
                       <div>
                         <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
-                        <h3 className="text-xl font-semibold text-[#060242] mb-2">Método de Estudos</h3>
+                        <h3 className="text-xl font-semibold text-intento-blue mb-2">Método de Estudos</h3>
                         <p className="text-slate-500 text-sm font-medium mb-8">Acesse a nossa plataforma de aulas e domine a metodologia Intento de ponta a ponta.</p>
                       </div>
-                      <a href="" onClick={e => e.preventDefault()} className="block w-full text-center bg-[#060242] text-white font-semibold py-3 rounded-lg hover:bg-blue-900 transition-colors">Acessar Plataforma</a>
+                      <a href="" onClick={e => e.preventDefault()} className="block w-full text-center bg-intento-blue text-white font-semibold py-3 rounded-lg hover:bg-blue-900 transition-colors">Acessar Plataforma</a>
                     </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:border-[#D4B726] transition-colors group">
+                    <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:border-intento-yellow transition-colors group">
                       <div>
-                        <div className="w-14 h-14 bg-yellow-50 text-[#D4B726] rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <div className="w-14 h-14 bg-yellow-50 text-intento-yellow rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         </div>
-                        <h3 className="text-xl font-semibold text-[#060242] mb-2">Aplicativo Intento</h3>
+                        <h3 className="text-xl font-semibold text-intento-blue mb-2">Aplicativo Intento</h3>
                         <p className="text-slate-500 text-sm font-medium mb-8">Acesse o nosso web app para registrar revisões, tarefas diárias e acompanhar simulados.</p>
                       </div>
-                      <a href="https://intento.ap1.com.br/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-[#D4B726] text-white font-semibold py-3 rounded-lg hover:bg-yellow-500 transition-colors">Abrir Aplicativo</a>
+                      <a href="https://intento.ap1.com.br/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-intento-yellow text-white font-semibold py-3 rounded-lg hover:bg-yellow-500 transition-colors">Abrir Aplicativo</a>
                     </div>
                     <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:border-emerald-500 transition-colors group">
                       <div>
                         <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
                         </div>
-                        <h3 className="text-xl font-semibold text-[#060242] mb-2">Suporte & Comunidade</h3>
+                        <h3 className="text-xl font-semibold text-intento-blue mb-2">Suporte & Comunidade</h3>
                         <p className="text-slate-500 text-sm font-medium mb-8">Tem alguma dúvida técnica ou quer falar com a equipe de suporte da Intento?</p>
                       </div>
                       <a href="" onClick={e => e.preventDefault()} className="block w-full text-center bg-slate-100 text-slate-700 font-semibold py-3 rounded-lg hover:bg-slate-200 transition-colors">Falar com o Suporte</a>
@@ -1287,37 +1287,37 @@ export default function PainelDoAluno() {
               {abaAtiva === 7 && (
                 <div className="space-y-6 animate-in fade-in duration-500">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <h2 className="text-xl font-bold text-[#060242]">Caderno de Erros</h2>
+                    <h2 className="text-xl font-bold text-intento-blue">Caderno de Erros</h2>
                     <div className="flex items-center gap-3 flex-wrap">
                       <div className="flex gap-2 flex-wrap">
                         {['Todas', ...disciplinasCaderno].map(d => (
-                          <button key={d} onClick={() => setFiltroCaderno(d)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filtroCaderno === d ? 'bg-[#060242] text-white' : 'bg-white border border-slate-200 text-slate-500 hover:border-[#060242]'}`}>{d}</button>
+                          <button key={d} onClick={() => setFiltroCaderno(d)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filtroCaderno === d ? 'bg-intento-blue text-white' : 'bg-white border border-slate-200 text-slate-500 hover:border-intento-blue'}`}>{d}</button>
                         ))}
                       </div>
-                      <button onClick={() => setModalCadernoAberto(true)} className="bg-[#D4B726] hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg text-sm shadow-sm transition-all shrink-0">+ Novo Card</button>
+                      <button onClick={() => setModalCadernoAberto(true)} className="bg-intento-yellow hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg text-sm shadow-sm transition-all shrink-0">+ Novo Card</button>
                     </div>
                   </div>
 
                   {cadernoCarregando ? (
-                    <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#060242]"></div></div>
+                    <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-intento-blue"></div></div>
                   ) : caderno.filter(c => filtroCaderno === 'Todas' || c.disciplina === filtroCaderno).length === 0 ? (
                     <div className="bg-white border border-slate-200 rounded-xl p-10 text-center">
                       <p className="text-slate-400 font-medium">Nenhum card {filtroCaderno !== 'Todas' ? `em ${filtroCaderno}` : 'criado'} ainda.</p>
-                      <button onClick={() => setModalCadernoAberto(true)} className="mt-4 text-sm text-[#060242] font-semibold underline underline-offset-2 hover:text-[#D4B726] transition">Criar primeiro card →</button>
+                      <button onClick={() => setModalCadernoAberto(true)} className="mt-4 text-sm text-intento-blue font-semibold underline underline-offset-2 hover:text-intento-yellow transition">Criar primeiro card →</button>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {caderno.filter(c => filtroCaderno === 'Todas' || c.disciplina === filtroCaderno).map(card => (
-                        <div key={card.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col hover:border-[#060242]/30 transition-all">
+                        <div key={card.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col hover:border-intento-blue/30 transition-all">
                           <div className="px-5 pt-5 pb-4 flex-1">
                             <div className="flex items-start justify-between mb-3">
                               <div>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4B726]">{card.disciplina}</span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-intento-yellow">{card.disciplina}</span>
                                 <p className="text-xs text-slate-400 mt-0.5">{card.topico}</p>
                               </div>
                               <span className="text-[10px] text-slate-300 font-medium shrink-0 ml-2">{card.data_erro}</span>
                             </div>
-                            <p className="text-sm font-medium text-[#060242] leading-relaxed mb-4">{card.pergunta}</p>
+                            <p className="text-sm font-medium text-intento-blue leading-relaxed mb-4">{card.pergunta}</p>
                             {cardVirado[card.id] ? (
                               <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
                                 <div className="flex items-center justify-between mb-1.5">
@@ -1327,7 +1327,7 @@ export default function PainelDoAluno() {
                                 <p className="text-sm text-slate-700 leading-relaxed">{card.resposta}</p>
                               </div>
                             ) : (
-                              <button onClick={() => setCardVirado(v => ({ ...v, [card.id]: true }))} className="w-full text-center text-xs font-semibold text-slate-400 hover:text-[#060242] border border-dashed border-slate-200 rounded-lg py-2.5 transition-all hover:border-[#060242]">
+                              <button onClick={() => setCardVirado(v => ({ ...v, [card.id]: true }))} className="w-full text-center text-xs font-semibold text-slate-400 hover:text-intento-blue border border-dashed border-slate-200 rounded-lg py-2.5 transition-all hover:border-intento-blue">
                                 Ver resposta →
                               </button>
                             )}
@@ -1358,17 +1358,17 @@ export default function PainelDoAluno() {
       {/* MODAL DE REGISTRO INICIAL (PASSO 1) */}
       {/* ========================================================== */}
       {modalRegistroAberto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#060242]/60 backdrop-blur-sm p-4 animate-in fade-in">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-intento-blue/60 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg flex flex-col overflow-hidden">
             <div className="px-7 py-5 border-b border-slate-100 flex justify-between items-center">
-              <h2 className="text-base font-semibold text-[#060242]">Novo Registro de Simulado</h2>
-              <button onClick={() => setModalRegistroAberto(false)} className="text-slate-300 hover:text-slate-500 transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+              <h2 className="text-base font-semibold text-intento-blue">Novo Registro de Simulado</h2>
+              <button onClick={() => setModalRegistroAberto(false)} aria-label="Fechar modal" className="text-slate-300 hover:text-slate-500 transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
 
             <div className="p-7 space-y-5">
               <div className="flex bg-slate-100 p-1 rounded-lg">
-                <button onClick={() => setTipoModelo("ENEM")} className={`flex-1 py-2.5 rounded-md font-medium text-sm transition-all ${tipoModelo === "ENEM" ? 'bg-[#060242] text-white' : 'text-slate-500 hover:text-slate-700'}`}>ENEM</button>
-                <button onClick={() => setTipoModelo("OUTROS")} className={`flex-1 py-2.5 rounded-md font-medium text-sm transition-all ${tipoModelo === "OUTROS" ? 'bg-[#060242] text-white' : 'text-slate-500 hover:text-slate-700'}`}>Outros Vestibulares</button>
+                <button onClick={() => setTipoModelo("ENEM")} className={`flex-1 py-2.5 rounded-md font-medium text-sm transition-all ${tipoModelo === "ENEM" ? 'bg-intento-blue text-white' : 'text-slate-500 hover:text-slate-700'}`}>ENEM</button>
+                <button onClick={() => setTipoModelo("OUTROS")} className={`flex-1 py-2.5 rounded-md font-medium text-sm transition-all ${tipoModelo === "OUTROS" ? 'bg-intento-blue text-white' : 'text-slate-500 hover:text-slate-700'}`}>Outros Vestibulares</button>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1403,11 +1403,11 @@ export default function PainelDoAluno() {
 
       {/* MODAL CADERNO DE ERROS */}
       {modalCadernoAberto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#060242]/60 backdrop-blur-sm p-4 animate-in fade-in">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-intento-blue/60 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-white w-full max-w-lg rounded-xl shadow-lg flex flex-col overflow-hidden">
             <div className="px-7 py-5 border-b border-slate-100 flex justify-between items-center">
-              <h2 className="text-base font-semibold text-[#060242]">Novo Card — Caderno de Erros</h2>
-              <button onClick={() => setModalCadernoAberto(false)} className="text-slate-300 hover:text-slate-500 transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+              <h2 className="text-base font-semibold text-intento-blue">Novo Card — Caderno de Erros</h2>
+              <button onClick={() => setModalCadernoAberto(false)} aria-label="Fechar modal" className="text-slate-300 hover:text-slate-500 transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
             </div>
             <div className="p-7 space-y-4">
               <div className="grid grid-cols-2 gap-4">
