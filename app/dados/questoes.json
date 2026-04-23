@@ -1,0 +1,2345 @@
+[
+  {
+    "id": "bio_1",
+    "disciplina": "Biologia",
+    "assunto": "Ecologia e Ciências Ambientais",
+    "enunciado": "Qual é a principal diferença entre Habitat e Nicho Ecológico?",
+    "opcoes": {
+      "A": "Habitat é a função do ser vivo, e Nicho é onde ele mora.",
+      "B": "Habitat é o \"endereço\" do ser vivo, e Nicho é sua \"profissão\" (modo de vida).",
+      "C": "Habitat se refere à dieta, e Nicho ao local de reprodução.",
+      "D": "Não há diferença entre os termos."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_2",
+    "disciplina": "Biologia",
+    "assunto": "Ecologia e Ciências Ambientais",
+    "enunciado": "Numa cadeia alimentar, os organismos produtores, como as plantas, são classificados como:",
+    "opcoes": {
+      "A": "Heterótrofos, pois produzem seu próprio alimento.",
+      "B": "Decompositores, pois decompõem a matéria orgânica.",
+      "C": "Autótrofos, pois produzem seu próprio alimento.",
+      "D": "Consumidores primários, pois são a base da cadeia."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_3",
+    "disciplina": "Biologia",
+    "assunto": "Ecologia e Ciências Ambientais",
+    "enunciado": "Qual é o papel fundamental dos decompositores (fungos e bactérias) em um ecossistema?",
+    "opcoes": {
+      "A": "Produzir energia através da fotossíntese.",
+      "B": "Servir de alimento para os consumidores primários.",
+      "C": "Controlar a população de produtores.",
+      "D": "Realizar a ciclagem de nutrientes, devolvendo matéria inorgânica ao ambiente."
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "bio_4",
+    "disciplina": "Biologia",
+    "assunto": "Ecologia e Ciências Ambientais",
+    "enunciado": "A relação ecológica entre uma orquídea que vive sobre uma árvore, beneficiando-se da luminosidade sem prejudicar a árvore, é um exemplo de:",
+    "opcoes": {
+      "A": "Parasitismo",
+      "B": "Mutualismo",
+      "C": "Comensalismo",
+      "D": "Predatismo"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_5",
+    "disciplina": "Biologia",
+    "assunto": "Ecologia e Ciências Ambientais",
+    "enunciado": "A relação entre o cupim e os protozoários que vivem em seu intestino e digerem a celulose é um exemplo de:",
+    "opcoes": {
+      "A": "Competição",
+      "B": "Mutualismo",
+      "C": "Inquilinismo",
+      "D": "Amensalismo"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_6",
+    "disciplina": "Biologia",
+    "assunto": "Ecologia e Ciências Ambientais",
+    "enunciado": "Qual processo remove o Dióxido de Carbono (CO2) da atmosfera, fixando-o em moléculas orgânicas?",
+    "opcoes": {
+      "A": "Respiração celular",
+      "B": "Decomposição",
+      "C": "Fotossíntese",
+      "D": "Combustão"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_7",
+    "disciplina": "Biologia",
+    "assunto": "Ecologia e Ciências Ambientais",
+    "enunciado": "As bactérias do gênero Rhizobium, presentes nas raízes de leguminosas, são cruciais para qual etapa do ciclo do Nitrogênio?",
+    "opcoes": {
+      "A": "Desnitrificação",
+      "B": "Amonificação",
+      "C": "Nitratação",
+      "D": "Fixação do Nitrogênio"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "bio_8",
+    "disciplina": "Biologia",
+    "assunto": "Ecologia e Ciências Ambientais",
+    "enunciado": "O acúmulo de gases como CO2 e CH4 na atmosfera, que retêm o calor irradiado pela Terra, é a causa primária de qual Fenômeno?",
+    "opcoes": {
+      "A": "Destruição da camada de ozônio",
+      "B": "Chuva ácida",
+      "C": "Eutrofização",
+      "D": "Intensificação do efeito estufa"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "bio_9",
+    "disciplina": "Biologia",
+    "assunto": "Ecologia e Ciências Ambientais",
+    "enunciado": "O despejo excessivo de esgoto doméstico em um lago, rico em matéria orgânica, leva a um processo de:",
+    "opcoes": {
+      "A": "Acidificação",
+      "B": "Eutrofização",
+      "C": "Salinização",
+      "D": "Biorremediação"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_10",
+    "disciplina": "Biologia",
+    "assunto": "Fisiologia Humana",
+    "enunciado": "Qual enzima, presente na saliva, inicia a digestão do amido na boca?",
+    "opcoes": {
+      "A": "Pepsina",
+      "B": "Tripsina",
+      "C": "Lipase",
+      "D": "Ptialina (ou Amilase Salivar)"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "bio_11",
+    "disciplina": "Biologia",
+    "assunto": "Fisiologia Humana",
+    "enunciado": "Onde ocorre a maior parte da absorção dos nutrientes resultantes da digestão?",
+    "opcoes": {
+      "A": "Estômago",
+      "B": "Intestino grosso",
+      "C": "Intestino delgado",
+      "D": "Fígado"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_12",
+    "disciplina": "Biologia",
+    "assunto": "Fisiologia Humana",
+    "enunciado": "As trocas gasosas (hematose) no sistema respiratório humano ocorrem em qual estrutura?",
+    "opcoes": {
+      "A": "Brônquios",
+      "B": "Laringe",
+      "C": "Alvéolos pulmonares",
+      "D": "Diafragma"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_13",
+    "disciplina": "Biologia",
+    "assunto": "Fisiologia Humana",
+    "enunciado": "Qual tipo de vaso sanguíneo é responsável por levar o sangue do coração para o resto do corpo?",
+    "opcoes": {
+      "A": "Veias",
+      "B": "Artérias",
+      "C": "Capilares",
+      "D": "Vênulas"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_14",
+    "disciplina": "Biologia",
+    "assunto": "Fisiologia Humana",
+    "enunciado": "A insulina é um hormônio produzido pelo pâncreas que tem como principal função:",
+    "opcoes": {
+      "A": "Aumentar a taxa de glicose no sangue.",
+      "B": "Facilitar a entrada de glicose nas células, diminuindo sua taxa no sangue.",
+      "C": "Digerir proteínas no estômago.",
+      "D": "Controlar a pressão arterial."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_15",
+    "disciplina": "Biologia",
+    "assunto": "Fisiologia Humana",
+    "enunciado": "Qual hormônio, produzido pela tireoide, é responsável por regular o metabolismo corporal?",
+    "opcoes": {
+      "A": "Adrenalina",
+      "B": "Glucagon",
+      "C": "Tiroxina (T4)",
+      "D": "Testosterona"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_16",
+    "disciplina": "Biologia",
+    "assunto": "Fisiologia Humana",
+    "enunciado": "Qual é a função básica de um neurônio?",
+    "opcoes": {
+      "A": "Transportar oxigênio pelo corpo.",
+      "B": "Defender o corpo contra patógenos.",
+      "C": "Transmitir impulsos nervosos.",
+      "D": "Produzir hormônios."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_17",
+    "disciplina": "Biologia",
+    "assunto": "Fisiologia Humana",
+    "enunciado": "As vacinas são um método de imunização ativa porque:",
+    "opcoes": {
+      "A": "Injetam anticorpos prontos no organismo.",
+      "B": "Estimulam o corpo a produzir seus próprios anticorpos e células de memória.",
+      "C": "Contém medicamentos para combater a infecção diretamente.",
+      "D": "Fornecem imunidade temporária."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_18",
+    "disciplina": "Biologia",
+    "assunto": "Citologia",
+    "enunciado": "Qual organela celular é conhecida como a \"central de energia\" da célula, por ser o local da respiração celular?",
+    "opcoes": {
+      "A": "Ribossomo",
+      "B": "Complexo de Golgi",
+      "C": "Mitocôndria",
+      "D": "Lisossomo"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_19",
+    "disciplina": "Biologia",
+    "assunto": "Citologia",
+    "enunciado": "A síntese de proteínas em uma célula ocorre em qual organela?",
+    "opcoes": {
+      "A": "Lisossomo",
+      "B": "Ribossomo",
+      "C": "Vacúolo",
+      "D": "Peroxissomo"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_20",
+    "disciplina": "Biologia",
+    "assunto": "Citologia",
+    "enunciado": "Qual é a principal função da membrana plasmática?",
+    "opcoes": {
+      "A": "Realizar a fotossíntese.",
+      "B": "Armazenar o material genético.",
+      "C": "Controlar a entrada e saída de substâncias da célula (permeabilidade seletiva).",
+      "D": "Dar rigidez e forma à célula vegetal."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_21",
+    "disciplina": "Biologia",
+    "assunto": "Citologia",
+    "enunciado": "O transporte de uma substância para dentro da célula, contra o seu gradiente de concentração e com gasto de energia (ATP), é chamado de:",
+    "opcoes": {
+      "A": "Difusão simples",
+      "B": "Difusão facilitada",
+      "C": "Osmose",
+      "D": "Transporte ativo"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "bio_22",
+    "disciplina": "Biologia",
+    "assunto": "Citologia",
+    "enunciado": "Qual é a equação geral simplificada da respiração celular aeróbica?",
+    "opcoes": {
+      "A": "CO2 + H2O → Glicose + O2",
+      "B": "Glicose + O2 → CO2 + H2O + ATP",
+      "C": "Glicose → Ácido Lático + ATP",
+      "D": "Glicose + CO2 → H2O + ATP"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_23",
+    "disciplina": "Biologia",
+    "assunto": "Citologia",
+    "enunciado": "Qual é o produto final da fotossíntese que serve como fonte de energia para a planta?",
+    "opcoes": {
+      "A": "Gás oxigênio",
+      "B": "Água",
+      "C": "Glicose",
+      "D": "Gás carbônico"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_24",
+    "disciplina": "Biologia",
+    "assunto": "Citologia",
+    "enunciado": "A fase da mitose onde os cromossomos se alinham na placa equatorial da célula é a:",
+    "opcoes": {
+      "A": "Prófase",
+      "B": "Metáfase",
+      "C": "Anáfase",
+      "D": "Telófase"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_25",
+    "disciplina": "Biologia",
+    "assunto": "Genética e Biologia Molecular",
+    "enunciado": "A Primeira Lei de Mendel, ou Lei da Segregação, afirma que:",
+    "opcoes": {
+      "A": "Os alelos de um gene se separam durante a formação dos gametas.",
+      "B": "Genes para características diferentes são herdados independentemente.",
+      "C": "Características adquiridas são transmitidas aos descendentes.",
+      "D": "Todos os genes de um cromossomo são herdados juntos."
+    },
+    "gabarito": "A"
+  },
+  {
+    "id": "bio_26",
+    "disciplina": "Biologia",
+    "assunto": "Genética e Biologia Molecular",
+    "enunciado": "No cruzamento entre dois indivíduos heterozigotos (Aa x Aa) qual a proporção genotípica esperada na descendência?",
+    "opcoes": {
+      "A": "1AA : 1aa",
+      "B": "3 Dominantes : 1 Recessivo",
+      "C": "1AA : 2Aa : 1aa",
+      "D": "100% Aa"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_27",
+    "disciplina": "Biologia",
+    "assunto": "Genética e Biologia Molecular",
+    "enunciado": "Qual a probabilidade de um casal, ambos heterozigotos para o albinismo (Aa), ter um filho albino (aa)?",
+    "opcoes": {
+      "A": "0%",
+      "B": "25%",
+      "C": "50%",
+      "D": "75%"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_28",
+    "disciplina": "Biologia",
+    "assunto": "Genética e Biologia Molecular",
+    "enunciado": "Um homem do tipo sanguíneo AB casa-se com uma mulher do tipo sanguíneo O. Quais os possíveis tipos sanguíneos dos filhos?",
+    "opcoes": {
+      "A": "Apenas AB e O",
+      "B": "Apenas A e B",
+      "C": "A, B, AB e O",
+      "D": "Apenas AB"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_29",
+    "disciplina": "Biologia",
+    "assunto": "Genética e Biologia Molecular",
+    "enunciado": "A hemofilia é uma doença recessiva ligada ao cromossomo X. Um homem hemofílico (XhY) tem uma filha com uma mulher normal homozigota (XHXH). Qual o genótipo da filha?",
+    "opcoes": {
+      "A": "XHXH",
+      "B": "XhXh",
+      "C": "XHXh",
+      "D": "XhY"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_30",
+    "disciplina": "Biologia",
+    "assunto": "Genética e Biologia Molecular",
+    "enunciado": "Qual é a principal diferença estrutural entre a molécula de DNA e a de RNA?",
+    "opcoes": {
+      "A": "O DNA tem uracila, e o RNA tem timina.",
+      "B": "O DNA é uma fita simples, e o RNA é uma fita dupla.",
+      "C": "A pentose do DNA é a desoxirribose, e a do RNA é a ribose.",
+      "D": "O DNA não possui bases nitrogenadas."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_31",
+    "disciplina": "Biologia",
+    "assunto": "Genética e Biologia Molecular",
+    "enunciado": "O processo de fabricação de uma molécula de RNA a partir de um molde de DNA é chamado de:",
+    "opcoes": {
+      "A": "Replicação",
+      "B": "Tradução",
+      "C": "Transcrição",
+      "D": "Conjugação"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_32",
+    "disciplina": "Biologia",
+    "assunto": "Biotecnologia",
+    "enunciado": "O que é um organismo transgênico?",
+    "opcoes": {
+      "A": "Um organismo que foi clonado a partir de outro.",
+      "B": "Um organismo que recebeu e incorporou um gene de outra espécie.",
+      "C": "Um organismo que se reproduz assexuadamente.",
+      "D": "Um organismo que sofreu uma mutação natural."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_33",
+    "disciplina": "Biologia",
+    "assunto": "Biotecnologia",
+    "enunciado": "A técnica de DNA Recombinante consiste basicamente em:",
+    "opcoes": {
+      "A": "Sequenciar o genoma de um organismo.",
+      "B": "\"Recortar\" um gene de interesse de uma espécie e \"colá-lo\" no material genético de outra.",
+      "C": "Produzir cópias idênticas de um organismo inteiro.",
+      "D": "Analisar a paternidade através de amostras de DNA."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_34",
+    "disciplina": "Biologia",
+    "assunto": "Biotecnologia",
+    "enunciado": "O que são células-tronco embrionárias?",
+    "opcoes": {
+      "A": "Células especializadas que não podem mais se dividir.",
+      "B": "Células que já formaram um tecido específico, como o muscular.",
+      "C": "Células indiferenciadas que podem se transformar em qualquer tipo de célula do corpo.",
+      "D": "Células responsáveis pela defesa do organismo."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_35",
+    "disciplina": "Biologia",
+    "assunto": "Biotecnologia",
+    "enunciado": "A clonagem terapêutica tem como principal objetivo:",
+    "opcoes": {
+      "A": "Criar um novo indivíduo geneticamente idêntico a outro.",
+      "B": "Produzir órgãos e tecidos para transplantes a partir de células do próprio paciente.",
+      "C": "Desenvolver novas espécies de plantas.",
+      "D": "Curar doenças genéticas alterando o DNA do paciente."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_36",
+    "disciplina": "Biologia",
+    "assunto": "Evolução",
+    "enunciado": "Qual teoria evolutiva propunha que as características adquiridas pelo uso e desuso durante a vida de um indivíduo poderiam ser transmitidas aos seus descendentes?",
+    "opcoes": {
+      "A": "Darwinismo",
+      "B": "Neodarwinismo",
+      "C": "Lamarckismo",
+      "D": "Criacionismo"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_37",
+    "disciplina": "Biologia",
+    "assunto": "Evolução",
+    "enunciado": "A seleção natural, conceito central do Darwinismo, pode ser definida como:",
+    "opcoes": {
+      "A": "A sobrevivência aleatória dos organismos.",
+      "B": "A sobrevivência e reprodução diferencial de indivíduos com características mais favoráveis ao ambiente.",
+      "C": "A luta direta e constante entre todos os indivíduos de uma espécie.",
+      "D": "A evolução com um propósito de atingir a perfeição."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_38",
+    "disciplina": "Biologia",
+    "assunto": "Evolução",
+    "enunciado": "A asa de um morcego e a asa de um inseto, que têm a mesma função (voar) mas origens evolutivas diferentes, são exemplos de estruturas:",
+    "opcoes": {
+      "A": "Homólogas",
+      "B": "Análogas",
+      "C": "Vestigiais",
+      "D": "Embrionárias"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_39",
+    "disciplina": "Biologia",
+    "assunto": "Evolução",
+    "enunciado": "O que é especiação?",
+    "opcoes": {
+      "A": "O processo de extinção de uma espécie.",
+      "B": "O processo de formação de novas espécies a partir de uma espécie ancestral.",
+      "C": "A migração de uma população para um novo habitat.",
+      "D": "A adaptação de um indivíduo ao longo de sua vida."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_40",
+    "disciplina": "Biologia",
+    "assunto": "Evolução",
+    "enunciado": "Qual é o principal mecanismo que introduz novas variações genéticas em uma população, sobre as quais a seleção natural pode atuar?",
+    "opcoes": {
+      "A": "Uso e desuso",
+      "B": "Seleção artificial",
+      "C": "Mutação",
+      "D": "Migração"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_41",
+    "disciplina": "Biologia",
+    "assunto": "Seres Vivos",
+    "enunciado": "Qual das seguintes características NÃO se aplica aos vírus?",
+    "opcoes": {
+      "A": "São acelulares.",
+      "B": "Possuem metabolismo próprio.",
+      "C": "São parasitas intracelulares obrigatórios.",
+      "D": "Possuem material genético (DNA ou RNA)."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "bio_42",
+    "disciplina": "Biologia",
+    "assunto": "Seres Vivos",
+    "enunciado": "As bactérias são organismos procariotos. Isso significa que elas:",
+    "opcoes": {
+      "A": "Possuem um núcleo celular bem definido.",
+      "B": "Não possuem material genético.",
+      "C": "Possuem o material genético disperso no citoplasma.",
+      "D": "São todas multicelulares."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_43",
+    "disciplina": "Biologia",
+    "assunto": "Seres Vivos",
+    "enunciado": "Doenças como a Malária e a Doença de Chagas são causadas por qual tipo de microrganismo?",
+    "opcoes": {
+      "A": "Vírus",
+      "B": "Bactérias",
+      "C": "Fungos",
+      "D": "Protozoários"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "bio_44",
+    "disciplina": "Biologia",
+    "assunto": "Seres Vivos",
+    "enunciado": "Os fungos são organismos heterótrofos que se alimentam por:",
+    "opcoes": {
+      "A": "Fotossíntese",
+      "B": "Ingestão",
+      "C": "Absorção de nutrientes do ambiente",
+      "D": "Quimiossíntese"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "bio_45",
+    "disciplina": "Biologia",
+    "assunto": "Seres Vivos",
+    "enunciado": "Qual é o principal critério usado para agrupar os seres vivos nos Cinco Grandes Reinos (Monera, Protista, Fungi, Plantae, Animalia)?",
+    "opcoes": {
+      "A": "O tipo de habitat em que vivem.",
+      "B": "O tipo de organização celular (procarionte ou eucarionte) e o modo de nutrição.",
+      "C": "O tamanho e a forma do organismo.",
+      "D": "A capacidade de locomoção."
+    },
+    "gabarito": "B"
+  },
+
+  {
+    "id": "qui_1",
+    "disciplina": "Química",
+    "assunto": "Química Geral e Atomística",
+    "enunciado": "Qual foi a principal contribuição do modelo atômico de Rutherford?",
+    "opcoes": {
+      "A": "A descoberta do elétron.",
+      "B": "A ideia de que os elétrons possuem órbitas quantizadas.",
+      "C": "A proposição de um núcleo atômico denso e positivo.",
+      "D": "O conceito de que o átomo é uma esfera maciça e indivisível."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_2",
+    "disciplina": "Química",
+    "assunto": "Química Geral e Atomística",
+    "enunciado": "Qual a distribuição eletrônica em camadas para o átomo de Cálcio (Ca), que possui número atômico 20?",
+    "opcoes": {
+      "A": "2-8-10",
+      "B": "2-8-8-2",
+      "C": "2-18",
+      "D": "2-8-9-1"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_3",
+    "disciplina": "Química",
+    "assunto": "Química Geral e Atomística",
+    "enunciado": "Um átomo possui 17 prótons, 18 nêutrons e 17 elétrons. Qual é o seu número de massa?",
+    "opcoes": {
+      "A": "17",
+      "B": "18",
+      "C": "34",
+      "D": "35"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "qui_4",
+    "disciplina": "Química",
+    "assunto": "Química Geral e Atomística",
+    "enunciado": "Qual destes elementos é um Halogênio?",
+    "opcoes": {
+      "A": "Sódio (Na)",
+      "B": "Cálcio (Ca)",
+      "C": "Cloro (Cl)",
+      "D": "Hélio (He)"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_5",
+    "disciplina": "Química",
+    "assunto": "Química Geral e Atomística",
+    "enunciado": "O que acontece com o raio atômico ao longo de um período da tabela periódica?",
+    "opcoes": {
+      "A": "Aumenta, pois o número de camadas aumenta.",
+      "B": "Diminui, devido ao aumento da carga nuclear efetiva.",
+      "C": "Permanece constante.",
+      "D": "Aumenta, pois o número de elétrons aumenta."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_6",
+    "disciplina": "Química",
+    "assunto": "Química Geral e Atomística",
+    "enunciado": "Qual é a propriedade periódica que mede a energia liberada quando um átomo neutro no estado gasoso recebe um elétron?",
+    "opcoes": {
+      "A": "Eletronegatividade",
+      "B": "Energia de ionização",
+      "C": "Afinidade eletrônica",
+      "D": "Raio atômico"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_7",
+    "disciplina": "Química",
+    "assunto": "Química Geral e Atomística",
+    "enunciado": "Qual tipo de ligação química ocorre entre um átomo de Sódio (Na) e um átomo de Cloro (Cl)?",
+    "opcoes": {
+      "A": "Covalente Polar",
+      "B": "Covalente Apolar",
+      "C": "Metálica",
+      "D": "Iônica"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "qui_8",
+    "disciplina": "Química",
+    "assunto": "Química Geral e Atomística",
+    "enunciado": "Qual o tipo de ligação predominante na molécula de Dióxido de Carbono (CO2)?",
+    "opcoes": {
+      "A": "Iônica",
+      "B": "Covalente",
+      "C": "Metálica",
+      "D": "Íon-dipolo"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_9",
+    "disciplina": "Química",
+    "assunto": "Química Geral e Atomística",
+    "enunciado": "Qual é a geometria da molécula de Amônia (NH3)?",
+    "opcoes": {
+      "A": "Linear",
+      "B": "Angular",
+      "C": "Piramidal trigonal",
+      "D": "Tetraédrica"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_10",
+    "disciplina": "Química",
+    "assunto": "Química Geral e Atomística",
+    "enunciado": "A molécula de Água (H2O) é considerada polar. Por quê?",
+    "opcoes": {
+      "A": "Porque possui ligações covalentes simples.",
+      "B": "Porque o oxigênio é menos eletronegativo que o hidrogênio.",
+      "C": "Porque sua geometria angular resulta em um vetor momento dipolar diferente de zero.",
+      "D": "Porque ela é formada por três átomos."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_11",
+    "disciplina": "Química",
+    "assunto": "Físico-Química",
+    "enunciado": "Qual a concentração em mol/L de uma solução preparada com 2 mols de NaOH em 4 litros de água?",
+    "opcoes": {
+      "A": "8 mol/L",
+      "B": "12 mol/L",
+      "C": "0,5 mol/L",
+      "D": "4 mol/L"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_12",
+    "disciplina": "Química",
+    "assunto": "Físico-Química",
+    "enunciado": "Qual a massa de NaCl necessária para preparar 500 mL de uma solução 0,1 mol/L? (Dado: Massa Molar do NaCl = 58,5 g/mol)",
+    "opcoes": {
+      "A": "58,5 g",
+      "B": "5,85 g",
+      "C": "2,925 g",
+      "D": "29,25 g"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_13",
+    "disciplina": "Química",
+    "assunto": "Físico-Química",
+    "enunciado": "Se 100 mL de uma solução 2 M são diluídos para 400 mL, qual será a nova concentração?",
+    "opcoes": {
+      "A": "8 M",
+      "B": "2 M",
+      "C": "0,5 M",
+      "D": "0,25 M"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_14",
+    "disciplina": "Química",
+    "assunto": "Físico-Química",
+    "enunciado": "Uma reação exotérmica é aquela que:",
+    "opcoes": {
+      "A": "Absorve calor e tem ΔH > 0.",
+      "B": "Libera calor e tem ΔH < 0.",
+      "C": "Ocorre com aumento da temperatura e tem ΔH > 0.",
+      "D": "Libera calor e tem ΔH > 0."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_15",
+    "disciplina": "Química",
+    "assunto": "Físico-Química",
+    "enunciado": "De acordo com a Lei de Hess, a variação de entalpia de uma reação química:",
+    "opcoes": {
+      "A": "Depende da velocidade da reação.",
+      "B": "É sempre positiva.",
+      "C": "Depende apenas dos estados inicial e final, não do caminho da reação.",
+      "D": "É sempre igual a zero."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_16",
+    "disciplina": "Química",
+    "assunto": "Físico-Química",
+    "enunciado": "Qual o conceito de entalpia de formação?",
+    "opcoes": {
+      "A": "O calor liberado na queima de 1 mol de uma substância.",
+      "B": "A energia necessária para quebrar 1 mol de ligações.",
+      "C": "O calor envolvido na formação de 1 mol de um composto a partir de substâncias simples no estado padrão.",
+      "D": "A variação de energia de uma reação qualquer."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_17",
+    "disciplina": "Química",
+    "assunto": "Físico-Química",
+    "enunciado": "Qual fator NÃO afeta a velocidade de uma reação química?",
+    "opcoes": {
+      "A": "Temperatura",
+      "B": "Concentração dos reagentes",
+      "C": "Variação da entalpia (ΔH)",
+      "D": "Superfície de contato"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_18",
+    "disciplina": "Química",
+    "assunto": "Físico-Química",
+    "enunciado": "O que faz um catalisador em uma reação química?",
+    "opcoes": {
+      "A": "Aumenta a energia de ativação.",
+      "B": "É consumido ao final da reação.",
+      "C": "Fornece um caminho de reação alternativo com menor energia de ativação.",
+      "D": "Aumenta a entalpia dos produtos."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_19",
+    "disciplina": "Química",
+    "assunto": "Físico-Química",
+    "enunciado": "O que acontece com um sistema em equilíbrio químico se a concentração de um dos reagentes for aumentada?",
+    "opcoes": {
+      "A": "O equilíbrio se desloca para a esquerda (sentido dos reagentes).",
+      "B": "O equilíbrio se desloca para a direita (sentido dos produtos).",
+      "C": "A constante de equilíbrio (K) aumenta.",
+      "D": "Nada acontece."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_20",
+    "disciplina": "Química",
+    "assunto": "Físico-Química",
+    "enunciado": "Para a reação exotérmica N2(g) + 3H2(g) ⇌ 2NH3(g), o que acontece se a temperatura do sistema for aumentada?",
+    "opcoes": {
+      "A": "O equilíbrio se desloca para a direita.",
+      "B": "A produção de amônia (NH3) aumenta.",
+      "C": "O equilíbrio se desloca para a esquerda.",
+      "D": "A constante de equilíbrio (Kc) não se altera."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_21",
+    "disciplina": "Química",
+    "assunto": "Físico-Química",
+    "enunciado": "Para o mesmo sistema N2(g) + 3H2(g) ⇌ 2NH3(g), o que acontece se a pressão for aumentada?",
+    "opcoes": {
+      "A": "O equilíbrio se desloca para a esquerda (maior volume molar).",
+      "B": "O equilíbrio se desloca para a direita (menor volume molar).",
+      "C": "A pressão não afeta este equilíbrio.",
+      "D": "A constante de equilíbrio (Kp) diminui."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_22",
+    "disciplina": "Química",
+    "assunto": "Físico-Química",
+    "enunciado": "O que a constante de equilíbrio (K) indica quando seu valor é muito maior que 1 (Kc >> 1)?",
+    "opcoes": {
+      "A": "A reação inversa é favorecida.",
+      "B": "No equilíbrio, a concentração de reagentes é muito maior que a de produtos.",
+      "C": "No equilíbrio, a concentração de produtos é muito maior que a de reagentes.",
+      "D": "A reação não atinge o equilíbrio."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_23",
+    "disciplina": "Química",
+    "assunto": "Estequiometria",
+    "enunciado": "Qual a massa molar da molécula de Ácido Sulfúrico (H2SO4)? (Dados: H=1, S=32, O=16)",
+    "opcoes": {
+      "A": "49 g/mol",
+      "B": "98 g/mol",
+      "C": "50 g/mol",
+      "D": "100 g/mol"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_24",
+    "disciplina": "Química",
+    "assunto": "Estequiometria",
+    "enunciado": "Qual a massa molar da glicose (C6H12O6)? (Dados: C=12, H=1, O=16)",
+    "opcoes": {
+      "A": "29 g/mol",
+      "B": "150 g/mol",
+      "C": "180 g/mol",
+      "D": "212 g/mol"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_25",
+    "disciplina": "Química",
+    "assunto": "Estequiometria",
+    "enunciado": "Qual é a equação corretamente balanceada para a combustão do metano (CH4)?",
+    "opcoes": {
+      "A": "CH4 + O2 → CO2 + 2H2O",
+      "B": "CH4 + 2O2 → CO2 + 2H2O",
+      "C": "2CH4 + O2 → 2CO2 + H2O",
+      "D": "CH4 + O2 → CO2 + H2O"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_26",
+    "disciplina": "Química",
+    "assunto": "Estequiometria",
+    "enunciado": "Na reação 2H2 + O2 → 2H2O, quantos mols de água são formados a partir de 4 mols de hidrogênio (H2)?",
+    "opcoes": {
+      "A": "2 mols",
+      "B": "4 mols",
+      "C": "6 mols",
+      "D": "8 mols"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_27",
+    "disciplina": "Química",
+    "assunto": "Estequiometria",
+    "enunciado": "Na mesma reação 2H2 + O2 → 2H2O, qual a massa de oxigênio (O2) necessária para reagir completamente com 4g de hidrogênio (H2)? (Dados: H=1, O=16)",
+    "opcoes": {
+      "A": "8 g",
+      "B": "16 g",
+      "C": "32 g",
+      "D": "64 g"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_28",
+    "disciplina": "Química",
+    "assunto": "Estequiometria",
+    "enunciado": "Qual o volume ocupado por 3 mols de um gás ideal nas CNTP (Condições Normais de Temperatura e Pressão)? (Dado: Volume Molar nas CNTP = 22,4 L/mol)",
+    "opcoes": {
+      "A": "7,46 L",
+      "B": "25,4 L",
+      "C": "67,2 L",
+      "D": "22,4 L"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_29",
+    "disciplina": "Química",
+    "assunto": "Estequiometria",
+    "enunciado": "Na reação 2Na + Cl2 → 2NaCl, se 46g de Na reagem com 80g de Cl2, qual é o reagente limitante? (Dados: Na=23, Cl=35,5)",
+    "opcoes": {
+      "A": "Sódio (Na)",
+      "B": "Cloro (Cl2)",
+      "C": "Ambos são consumidos completamente.",
+      "D": "Cloreto de Sódio (NaCl)"
+    },
+    "gabarito": "A"
+  },
+  {
+    "id": "qui_30",
+    "disciplina": "Química",
+    "assunto": "Estequiometria",
+    "enunciado": "Uma amostra de 100g de calcário (impuro) tem 80% de pureza em CaCO3. Qual a massa real de CaCO3 na amostra?",
+    "opcoes": {
+      "A": "100 g",
+      "B": "20 g",
+      "C": "80 g",
+      "D": "125 g"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_31",
+    "disciplina": "Química",
+    "assunto": "Química Orgânica",
+    "enunciado": "A qual função orgânica pertence o composto CH3COOH?",
+    "opcoes": {
+      "A": "Álcool",
+      "B": "Aldeído",
+      "C": "Cetona",
+      "D": "Ácido Carboxílico"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "qui_32",
+    "disciplina": "Química",
+    "assunto": "Química Orgânica",
+    "enunciado": "Qual das seguintes substâncias é um álcool?",
+    "opcoes": {
+      "A": "CH3OCH3",
+      "B": "CH3-CH2-OH",
+      "C": "CH3-CHO",
+      "D": "CH3COCH3"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_33",
+    "disciplina": "Química",
+    "assunto": "Química Orgânica",
+    "enunciado": "O composto propanona (acetona) pertence a qual função orgânica?",
+    "opcoes": {
+      "A": "Éter",
+      "B": "Éster",
+      "C": "Aldeído",
+      "D": "Cetona"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "qui_34",
+    "disciplina": "Química",
+    "assunto": "Química Orgânica",
+    "enunciado": "A qual função orgânica pertence a molécula HCHO (formol ou metanal)?",
+    "opcoes": {
+      "A": "Aldeído",
+      "B": "Álcool",
+      "C": "Ácido Carboxílico",
+      "D": "Éter"
+    },
+    "gabarito": "A"
+  },
+  {
+    "id": "qui_35",
+    "disciplina": "Química",
+    "assunto": "Química Orgânica",
+    "enunciado": "Qual o nome oficial (IUPAC) do composto CH3-CH2-CH2-CH3?",
+    "opcoes": {
+      "A": "Metano",
+      "B": "Propano",
+      "C": "Butano",
+      "D": "Etano"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_36",
+    "disciplina": "Química",
+    "assunto": "Química Orgânica",
+    "enunciado": "Qual é o nome do alcano com 3 átomos de carbono?",
+    "opcoes": {
+      "A": "Metano",
+      "B": "Etano",
+      "C": "Propano",
+      "D": "Butano"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_37",
+    "disciplina": "Química",
+    "assunto": "Química Orgânica",
+    "enunciado": "Os compostos Butan-1-ol e Butan-2-ol são exemplos de que tipo de isomeria?",
+    "opcoes": {
+      "A": "De cadeia",
+      "B": "De função",
+      "C": "De posição",
+      "D": "Tautomeria"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_38",
+    "disciplina": "Química",
+    "assunto": "Química Orgânica",
+    "enunciado": "A reação de um alceno com H2 na presença de um catalisador é uma reação de:",
+    "opcoes": {
+      "A": "Adição (Hidrogenação)",
+      "B": "Substituição",
+      "C": "Eliminação",
+      "D": "Oxidação"
+    },
+    "gabarito": "A"
+  },
+  {
+    "id": "qui_39",
+    "disciplina": "Química",
+    "assunto": "Química Orgânica",
+    "enunciado": "A reação do benzeno com Cl2 na presença de um catalisador (FeCl3) é um exemplo de:",
+    "opcoes": {
+      "A": "Adição",
+      "B": "Substituição Eletrofílica Aromática",
+      "C": "Eliminação",
+      "D": "Redução"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_40",
+    "disciplina": "Química",
+    "assunto": "Química Orgânica",
+    "enunciado": "A desidratação de um álcool pode formar qual tipo de composto?",
+    "opcoes": {
+      "A": "Um alcano",
+      "B": "Um alcino",
+      "C": "Um alceno",
+      "D": "Um haleto de alquila"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_41",
+    "disciplina": "Química",
+    "assunto": "Eletroquímica",
+    "enunciado": "Qual o número de oxidação (NOx) do Manganês (Mn) no íon permanganato (MnO4-)?",
+    "opcoes": {
+      "A": "+2",
+      "B": "+4",
+      "C": "+7",
+      "D": "-1"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_42",
+    "disciplina": "Química",
+    "assunto": "Eletroquímica",
+    "enunciado": "Em uma pilha de Daniell (Zn / Zn2+ // Cu2+ / Cu) o que ocorre no ânodo?",
+    "opcoes": {
+      "A": "A redução do Cobre (Cu2+).",
+      "B": "A oxidação do Zinco (Zn).",
+      "C": "A deposição de Zinco metálico.",
+      "D": "A passagem de elétrons do Cobre para o Zinco."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_43",
+    "disciplina": "Química",
+    "assunto": "Eletroquímica",
+    "enunciado": "O que é o cátodo em uma célula eletroquímica?",
+    "opcoes": {
+      "A": "O eletrodo onde ocorre a oxidação.",
+      "B": "O eletrodo com o menor potencial de redução.",
+      "C": "O eletrodo onde ocorre a redução.",
+      "D": "O eletrodo que é consumido."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "qui_44",
+    "disciplina": "Química",
+    "assunto": "Eletroquímica",
+    "enunciado": "Na eletrólise ígnea (fundida) do cloreto de sódio (NaCl), quais produtos são formados no cátodo e no ânodo, respectivamente?",
+    "opcoes": {
+      "A": "H2 e O2",
+      "B": "Na(s) e Cl2(g)",
+      "C": "Cl2(g) e Na(s)",
+      "D": "H2 e Cl2(g)"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "qui_45",
+    "disciplina": "Química",
+    "assunto": "Eletroquímica",
+    "enunciado": "Qual é o objetivo da eletrólise?",
+    "opcoes": {
+      "A": "Gerar energia elétrica a partir de uma reação espontânea.",
+      "B": "Forçar a ocorrência de uma reação química não espontânea usando energia elétrica.",
+      "C": "Neutralizar uma solução ácida.",
+      "D": "Acelerar uma reação espontânea."
+    },
+    "gabarito": "B"
+  },
+
+  {
+    "id": "mat_1",
+    "disciplina": "Matemática",
+    "assunto": "Matemática Básica",
+    "enunciado": "Qual o resultado da operação (2/3) + (3/4)?",
+    "opcoes": {
+      "A": "5/7",
+      "B": "17/12",
+      "C": "5/12",
+      "D": "6/12"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_2",
+    "disciplina": "Matemática",
+    "assunto": "Matemática Básica",
+    "enunciado": "Qual o resultado da divisão 1,2 / 0,03?",
+    "opcoes": {
+      "A": "40",
+      "B": "4",
+      "C": "0,4",
+      "D": "0,04"
+    },
+    "gabarito": "A"
+  },
+  {
+    "id": "mat_3",
+    "disciplina": "Matemática",
+    "assunto": "Matemática Básica",
+    "enunciado": "Qual o valor da expressão (3²)⁻¹?",
+    "opcoes": {
+      "A": "-9",
+      "B": "1/6",
+      "C": "-6",
+      "D": "1/9"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "mat_4",
+    "disciplina": "Matemática",
+    "assunto": "Matemática Básica",
+    "enunciado": "Qual o resultado de √48 simplificado?",
+    "opcoes": {
+      "A": "2√12",
+      "B": "16/3",
+      "C": "4√3",
+      "D": "6√2"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_5",
+    "disciplina": "Matemática",
+    "assunto": "Matemática Básica",
+    "enunciado": "Qual o valor da expressão (2/3)³?",
+    "opcoes": {
+      "A": "6/9",
+      "B": "8/27",
+      "C": "6/27",
+      "D": "8/9"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_6",
+    "disciplina": "Matemática",
+    "assunto": "Matemática Básica",
+    "enunciado": "Se 4 impressoras produzem 1000 panfletos em 2 horas, quantas impressoras são necessárias para produzir 1000 panfletos em 30 minutos?",
+    "opcoes": {
+      "A": "1",
+      "B": "8",
+      "C": "16",
+      "D": "32"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_7",
+    "disciplina": "Matemática",
+    "assunto": "Matemática Básica",
+    "enunciado": "Um trem percorre 480 km em 6 horas. Mantendo a mesma velocidade média, qual a distância percorrida em 4 horas?",
+    "opcoes": {
+      "A": "320 km",
+      "B": "300 km",
+      "C": "720 km",
+      "D": "240 km"
+    },
+    "gabarito": "A"
+  },
+  {
+    "id": "mat_8",
+    "disciplina": "Matemática",
+    "assunto": "Matemática Básica",
+    "enunciado": "Um produto que custava R$ 150,00 sofreu um aumento de 15%. Qual o novo preço?",
+    "opcoes": {
+      "A": "R$ 165,00",
+      "B": "R$ 172,50",
+      "C": "R$ 151,50",
+      "D": "R$ 180,00"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_9",
+    "disciplina": "Matemática",
+    "assunto": "Matemática Básica",
+    "enunciado": "Se R$ 45,00 correspondem a 20% de um valor, qual é o valor total?",
+    "opcoes": {
+      "A": "R$ 90,00",
+      "B": "R$ 225,00",
+      "C": "R$ 450,00",
+      "D": "R$ 900,00"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_10",
+    "disciplina": "Matemática",
+    "assunto": "Matemática Básica",
+    "enunciado": "Um item foi vendido por R$ 80,00, com um prejuízo de 20% sobre o preço de compra. Qual foi o preço de compra?",
+    "opcoes": {
+      "A": "R$ 64,00",
+      "B": "R$ 96,00",
+      "C": "R$ 100,00",
+      "D": "R$ 120,00"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_11",
+    "disciplina": "Matemática",
+    "assunto": "Estatística",
+    "enunciado": "Para o conjunto de dados {2, 5, 5, 8, 10}, qual é a Média Aritmética?",
+    "opcoes": {
+      "A": "5",
+      "B": "6",
+      "C": "8",
+      "D": "30"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_12",
+    "disciplina": "Matemática",
+    "assunto": "Estatística",
+    "enunciado": "Para o conjunto de dados {7, 3, 5, 9, 3}, qual é a Mediana?",
+    "opcoes": {
+      "A": "3",
+      "B": "7",
+      "C": "9",
+      "D": "5"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "mat_13",
+    "disciplina": "Matemática",
+    "assunto": "Estatística",
+    "enunciado": "Para o conjunto de dados {10, 20, 10, 30, 10, 40}, qual é a Moda?",
+    "opcoes": {
+      "A": "40",
+      "B": "20",
+      "C": "30",
+      "D": "10"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "mat_14",
+    "disciplina": "Matemática",
+    "assunto": "Estatística",
+    "enunciado": "Um gráfico de pizza mostra a preferência de 100 pessoas por esportes: Futebol (50%), Vôlei (30%), Basquete (20%). Quantas pessoas preferem Vôlei?",
+    "opcoes": {
+      "A": "20",
+      "B": "30",
+      "C": "50",
+      "D": "100"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_15",
+    "disciplina": "Matemática",
+    "assunto": "Estatística",
+    "enunciado": "Uma tabela mostra as notas de um aluno: Prova 1 (7), Prova 2 (9), Prova 3 (5). Qual a nota média do aluno?",
+    "opcoes": {
+      "A": "5",
+      "B": "7",
+      "C": "9",
+      "D": "21"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_16",
+    "disciplina": "Matemática",
+    "assunto": "Estatística",
+    "enunciado": "Qual medida estatística indica o grau de dispersão dos dados em relação à média do conjunto?",
+    "opcoes": {
+      "A": "Mediana",
+      "B": "Moda",
+      "C": "Desvio Padrão",
+      "D": "Frequência Absoluta"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_17",
+    "disciplina": "Matemática",
+    "assunto": "Estatística",
+    "enunciado": "Dois grupos de alunos fizeram uma prova. O Grupo A teve notas {5, 6, 7} e o Grupo B teve notas {1, 6, 11}. Qual grupo teve maior variância nas notas?",
+    "opcoes": {
+      "A": "Grupo A",
+      "B": "Grupo B",
+      "C": "A variância é a mesma",
+      "D": "Não é possível calcular"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_18",
+    "disciplina": "Matemática",
+    "assunto": "Geometria Plana",
+    "enunciado": "Qual é a área de um triângulo com base 12 cm e altura 5 cm?",
+    "opcoes": {
+      "A": "60 cm²",
+      "B": "17 cm²",
+      "C": "30 cm²",
+      "D": "15 cm²"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_19",
+    "disciplina": "Matemática",
+    "assunto": "Geometria Plana",
+    "enunciado": "A área de um quadrado é 81 m². Qual é a medida do seu lado?",
+    "opcoes": {
+      "A": "81 m",
+      "B": "9 m",
+      "C": "20,25 m",
+      "D": "40,5 m"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_20",
+    "disciplina": "Matemática",
+    "assunto": "Geometria Plana",
+    "enunciado": "Qual a área de um círculo com diâmetro de 20 cm? (Use π = 3,14)",
+    "opcoes": {
+      "A": "62,8 cm²",
+      "B": "1256 cm²",
+      "C": "314 cm²",
+      "D": "628 cm²"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_21",
+    "disciplina": "Matemática",
+    "assunto": "Geometria Plana",
+    "enunciado": "Em um triângulo retângulo, a hipotenusa mede 13 cm e um dos catetos mede 5 cm. Qual a medida do outro cateto?",
+    "opcoes": {
+      "A": "8 cm",
+      "B": "12 cm",
+      "C": "18 cm",
+      "D": "144 cm"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_22",
+    "disciplina": "Matemática",
+    "assunto": "Geometria Plana",
+    "enunciado": "Os catetos de um triângulo retângulo medem 9 cm e 12 cm. Qual o valor da hipotenusa?",
+    "opcoes": {
+      "A": "15 cm",
+      "B": "21 cm",
+      "C": "108 cm",
+      "D": "225 cm"
+    },
+    "gabarito": "A"
+  },
+  {
+    "id": "mat_23",
+    "disciplina": "Matemática",
+    "assunto": "Geometria Plana",
+    "enunciado": "Dois triângulos são semelhantes. O primeiro tem lados 3, 4 e 5. O segundo tem o menor lado medindo 6. Quais as medidas dos outros lados do segundo triângulo?",
+    "opcoes": {
+      "A": "7 e 8",
+      "B": "8 e 10",
+      "C": "9 e 12",
+      "D": "12 e 15"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_24",
+    "disciplina": "Matemática",
+    "assunto": "Geometria Espacial",
+    "enunciado": "Qual o volume de um cubo com aresta de 5 cm?",
+    "opcoes": {
+      "A": "25 cm³",
+      "B": "125 cm³",
+      "C": "150 cm³",
+      "D": "50 cm³"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_25",
+    "disciplina": "Matemática",
+    "assunto": "Geometria Espacial",
+    "enunciado": "Qual o volume de um paralelepípedo com dimensões 4 cm, 5 cm e 6 cm?",
+    "opcoes": {
+      "A": "15 cm³",
+      "B": "60 cm³",
+      "C": "120 cm³",
+      "D": "240 cm³"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_26",
+    "disciplina": "Matemática",
+    "assunto": "Geometria Espacial",
+    "enunciado": "Qual o volume de um cilindro reto com raio da base de 2 m e altura de 10 m? (Use π = 3)",
+    "opcoes": {
+      "A": "60 m³",
+      "B": "120 m³",
+      "C": "40 m³",
+      "D": "200 m³"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_27",
+    "disciplina": "Matemática",
+    "assunto": "Geometria Espacial",
+    "enunciado": "Qual é o volume de um cone com raio da base de 3 cm e altura de 10 cm? (Use π = 3)",
+    "opcoes": {
+      "A": "30 cm³",
+      "B": "90 cm³",
+      "C": "270 cm³",
+      "D": "300 cm³"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_28",
+    "disciplina": "Matemática",
+    "assunto": "Geometria Espacial",
+    "enunciado": "Qual é o volume de uma pirâmide de base quadrada com lado de 6 m e altura de 10 m?",
+    "opcoes": {
+      "A": "60 m³",
+      "B": "120 m³",
+      "C": "180 m³",
+      "D": "360 m³"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_29",
+    "disciplina": "Matemática",
+    "assunto": "Funções",
+    "enunciado": "Na função f(x) = 3x - 5, o valor de x = 2 pertence ao domínio e seu correspondente no contradomínio é 1. Qual o conjunto imagem para este ponto?",
+    "opcoes": {
+      "A": "{2}",
+      "B": "{1}",
+      "C": "{2, 1}",
+      "D": "{3, -5}"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_30",
+    "disciplina": "Matemática",
+    "assunto": "Funções",
+    "enunciado": "Qual é a raiz da função de 1º grau f(x) = 4x + 8?",
+    "opcoes": {
+      "A": "8",
+      "B": "2",
+      "C": "-2",
+      "D": "-8"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_31",
+    "disciplina": "Matemática",
+    "assunto": "Funções",
+    "enunciado": "O gráfico da função f(x) = -2x + 6 é uma reta:",
+    "opcoes": {
+      "A": "Crescente que corta o eixo y em -2",
+      "B": "Decrescente que corta o eixo y em 6",
+      "C": "Crescente que corta o eixo y em 6",
+      "D": "Decrescente que corta o eixo y em -2"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_32",
+    "disciplina": "Matemática",
+    "assunto": "Funções",
+    "enunciado": "Qual é o coeficiente angular da reta que representa a função f(x) = 5 - x?",
+    "opcoes": {
+      "A": "5",
+      "B": "1",
+      "C": "-1",
+      "D": "-5"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_33",
+    "disciplina": "Matemática",
+    "assunto": "Funções",
+    "enunciado": "Quais são as raízes da função de 2º grau f(x) = x² - 7x + 10?",
+    "opcoes": {
+      "A": "{-2, -5}",
+      "B": "{2, 5}",
+      "C": "{-2, 5}",
+      "D": "{2, -5}"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_34",
+    "disciplina": "Matemática",
+    "assunto": "Funções",
+    "enunciado": "A parábola da função f(x) = -x² + 2x + 3 tem a concavidade voltada para:",
+    "opcoes": {
+      "A": "Cima, pois o termo 'a' é negativo",
+      "B": "Baixo, pois o termo 'a' é negativo",
+      "C": "Cima, pois o termo 'c' é positivo",
+      "D": "Baixo, pois o termo 'c' é positivo"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_35",
+    "disciplina": "Matemática",
+    "assunto": "Funções",
+    "enunciado": "Qual é o vértice da parábola da função f(x) = x² - 2x + 5?",
+    "opcoes": {
+      "A": "(-1, 4)",
+      "B": "(1, 8)",
+      "C": "(2, 5)",
+      "D": "(1, 4)"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "mat_36",
+    "disciplina": "Matemática",
+    "assunto": "Funções",
+    "enunciado": "Uma função de 2º grau tem raízes 2 e 3 e seu coeficiente 'a' é 1. Qual é a função?",
+    "opcoes": {
+      "A": "f(x) = x² + 5x + 6",
+      "B": "f(x) = x² - 5x + 6",
+      "C": "f(x) = x² + x - 6",
+      "D": "f(x) = x² - x - 6"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_37",
+    "disciplina": "Matemática",
+    "assunto": "Probabilidade",
+    "enunciado": "Em um baralho de 52 cartas, qual a probabilidade de se retirar um Rei?",
+    "opcoes": {
+      "A": "1/52",
+      "B": "4/48",
+      "C": "1/13",
+      "D": "1/4"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_38",
+    "disciplina": "Matemática",
+    "assunto": "Probabilidade",
+    "enunciado": "Ao lançar dois dados comuns, qual a probabilidade de a soma dos pontos ser igual a 7?",
+    "opcoes": {
+      "A": "1/36",
+      "B": "1/6",
+      "C": "7/36",
+      "D": "1/12"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_39",
+    "disciplina": "Matemática",
+    "assunto": "Probabilidade",
+    "enunciado": "Numa caixa há 4 bolas brancas e 6 bolas pretas. Retirando-se uma bola ao acaso, qual a probabilidade de ela ser branca OU preta?",
+    "opcoes": {
+      "A": "0,4",
+      "B": "0,6",
+      "C": "1",
+      "D": "0,24"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_40",
+    "disciplina": "Matemática",
+    "assunto": "Probabilidade",
+    "enunciado": "Sabendo que um aluno é da turma A, que tem 30 alunos, qual a probabilidade de ele ser o João, que estuda na turma A?",
+    "opcoes": {
+      "A": "1/30",
+      "B": "1/100",
+      "C": "30/100",
+      "D": "Não é possível calcular"
+    },
+    "gabarito": "A"
+  },
+  {
+    "id": "mat_41",
+    "disciplina": "Matemática",
+    "assunto": "Análise Combinatória",
+    "enunciado": "Um restaurante oferece 4 tipos de prato principal, 3 tipos de bebida e 2 tipos de sobremesa. De quantas maneiras distintas um cliente pode montar uma refeição com um item de cada categoria?",
+    "opcoes": {
+      "A": "9",
+      "B": "12",
+      "C": "24",
+      "D": "36"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_42",
+    "disciplina": "Matemática",
+    "assunto": "Análise Combinatória",
+    "enunciado": "De quantas formas 5 pessoas podem se sentar em 5 cadeiras enfileiradas?",
+    "opcoes": {
+      "A": "5",
+      "B": "25",
+      "C": "120",
+      "D": "3125"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "mat_43",
+    "disciplina": "Matemática",
+    "assunto": "Análise Combinatória",
+    "enunciado": "Um time de 4 pessoas precisa ser formado a partir de um grupo de 10 pessoas. De quantas maneiras isso pode ser feito?",
+    "opcoes": {
+      "A": "40",
+      "B": "210",
+      "C": "5040",
+      "D": "10000"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_44",
+    "disciplina": "Matemática",
+    "assunto": "Trigonometria",
+    "enunciado": "Um avião decola, percorrendo uma rampa retilínea de 1000 m. Ao final, está a uma altura de 500 m. Qual é o seno do ângulo de decolagem?",
+    "opcoes": {
+      "A": "2",
+      "B": "0,5",
+      "C": "1",
+      "D": "500"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "mat_45",
+    "disciplina": "Matemática",
+    "assunto": "Trigonometria",
+    "enunciado": "No ciclo trigonométrico, o valor do cosseno de um arco corresponde à:",
+    "opcoes": {
+      "A": "Projeção do arco no eixo das ordenadas (y)",
+      "B": "Projeção do arco no eixo das abscissas (x)",
+      "C": "Comprimento do arco",
+      "D": "Tangente do arco"
+    },
+    "gabarito": "B"
+  },
+
+  {
+    "id": "fis_1",
+    "disciplina": "Física",
+    "assunto": "Mecânica",
+    "enunciado": "Um carro em MRU percorre uma distância de 200m em 10s. Qual sua velocidade?",
+    "opcoes": {
+      "A": "20 m/s",
+      "B": "2 m/s",
+      "C": "2000 m/s",
+      "D": "10 m/s"
+    },
+    "gabarito": "A"
+  },
+  {
+    "id": "fis_2",
+    "disciplina": "Física",
+    "assunto": "Mecânica",
+    "enunciado": "Um corpo parte do repouso em MRUV e atinge 30 m/s em 6s. Qual sua aceleração?",
+    "opcoes": {
+      "A": "180 m/s²",
+      "B": "136 m/s²",
+      "C": "5 m/s²",
+      "D": "0,2 m/s²"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_3",
+    "disciplina": "Física",
+    "assunto": "Mecânica",
+    "enunciado": "O que acontece com um objeto em queda livre (desprezando a resistência do ar)?",
+    "opcoes": {
+      "A": "Sua velocidade é constante.",
+      "B": "Sua aceleração aumenta.",
+      "C": "Sua aceleração é a da gravidade (g).",
+      "D": "Ele não tem aceleração."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_4",
+    "disciplina": "Física",
+    "assunto": "Mecânica",
+    "enunciado": "Um projétil é lançado verticalmente para cima. No ponto mais alto de sua trajetória, sua velocidade é:",
+    "opcoes": {
+      "A": "Máxima",
+      "B": "Constante",
+      "C": "Nula",
+      "D": "Igual à da gravidade"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_5",
+    "disciplina": "Física",
+    "assunto": "Mecânica",
+    "enunciado": "De acordo com a 1ª Lei de Newton (Lei da Inércia), um corpo em movimento retilíneo uniforme tende a:",
+    "opcoes": {
+      "A": "Parar imediatamente.",
+      "B": "Aumentar sua velocidade.",
+      "C": "Manter seu estado de movimento.",
+      "D": "Mudar de direção."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_6",
+    "disciplina": "Física",
+    "assunto": "Mecânica",
+    "enunciado": "Uma força de 50 N é aplicada a um corpo de massa 10 kg. Qual a aceleração adquirida pelo corpo?",
+    "opcoes": {
+      "A": "500 m/s²",
+      "B": "5 m/s²",
+      "C": "0,2 m/s²",
+      "D": "40 m/s²"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_7",
+    "disciplina": "Física",
+    "assunto": "Mecânica",
+    "enunciado": "Qual é o princípio por trás da afirmação \"toda ação tem uma reação igual e em sentido contrário\"?",
+    "opcoes": {
+      "A": "1ª Lei de Newton",
+      "B": "2ª Lei de Newton",
+      "C": "3ª Lei de Newton",
+      "D": "Lei da Gravitação Universal"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_8",
+    "disciplina": "Física",
+    "assunto": "Mecânica",
+    "enunciado": "O que é Trabalho na física?",
+    "opcoes": {
+      "A": "A energia que um corpo possui devido ao seu movimento.",
+      "B": "A energia transferida pela aplicação de uma força ao longo de um deslocamento.",
+      "C": "A taxa de variação da energia.",
+      "D": "A energia armazenada devido à posição de um corpo."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_9",
+    "disciplina": "Física",
+    "assunto": "Mecânica",
+    "enunciado": "Um corpo de 2 kg está a uma altura de 10 m do solo. Qual sua energia potencial gravitacional? (Use g = 10 m/s²)",
+    "opcoes": {
+      "A": "20 J",
+      "B": "100 J",
+      "C": "200 J",
+      "D": "12 J"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_10",
+    "disciplina": "Física",
+    "assunto": "Mecânica",
+    "enunciado": "A energia cinética de um corpo depende de quais grandezas?",
+    "opcoes": {
+      "A": "Massa e altura",
+      "B": "Força e deslocamento",
+      "C": "Massa e velocidade",
+      "D": "Força e tempo"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_11",
+    "disciplina": "Física",
+    "assunto": "Eletrodinâmica",
+    "enunciado": "Um resistor de 15 Ω é percorrido por uma corrente de 3 A. Qual a tensão (ddp) em seus terminais?",
+    "opcoes": {
+      "A": "5 V",
+      "B": "18 V",
+      "C": "45 V",
+      "D": "0,2 V"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_12",
+    "disciplina": "Física",
+    "assunto": "Eletrodinâmica",
+    "enunciado": "Um chuveiro elétrico tem resistência de 10 Ω e é ligado em uma tomada de 220 V. Qual a corrente que o atravessa?",
+    "opcoes": {
+      "A": "2200 A",
+      "B": "22 A",
+      "C": "0,045 A",
+      "D": "210 A"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_13",
+    "disciplina": "Física",
+    "assunto": "Eletrodinâmica",
+    "enunciado": "Um ferro de passar com potência de 1100 W é ligado em uma rede de 110 V. Qual a corrente elétrica consumida?",
+    "opcoes": {
+      "A": "121000 A",
+      "B": "10 A",
+      "C": "0,1 A",
+      "D": "1100 A"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_14",
+    "disciplina": "Física",
+    "assunto": "Eletrodinâmica",
+    "enunciado": "Qual o principal efeito responsável pelo aquecimento de um chuveiro elétrico?",
+    "opcoes": {
+      "A": "Efeito Fotoelétrico",
+      "B": "Efeito Joule",
+      "C": "Efeito Doppler",
+      "D": "Efeito Magnético"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_15",
+    "disciplina": "Física",
+    "assunto": "Eletrodinâmica",
+    "enunciado": "Um aparelho consome 2 kWh de energia. Se a tarifa é R$ 0,50 por kWh, qual o custo do consumo?",
+    "opcoes": {
+      "A": "R$ 0,25",
+      "B": "R$ 0,50",
+      "C": "R$ 1,00",
+      "D": "R$ 2,50"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_16",
+    "disciplina": "Física",
+    "assunto": "Eletrodinâmica",
+    "enunciado": "Como se calcula a resistência equivalente de dois resistores (R1 e R2) em série?",
+    "opcoes": {
+      "A": "Req = R1 + R2",
+      "B": "Req = (R1 * R2) / (R1 + R2)",
+      "C": "1/Req = 1/R1 - 1/R2",
+      "D": "Req = R1"
+    },
+    "gabarito": "A"
+  },
+  {
+    "id": "fis_17",
+    "disciplina": "Física",
+    "assunto": "Eletrodinâmica",
+    "enunciado": "Como se calcula a resistência equivalente de dois resistores (R1 e R2) em paralelo?",
+    "opcoes": {
+      "A": "Req = R1 + R2",
+      "B": "1/Req = 1/R1 + 1/R2",
+      "C": "Req = R2",
+      "D": "Req = R1 - R2"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_18",
+    "disciplina": "Física",
+    "assunto": "Eletrodinâmica",
+    "enunciado": "Em uma associação de resistores em série, qual grandeza é a mesma para todos os resistores?",
+    "opcoes": {
+      "A": "A tensão (ddp)",
+      "B": "A resistência",
+      "C": "A potência dissipada",
+      "D": "A corrente elétrica"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "fis_19",
+    "disciplina": "Física",
+    "assunto": "Ondulatória",
+    "enunciado": "Uma onda tem frequência de 50 Hz e comprimento de onda de 2 m. Qual a sua velocidade de propagação?",
+    "opcoes": {
+      "A": "25 m/s",
+      "B": "0,04 m/s",
+      "C": "100 m/s",
+      "D": "52 m/s"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_20",
+    "disciplina": "Física",
+    "assunto": "Ondulatória",
+    "enunciado": "O som é um exemplo de que tipo de onda quanto à sua natureza e propagação?",
+    "opcoes": {
+      "A": "Eletromagnética e transversal",
+      "B": "Mecânica e longitudinal",
+      "C": "Eletromagnética e longitudinal",
+      "D": "Mecânica e transversal"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_21",
+    "disciplina": "Física",
+    "assunto": "Ondulatória",
+    "enunciado": "Qual fenômeno ondulatório explica por que conseguimos ouvir um som mesmo estando atrás de um muro?",
+    "opcoes": {
+      "A": "Reflexão",
+      "B": "Refração",
+      "C": "Difração",
+      "D": "Polarização"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_22",
+    "disciplina": "Física",
+    "assunto": "Ondulatória",
+    "enunciado": "A mudança na velocidade de propagação de uma onda ao passar de um meio para outro é chamada de:",
+    "opcoes": {
+      "A": "Interferência",
+      "B": "Refração",
+      "C": "Ressonância",
+      "D": "Reflexão"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_23",
+    "disciplina": "Física",
+    "assunto": "Ondulatória",
+    "enunciado": "O que acontece quando duas ondas se encontram e se somam, resultando em uma onda de maior amplitude?",
+    "opcoes": {
+      "A": "Interferência destrutiva",
+      "B": "Interferência construtiva",
+      "C": "Difração",
+      "D": "Polarização"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_24",
+    "disciplina": "Física",
+    "assunto": "Ondulatória",
+    "enunciado": "A qualidade do som que nos permite diferenciar um violino de um piano tocando a mesma nota musical é:",
+    "opcoes": {
+      "A": "Altura",
+      "B": "Intensidade",
+      "C": "Timbre",
+      "D": "Velocidade"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_25",
+    "disciplina": "Física",
+    "assunto": "Ondulatória",
+    "enunciado": "Em um violão, para produzir um som mais agudo (maior frequência), o que se deve fazer com a corda?",
+    "opcoes": {
+      "A": "Aumentar seu comprimento",
+      "B": "Diminuir sua tensão",
+      "C": "Aumentar sua espessura",
+      "D": "Diminuir seu comprimento"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "fis_26",
+    "disciplina": "Física",
+    "assunto": "Termologia",
+    "enunciado": "Qual é a definição de calor?",
+    "opcoes": {
+      "A": "Medida da temperatura de um corpo.",
+      "B": "Energia térmica contida em um corpo.",
+      "C": "Energia térmica em trânsito entre corpos com diferentes temperaturas.",
+      "D": "Energia necessária para derreter um corpo."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_27",
+    "disciplina": "Física",
+    "assunto": "Termologia",
+    "enunciado": "A quantidade de calor necessária para elevar em 1°C a temperatura de 1g de uma substância é chamada de:",
+    "opcoes": {
+      "A": "Calor latente",
+      "B": "Capacidade térmica",
+      "C": "Calor específico",
+      "D": "Equivalente em água"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_28",
+    "disciplina": "Física",
+    "assunto": "Termologia",
+    "enunciado": "Qual tipo de calor está associado à mudança de estado físico de uma substância, sem alteração de temperatura?",
+    "opcoes": {
+      "A": "Calor sensível",
+      "B": "Calor latente",
+      "C": "Calor específico",
+      "D": "Calor de combustão"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_29",
+    "disciplina": "Física",
+    "assunto": "Termologia",
+    "enunciado": "A primeira lei da Termodinâmica é uma afirmação do princípio de:",
+    "opcoes": {
+      "A": "Conservação da massa",
+      "B": "Conservação da energia",
+      "C": "Aumento da entropia",
+      "D": "Equilíbrio térmico"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_30",
+    "disciplina": "Física",
+    "assunto": "Termologia",
+    "enunciado": "Num transformação isobárica, qual grandeza do gás permanece constante?",
+    "opcoes": {
+      "A": "Temperatura",
+      "B": "Volume",
+      "C": "Pressão",
+      "D": "Energia interna"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_31",
+    "disciplina": "Física",
+    "assunto": "Termologia",
+    "enunciado": "O que acontece com o comprimento de uma barra de metal quando ela é aquecida?",
+    "opcoes": {
+      "A": "Diminui",
+      "B": "Aumenta",
+      "C": "Permanece o mesmo",
+      "D": "Depende do material"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_32",
+    "disciplina": "Física",
+    "assunto": "Óptica Geométrica",
+    "enunciado": "Qual é o princípio da propagação retilínea da luz?",
+    "opcoes": {
+      "A": "A luz se propaga sempre na mesma velocidade.",
+      "B": "Em meios homogêneos e transparentes, a luz se propaga em linha reta.",
+      "C": "Os raios de luz são reversíveis.",
+      "D": "A luz não se propaga no vácuo."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_33",
+    "disciplina": "Física",
+    "assunto": "Óptica Geométrica",
+    "enunciado": "A imagem formada por um espelho plano é sempre:",
+    "opcoes": {
+      "A": "Real, invertida e maior que o objeto",
+      "B": "Virtual, direita e do mesmo tamanho do objeto",
+      "C": "Real, direita e menor que o objeto",
+      "D": "Virtual, invertida e do mesmo tamanho do objeto"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_34",
+    "disciplina": "Física",
+    "assunto": "Óptica Geométrica",
+    "enunciado": "Um objeto é colocado em frente a um espelho côncavo, entre o foco e o vértice. A imagem formada é:",
+    "opcoes": {
+      "A": "Real, invertida e menor",
+      "B": "Real, invertida e maior",
+      "C": "Imprópria",
+      "D": "Virtual, direita e maior"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "fis_35",
+    "disciplina": "Física",
+    "assunto": "Óptica Geométrica",
+    "enunciado": "O fenômeno da refração da luz ocorre devido à mudança de qual característica da luz?",
+    "opcoes": {
+      "A": "Frequência",
+      "B": "Amplitude",
+      "C": "Velocidade de propagação",
+      "D": "Cor"
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_36",
+    "disciplina": "Física",
+    "assunto": "Óptica Geométrica",
+    "enunciado": "Lentes convergentes são usadas para corrigir qual defeito de visão?",
+    "opcoes": {
+      "A": "Miopia",
+      "B": "Astigmatismo",
+      "C": "Daltonismo",
+      "D": "Hipermetropia"
+    },
+    "gabarito": "D"
+  },
+  {
+    "id": "fis_37",
+    "disciplina": "Física",
+    "assunto": "Eletromagnetismo",
+    "enunciado": "Qual é a principal característica das linhas de campo magnético de um ímã?",
+    "opcoes": {
+      "A": "São abertas, saindo do polo norte e chegando ao infinito.",
+      "B": "São fechadas, saindo do polo norte e entrando no polo sul.",
+      "C": "Cruzam-se dentro do ímã.",
+      "D": "São sempre paralelas entre si."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_38",
+    "disciplina": "Física",
+    "assunto": "Eletromagnetismo",
+    "enunciado": "A regra da mão direita é usada em eletromagnetismo para determinar:",
+    "opcoes": {
+      "A": "A intensidade da força elétrica.",
+      "B": "A direção e o sentido do campo magnético gerado por uma corrente.",
+      "C": "O valor da resistência de um material.",
+      "D": "A potência de um circuito."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_39",
+    "disciplina": "Física",
+    "assunto": "Eletromagnetismo",
+    "enunciado": "Uma carga elétrica em movimento em um campo magnético pode sofrer a ação de uma força magnética. Se a carga está em repouso, a força magnética é:",
+    "opcoes": {
+      "A": "Máxima",
+      "B": "Nula",
+      "C": "Constante e diferente de zero",
+      "D": "Depende da intensidade do campo"
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_40",
+    "disciplina": "Física",
+    "assunto": "Eletromagnetismo",
+    "enunciado": "A Lei de Faraday descreve qual fenômeno?",
+    "opcoes": {
+      "A": "A geração de um campo elétrico por uma carga.",
+      "B": "A geração de uma corrente elétrica em um circuito por uma variação de fluxo magnético.",
+      "C": "A força de atração entre duas massas.",
+      "D": "A dissipação de energia por um resistor."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_41",
+    "disciplina": "Física",
+    "assunto": "Estática e Hidrostática",
+    "enunciado": "Para que um ponto material esteja em equilíbrio, o que é necessário?",
+    "opcoes": {
+      "A": "Que a soma das velocidades seja nula.",
+      "B": "Que a força resultante sobre ele seja nula.",
+      "C": "Que ele esteja em repouso.",
+      "D": "Que nenhuma força atue sobre ele."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_42",
+    "disciplina": "Física",
+    "assunto": "Estática e Hidrostática",
+    "enunciado": "O que é o torque ou momento de uma força?",
+    "opcoes": {
+      "A": "A tendência de uma força de causar um deslocamento linear.",
+      "B": "A tendência de uma força de causar uma rotação.",
+      "C": "A energia associada a uma força.",
+      "D": "O trabalho realizado por uma força."
+    },
+    "gabarito": "B"
+  },
+  {
+    "id": "fis_43",
+    "disciplina": "Física",
+    "assunto": "Estática e Hidrostática",
+    "enunciado": "O Teorema de Stevin relaciona a diferença de pressão entre dois pontos de um fluido com:",
+    "opcoes": {
+      "A": "A velocidade do fluido.",
+      "B": "A viscosidade do fluido.",
+      "C": "A diferença de profundidade entre os pontos.",
+      "D": "A temperatura do fluido."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_44",
+    "disciplina": "Física",
+    "assunto": "Estática e Hidrostática",
+    "enunciado": "O que afirma o Princípio de Arquimedes sobre o empuxo?",
+    "opcoes": {
+      "A": "Todo corpo imerso em um fluido recebe uma força vertical para baixo.",
+      "B": "O empuxo é igual ao peso do corpo.",
+      "C": "O empuxo é igual ao peso do volume de fluido deslocado pelo corpo.",
+      "D": "O empuxo depende da forma do corpo."
+    },
+    "gabarito": "C"
+  },
+  {
+    "id": "fis_45",
+    "disciplina": "Física",
+    "assunto": "Estática e Hidrostática",
+    "enunciado": "Por que um navio de ferro flutua na água?",
+    "opcoes": {
+      "A": "Porque o ferro é menos denso que a água.",
+      "B": "Porque a densidade média do navio (considerando o ar interno) é menor que a da água.",
+      "C": "Por causa da tensão superficial da água.",
+      "D": "Porque a pressão atmosférica o sustenta."
+    },
+    "gabarito": "B"
+  }
+]

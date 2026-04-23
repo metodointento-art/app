@@ -1,0 +1,1454 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+// 1. IMPORTAÇÕES DO FIREBASE E GRÁFICOS
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
+import { Bar, Line, Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend);
+ChartJS.defaults.font.family = "inherit";
+ChartJS.defaults.plugins.legend.position = 'bottom';
+ChartJS.defaults.plugins.legend.labels.usePointStyle = true;
+
+const cardClass = "bg-white rounded-xl border border-slate-200 p-6 shadow-sm transition-colors";
+const inputClass = "w-full p-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-[#060242] transition-all font-medium text-[#060242]";
+const labelClass = "block text-[11px] font-medium text-slate-400 uppercase mb-2 tracking-wider";
+
+// Hierarquia de botões
+const btnPrimary = "bg-[#060242] hover:bg-blue-900 text-white font-semibold px-6 py-3 rounded-lg transition-all text-sm";
+const btnCTA     = "bg-[#D4B726] hover:bg-yellow-500 text-white font-semibold px-6 py-3 rounded-lg transition-all text-sm";
+const btnGhost   = "bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-medium px-6 py-3 rounded-lg transition-all text-sm";
+
+// =========================================================================
+// LISTA FIXA: DISCIPLINAS DO ENEM 
+// =========================================================================
+const DISCIPLINAS_ENEM = {
+  'Linguagens': ['Português', 'Literatura', 'Inglês', 'Espanhol', 'Artes', 'Educação Física'],
+  'Humanas': ['História', 'Geografia', 'Filosofia', 'Sociologia'],
+  'Natureza': ['Biologia', 'Física', 'Química'],
+  'Matemática': ['Matemática']
+};
+
+// =========================================================================
+// COMPONENTE: CARDS DE DESEMPENHO (Anterior -> Atual)
+// =========================================================================
+const RenderMiniCards = ({ dataArray, isFirstWeek, fullBorder }) => {
+  if (!dataArray || !Array.isArray(dataArray)) return null;
+  const bColFull = { 'emerald': 'border-[#10b981]', 'purple': 'border-[#a855f7]', 'blue': 'border-[#3b82f6]', 'red': 'border-[#ef4444]', 'slate': 'border-slate-300' };
+  const textColFull = { 'emerald': 'text-[#065f46]', 'purple': 'text-[#581c87]', 'blue': 'text-[#1e3a8a]', 'red': 'text-[#7f1d1d]', 'slate': 'text-slate-600' };
+
+  return dataArray.map((item, idx) => {
+    const prevStr = (item.prev || '0').toString().replace('%', '').replace(',', '.');
+    const currStr = (item.curr || '0').toString().replace('%', '').replace(',', '.');
+    const diff = parseFloat(currStr) - parseFloat(prevStr);
+    
+    const invertido = (item.name || '').toLowerCase().includes('atrasad');
+    let valCol = "text-[#060242]"; let arrow = ""; let positivo = null;
+    if (!isFirstWeek && diff !== 0) {
+      const subiu = diff > 0;
+      positivo = invertido ? !subiu : subiu;
+      valCol = positivo ? "text-emerald-700" : "text-red-700";
+      arrow = subiu ? "▲" : "▼";
+    }
+
+    const bgTint = (!fullBorder && !isFirstWeek && diff !== 0) ? (positivo ? 'bg-emerald-50' : 'bg-red-50') : 'bg-white';
+    let cardClasses = fullBorder ? `${bgTint} rounded-xl border border-l-4 ${bColFull[item.theme || 'slate']} p-5 shadow-sm flex flex-col justify-center` : `${bgTint} rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-center`;
+    let titleColor = fullBorder ? textColFull[item.theme || 'slate'] : "text-slate-500";
+
+    return (
+      <div key={idx} className={cardClasses}>
+        <span className={`text-[11px] font-medium uppercase mb-3 tracking-wide ${titleColor}`}>{item.name || ''}</span>
+        {isFirstWeek ? (
+          <span className={`text-3xl font-bold ${valCol}`}>{item.curr || '0'}</span>
+        ) : (
+          <div className="flex items-center gap-3">
+            <span className="text-xl font-light text-slate-300">{item.prev || '0'}</span>
+            <span className="text-slate-200 font-normal">→</span>
+            <div className="flex items-baseline gap-2">
+              <span className={`text-3xl font-bold ${valCol}`}>{item.curr || '0'}</span>
+              {diff !== 0 && (
+                <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full leading-none ${positivo ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                  {diff > 0 ? '+' : ''}{diff % 1 === 0 ? diff.toFixed(0) : diff.toFixed(1)}{arrow}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  });
+};
+
+export default function PainelDoAluno() {
+  const router = useRouter();
+  const [sessao, setSessao] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [fotoUsuario, setFotoUsuario] = useState(null);
+  
+  // Estados de Interface e Layout
+  const [abaAtiva, setAbaAtiva] = useState(1);
+  const [menuMobileAberto, setMenuMobileAberto] = useState(false);
+  const [sidebarColapsada, setSidebarColapsada] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', tipo: 'success' });
+  const [showCharts, setShowCharts] = useState(false);
+  const [diasEnem, setDiasEnem] = useState('--');
+
+  const [checkboxes, setCheckboxes] = useState({});
+  const [tarefas, setTarefas] = useState([]);
+  const [novaTarefa, setNovaTarefa] = useState('');
+  const [planoChecks, setPlanoChecks] = useState({});
+
+  // CADERNO DE ERROS
+  const [caderno, setCaderno] = useState([]);
+  const [cadernoCarregando, setCadernoCarregando] = useState(false);
+  const [modalCadernoAberto, setModalCadernoAberto] = useState(false);
+  const [cardVirado, setCardVirado] = useState({});
+  const [filtroCaderno, setFiltroCaderno] = useState('Todas');
+  const [formCaderno, setFormCaderno] = useState({ disciplina: '', topico: '', data: new Date().toISOString().split('T')[0], pergunta: '', resposta: '' });
+
+  // ESTADOS DO SIMULADO 
+  const [modalRegistroAberto, setModalRegistroAberto] = useState(false);
+  const [tipoModelo, setTipoModelo] = useState("ENEM"); 
+  const [formRegistro, setFormRegistro] = useState({ data: '', especificacao: '', lg: '', ch: '', cn: '', mat: '', redacao: '' });
+  const [topicosDicionario, setTopicosDicionario] = useState({});
+  
+  // A Visualização da Análise
+  const [simuladoAnalise, setSimuladoAnalise] = useState(null);
+  const [abaAnalise, setAbaAnalise] = useState('Objetiva'); 
+  const [areaExpandida, setAreaExpandida] = useState(null); // O NOVO CONTROLE DA SANFONA
+  const [formAutopsia, setFormAutopsia] = useState({ erros: [], kolb: { exp: '', ref: '', con: '', acao: '', redacao: '' } });
+  const [salvandoAutopsia, setSalvandoAutopsia] = useState(false);
+
+  const [simuladosLista, setSimuladosLista] = useState([]);
+
+  const mostrarToast = (message, tipo = 'success') => {
+    setToast({ show: true, message, tipo });
+    setTimeout(() => setToast({ show: false, message: '', tipo: 'success' }), 3500);
+  };
+
+  useEffect(() => {
+    document.documentElement.classList.remove('dark');
+    
+    const buscarTopicos = async () => {
+      try {
+        const res = await fetch('/api/mentor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'buscarTopicosGlobais' }) });
+        const data = await res.json();
+        if (data.status === 'sucesso') setTopicosDicionario(data.topicos || {});
+      } catch (e) { console.error("Erro ao buscar tópicos"); }
+    };
+    buscarTopicos();
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user?.photoURL) setFotoUsuario(user.photoURL);
+      const emailDefinitivo = (user && user.email) ? user.email : sessionStorage.getItem('emailLogado');
+      if (!emailDefinitivo) { router.push('/'); return; }
+
+      try {
+        const res = await fetch('/api/mentor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'login', email: emailDefinitivo }) });
+        const resposta = await res.json();
+
+        if (resposta.status === 200) {
+          if (resposta.perfil === 'PENDENTE') { router.push('/hub'); } 
+          else {
+            setSessao(resposta);
+            const d = new Date('2026-11-01T00:00:00');
+            const diff = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+            setDiasEnem(diff > 0 ? diff : 0);
+            if (resposta.dadosPainel?.sim?.lista) {
+              setSimuladosLista(resposta.dadosPainel.sim.lista);
+            } else {
+              setSimuladosLista([]); // Limpa os mocks se não houver dados reais
+            }
+            const savedChecks = {};
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith('Intento_')) savedChecks[key] = localStorage.getItem(key) === 'true';
+            }
+            setCheckboxes(savedChecks);
+          }
+        } else { router.push('/'); }
+      } catch (e) { router.push('/'); } 
+      finally { setCarregando(false); }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
+  useEffect(() => {
+    if (!sessao) return;
+    const d = sessao.dadosPainel || {};
+    const nome = String(d.aluno?.nome || sessao.email || "Aluno Intento");
+    const base = "Intento_" + nome.replace(/\s+/g, '_') + "_";
+    const savedTarefas = localStorage.getItem(base + 'tarefas');
+    if (savedTarefas) setTarefas(JSON.parse(savedTarefas));
+    const savedChecks = localStorage.getItem(base + 'planoChecks');
+    if (savedChecks) setPlanoChecks(JSON.parse(savedChecks));
+
+    const idPlanilha = sessao?.idPlanilha || sessao?.idPlanilhaAluno || sessao?.dadosPainel?.idPlanilha;
+    if (!idPlanilha) return;
+    setCadernoCarregando(true);
+    fetch('/api/mentor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acao: 'listarCaderno', idPlanilha }),
+    }).then(r => r.json()).then(data => {
+      if (data.status === 'sucesso') setCaderno(data.cards || []);
+    }).finally(() => setCadernoCarregando(false));
+  }, [sessao]);
+
+  // =========================================================================
+  // FUNÇÕES DO SIMULADO (A ANÁLISE)
+  // =========================================================================
+  const iniciarAutopsia = (sim) => {
+    // SE O SIMULADO JÁ TEM DADOS SALVOS, NÓS CARREGAMOS A MEMÓRIA!
+    if (sim.erros && sim.erros.length > 0) {
+      setFormAutopsia({ erros: sim.erros, kolb: sim.kolb });
+      setSimuladoAnalise(sim);
+      setAbaAnalise('Objetiva');
+      setAreaExpandida(null);
+      window.scrollTo(0, 0); 
+      return; // Para a função aqui, não gera linhas novas.
+    }
+
+    // SE É A PRIMEIRA VEZ, GERA AS CAIXAS VAZIAS (Como já funcionava)
+    let errosGerados = [];
+    let idCounter = 0;
+    let primeiraAreaComErro = null;
+
+    if (sim.modelo === 'ENEM') {
+      const areas = [
+        { nome: 'Linguagens', acertos: parseInt(sim.lg || 0), total: 45 },
+        { nome: 'Humanas', acertos: parseInt(sim.ch || 0), total: 45 },
+        { nome: 'Natureza', acertos: parseInt(sim.cn || 0), total: 45 },
+        { nome: 'Matemática', acertos: parseInt(sim.mat || 0), total: 45 }
+      ];
+
+      areas.forEach(a => {
+        const qtdErros = a.total - a.acertos;
+        if (qtdErros > 0 && !primeiraAreaComErro) primeiraAreaComErro = a.nome;
+        
+        for(let i = 0; i < qtdErros; i++) {
+          const disciplinaPadrao = a.nome === 'Matemática' ? 'Matemática' : '';
+          errosGerados.push({ id: idCounter++, area: a.nome, questao: '', disciplina: disciplinaPadrao, topico: '', tipo: '' });
+        }
+      });
+    }
+
+    setFormAutopsia({ erros: errosGerados, kolb: { exp: '', ref: '', con: '', acao: '', redacao: '' } });
+    setSimuladoAnalise(sim);
+    setAbaAnalise('Objetiva');
+    setAreaExpandida(primeiraAreaComErro);
+    window.scrollTo(0, 0); 
+  };
+
+  
+  // A FUNÇÃO DE ESTADO CORRIGIDA (Atualização em Lote)
+  const atualizarErro = (id, atualizacoes) => {
+    const novosErros = formAutopsia.erros.map(e => e.id === id ? { ...e, ...atualizacoes } : e);
+    setFormAutopsia({ ...formAutopsia, erros: novosErros });
+  };
+
+  // Função auxiliar para capturar o ID da planilha de forma segura
+  const getSpreadsheetId = () => {
+    return sessao?.idPlanilha || sessao?.idPlanilhaAluno || sessao?.dadosPainel?.idPlanilha;
+  };
+
+  const salvarSimulado = async () => {
+    const idPlanilha = getSpreadsheetId();
+    
+    if (!idPlanilha) {
+      mostrarToast("Erro: ID da planilha não encontrado na sessão.", "error");
+      return;
+    }
+
+    if(!formRegistro.data || !formRegistro.especificacao) {
+      mostrarToast("Preencha a data e a especificação.", "error");
+      return;
+    }
+
+    if (tipoModelo === 'ENEM') {
+      const invalido = ['lg', 'ch', 'cn', 'mat'].some(k => {
+        const v = parseInt(formRegistro[k]);
+        return isNaN(v) || v < 0 || v > 45;
+      });
+      if (invalido) {
+        mostrarToast("Acertos por área devem estar entre 0 e 45.", "error");
+        return;
+      }
+    }
+
+    mostrarToast("Registrando Simulado...", "success");
+    try {
+      const res = await fetch('/api/mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          acao: 'salvarSimulado', 
+          idPlanilha: idPlanilha, // Agora garantido!
+          ...formRegistro 
+        })
+      });
+      const data = await res.json();
+      
+      if (data.status === 'sucesso') { 
+        mostrarToast("Registro Salvo! A página será atualizada.", "success");
+        setModalRegistroAberto(false);
+        setTimeout(() => window.location.reload(), 1500); 
+      } else {
+        mostrarToast("Erro no servidor: " + data.mensagem, "error");
+      }
+    } catch (e) { 
+      mostrarToast("Erro de conexão ao salvar.", "error"); 
+    }
+  };
+
+  const salvarAutopsia = async () => {
+    const idPlanilha = getSpreadsheetId();
+
+    // Verifica se o aluno tocou na análise objetiva nesta sessão
+    const objetivaModificada = formAutopsia.erros.some(e => e.questao || e.disciplina || e.topico || e.tipo);
+
+    if (objetivaModificada) {
+      const faltam = formAutopsia.erros.some(e => !e.questao || !e.disciplina || !e.topico || !e.tipo);
+      if (faltam) {
+        mostrarToast("Existem erros não classificados na Análise Objetiva.", "error");
+        setAbaAnalise('Objetiva'); return;
+      }
+    }
+
+    if (!formAutopsia.kolb.exp || !formAutopsia.kolb.acao || !formAutopsia.kolb.redacao) {
+      mostrarToast("Preencha os campos obrigatórios no Kolb e Redação.", "error");
+      setAbaAnalise('Subjetiva'); return;
+    }
+
+    setSalvandoAutopsia(true);
+    try {
+      const payload = {
+        acao: 'salvarAutopsia',
+        idPlanilha: idPlanilha,
+        idSimulado: simuladoAnalise.id,
+        statusAnalise: 'Concluída',
+        kolb: formAutopsia.kolb
+      };
+      // Só reenvia os erros se foram modificados nesta sessão, para não sobrescrever dados já salvos
+      if (objetivaModificada) payload.erros = formAutopsia.erros;
+
+      const res = await fetch('/api/mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.status === 'sucesso') {
+        mostrarToast("Análise gravada com sucesso!", "success");
+        setSimuladoAnalise(null);
+        setTimeout(() => window.location.reload(), 1500);
+      }
+    } catch (e) {
+      mostrarToast("Erro ao sincronizar análise.", "error");
+    } finally {
+      setSalvandoAutopsia(false);
+    }
+  };
+
+  const salvarProgressoObjetiva = async () => {
+    const idPlanilha = getSpreadsheetId();
+
+    const faltam = formAutopsia.erros.some(e => !e.questao || !e.disciplina || !e.topico || !e.tipo);
+    if (faltam) { 
+      mostrarToast("Preencha todos os erros da parte Objetiva antes de pausar.", "error"); 
+      return; 
+    }
+    
+    mostrarToast("Salvando progresso...", "success");
+    try {
+      await fetch('/api/mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          acao: 'salvarAutopsia', 
+          idPlanilha: idPlanilha,
+          idSimulado: simuladoAnalise.id,
+          statusAnalise: 'Pendente',
+          erros: formAutopsia.erros,
+          kolb: formAutopsia.kolb
+        })
+      });
+      mostrarToast("Progresso salvo!", "success");
+      setSimuladoAnalise(null);
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (e) {
+      mostrarToast("Erro ao salvar progresso.", "error");
+    }
+  };
+
+  const toggleTask = (taskId) => {
+    const key = alunoNameKey + taskId;
+    const newVal = !checkboxes[key];
+    setCheckboxes(prev => ({ ...prev, [key]: newVal }));
+    if (newVal) localStorage.setItem(key, 'true'); else localStorage.removeItem(key);
+  };
+
+  const zerarRotina = () => {
+    if (window.confirm("Zerar as atividades e iniciar uma nova semana?")) {
+      Object.keys(checkboxes).forEach(key => localStorage.removeItem(key));
+      setCheckboxes({});
+    }
+  };
+
+  const getBadge = (val) => {
+    if (val >= 90) return <span className="inline-flex items-center px-2.5 py-1 bg-[#060242] text-[#D4B726] text-[10px] uppercase tracking-wide font-medium rounded-full mt-2">Elite</span>;
+    if (val >= 80) return <span className="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] uppercase tracking-wide font-medium rounded-full mt-2">Core</span>;
+    if (val >= 70) return <span className="inline-flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] uppercase tracking-wide font-medium rounded-full mt-2">Starter</span>;
+    return null;
+  };
+
+  if (carregando || !sessao) {
+    return (
+      <div className="flex h-screen bg-slate-50 overflow-hidden">
+        <aside className="hidden md:flex flex-col w-72 bg-white border-r border-slate-200">
+          <div className="p-6 border-b border-slate-100"><div className="h-8 w-40 bg-slate-200 rounded-lg animate-pulse" /></div>
+          <div className="px-6 py-5 border-b border-slate-100"><div className="h-4 w-24 bg-slate-200 rounded animate-pulse mb-3" /><div className="h-10 w-full bg-slate-200 rounded-xl animate-pulse" /></div>
+          <div className="px-4 py-4 space-y-2">
+            {[1,2,3,4,5,6].map(i => <div key={i} className="h-11 w-full bg-slate-100 rounded-xl animate-pulse" />)}
+          </div>
+        </aside>
+        <main className="flex-1 p-8 space-y-6">
+          <div className="h-9 w-48 bg-slate-200 rounded-xl animate-pulse" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[1,2,3,4].map(i => <div key={i} className="h-32 bg-slate-200 rounded-xl animate-pulse" />)}
+          </div>
+          <div className="h-40 bg-slate-200 rounded-xl animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1,2,3].map(i => <div key={i} className="h-64 bg-slate-200 rounded-xl animate-pulse" />)}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const dados = sessao.dadosPainel || {};
+  const nomeAluno = String(dados.aluno?.nome || sessao.email || "Aluno Intento");
+  const alunoNameKey = "Intento_" + nomeAluno.replace(/\s+/g, '_') + "_";
+  const snapshot = dados.snapshot || { dom: [0, 0, 0, 0], prog: [0, 0, 0, 0] };
+  const progressoGeral = snapshot.prog?.length ? Math.round(snapshot.prog.reduce((a, b) => a + b, 0) / snapshot.prog.length) : 0;
+  const mensal = dados.mensal || { labels: [], meta: [], horas: [], domTot: [], progTot: [], estresse: [], ansiedade: [], motivacao: [], sono: [] };
+  const semanal = dados.semanal || { isFirstWeek: true, streak: [], geral: [], estilo: [], desempenho: [] };
+  const plano = dados.plano || { data: '--', meta: 'Nenhuma meta', acao: [] };
+  const rotina = dados.rotina || {};
+  const rotinaDias = dados.rotinaDias || ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+  const simKpi = dados.sim?.kpi || { realizados: 0, medAcertos: 0, medRedacao: 0, medLG: 0, medCH: 0, medCN: 0, medMAT: 0, erros: { atencao: 0, inter: 0, rec: 0, lac: 0 } };
+  const histSim = dados.sim?.hist || { labels: [], lg: [], ch: [], cn: [], mat: [] };
+
+  const historicoConsistencia = (mensal.horas || []).map((h, i) => parseFloat(h) >= parseFloat(mensal.meta[i] || 0) && parseFloat(mensal.meta[i] || 0) > 0);
+  
+  const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { grid: { color: 'rgba(150, 150, 150, 0.1)' } }, y: { grid: { color: 'rgba(150, 150, 150, 0.1)' } } } };
+
+  // =========================================================================
+  // MENU DE NAVEGAÇÃO LATERAL
+  // =========================================================================
+  const MENU_ITENS = [
+    { id: 1, nome: 'Visão Geral', icone: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+    { id: 2, nome: 'Acompanhamento Semanal', icone: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+    { id: 3, nome: 'Mentoria', icone: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+    { id: 4, nome: 'Semana Padrão', icone: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { id: 5, nome: 'Simulados', icone: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+    { id: 6, nome: 'Recursos', icone: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' },
+    { id: 7, nome: 'Caderno de Erros', icone: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' }
+  ];
+
+  // ── Caderno de Erros ─────────────────────────────────────────────────────────
+  const disciplinasCaderno = ['Biologia', 'Química', 'Física', 'Matemática', 'Linguagens', 'Humanas', 'Redação'];
+
+  const salvarCardCaderno = async () => {
+    const idPlanilha = getSpreadsheetId();
+    if (!idPlanilha) return;
+    if (!formCaderno.disciplina || !formCaderno.pergunta || !formCaderno.resposta) {
+      mostrarToast('Preencha disciplina, pergunta e resposta.', 'error');
+      return;
+    }
+    const novoCard = { ...formCaderno, id: Date.now(), repeticoes: 0 };
+    try {
+      await fetch('/api/mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acao: 'salvarCardCaderno', idPlanilha, ...novoCard }),
+      });
+      setCaderno(prev => [novoCard, ...prev]);
+      setModalCadernoAberto(false);
+      setFormCaderno({ disciplina: '', topico: '', data: new Date().toLocaleDateString('pt-BR'), pergunta: '', resposta: '' });
+      mostrarToast('Card adicionado!');
+    } catch { mostrarToast('Erro ao salvar.', 'error'); }
+  };
+
+  const incrementarRepeticao = async (id) => {
+    const idPlanilha = getSpreadsheetId();
+    setCaderno(prev => prev.map(c => c.id === id ? { ...c, repeticoes: (c.repeticoes || 0) + 1 } : c));
+    if (idPlanilha) fetch('/api/mentor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acao: 'incrementarRepeticao', idPlanilha, id }),
+    });
+  };
+
+  const deletarCardCaderno = async (id) => {
+    const idPlanilha = getSpreadsheetId();
+    setCaderno(prev => prev.filter(c => c.id !== id));
+    if (idPlanilha) fetch('/api/mentor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acao: 'deletarCardCaderno', idPlanilha, id }),
+    });
+  };
+
+  const togglePlanoCheck = (i) => {
+    const atualizados = { ...planoChecks, [i]: !planoChecks[i] };
+    setPlanoChecks(atualizados);
+    localStorage.setItem(alunoNameKey + 'planoChecks', JSON.stringify(atualizados));
+  };
+
+  const adicionarTarefa = () => {
+    if (!novaTarefa.trim()) return;
+    const nova = { id: Date.now(), texto: novaTarefa.trim(), concluida: false };
+    const atualizadas = [...tarefas, nova];
+    setTarefas(atualizadas);
+    localStorage.setItem(alunoNameKey + 'tarefas', JSON.stringify(atualizadas));
+    setNovaTarefa('');
+  };
+  const toggleTarefa = (id) => {
+    const atualizadas = tarefas.map(t => t.id === id ? { ...t, concluida: !t.concluida } : t);
+    setTarefas(atualizadas);
+    localStorage.setItem(alunoNameKey + 'tarefas', JSON.stringify(atualizadas));
+  };
+  const removerTarefa = (id) => {
+    const atualizadas = tarefas.filter(t => t.id !== id);
+    setTarefas(atualizadas);
+    localStorage.setItem(alunoNameKey + 'tarefas', JSON.stringify(atualizadas));
+  };
+
+  return (
+    <div className="flex h-screen bg-slate-50 text-slate-800 font-sans overflow-hidden">
+      
+      {/* TOAST DE NOTIFICAÇÃO */}
+      {toast.show && (
+        <div className={`fixed top-6 right-6 z-[200] flex items-center gap-3 px-5 py-3 rounded-lg shadow-lg animate-in slide-in-from-right-8 fade-in ${toast.tipo === 'error' ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'}`}>
+          <div className="font-medium text-sm">{toast.message}</div>
+        </div>
+      )}
+
+      {/* SIDEBAR (MENU LATERAL) */}
+      {menuMobileAberto && <div className="fixed inset-0 bg-[#060242]/40 z-30 md:hidden backdrop-blur-sm" onClick={() => setMenuMobileAberto(false)}></div>}
+
+      <aside className={`fixed inset-y-0 left-0 z-40 bg-white border-r border-slate-200 transform transition-all duration-300 flex flex-col md:translate-x-0 ${menuMobileAberto ? 'translate-x-0' : '-translate-x-full'} md:static ${sidebarColapsada ? 'md:w-16' : 'md:w-72'} w-72`}>
+        {/* Header */}
+        <div className={`border-b border-slate-100 flex items-center ${sidebarColapsada ? 'justify-center p-3' : 'justify-between p-6'}`}>
+          <div className="flex items-center gap-3 min-w-0">
+            <img src="/simbolo-azul.png" alt="Símbolo Intento" className="w-8 h-8 object-contain shrink-0" />
+            {!sidebarColapsada && <span className="font-semibold text-[#060242] text-base whitespace-nowrap">Mentoria Intento</span>}
+          </div>
+          <button className="md:hidden text-slate-400 text-xl" onClick={() => setMenuMobileAberto(false)}>✕</button>
+        </div>
+
+        {/* Perfil */}
+        {!sidebarColapsada && (
+          <div className="px-6 py-5 border-b border-slate-100 bg-slate-50">
+            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-3">Mentorado(a)</p>
+            <div className="flex items-center gap-3">
+              {fotoUsuario ? (
+                <img src={fotoUsuario} alt="Foto do aluno" className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-[#060242] flex items-center justify-center shrink-0 border border-slate-200">
+                  <span className="text-white font-semibold text-sm">{nomeAluno.charAt(0).toUpperCase()}</span>
+                </div>
+              )}
+              <p className="font-semibold text-slate-700 text-sm truncate" title={nomeAluno}>{nomeAluno}</p>
+            </div>
+          </div>
+        )}
+        {sidebarColapsada && (
+          <div className="flex justify-center py-4 border-b border-slate-100 bg-slate-50">
+            {fotoUsuario ? (
+              <img src={fotoUsuario} alt="Foto do aluno" className="w-8 h-8 rounded-full object-cover border border-slate-200" referrerPolicy="no-referrer" title={nomeAluno} />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-[#060242] flex items-center justify-center border border-slate-200" title={nomeAluno}>
+                <span className="text-white font-semibold text-xs">{nomeAluno.charAt(0).toUpperCase()}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Nav */}
+        <nav className={`flex-1 overflow-y-auto custom-scrollbar py-3 ${sidebarColapsada ? 'px-2 space-y-1' : 'px-4 space-y-1'}`}>
+          {MENU_ITENS.map(item => (
+            <button
+              key={item.id}
+              onClick={() => { setAbaAtiva(item.id); setSimuladoAnalise(null); setMenuMobileAberto(false); }}
+              title={sidebarColapsada ? item.nome : undefined}
+              className={`w-full flex items-center rounded-lg font-medium text-sm transition-all text-left leading-tight ${sidebarColapsada ? 'justify-center p-2.5' : 'gap-3 px-4 py-2.5'} ${abaAtiva === item.id && !simuladoAnalise ? 'bg-[#060242] text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
+            >
+              <svg className="w-4 h-4 shrink-0" style={{ opacity: abaAtiva === item.id && !simuladoAnalise ? 1 : 0.6 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icone}></path></svg>
+              {!sidebarColapsada && <span>{item.nome}</span>}
+            </button>
+          ))}
+        </nav>
+
+        {/* Logout + Toggle */}
+        <div className={`border-t border-slate-100 ${sidebarColapsada ? 'p-2 flex flex-col items-center gap-2' : 'p-4 space-y-2'}`}>
+          <button
+            onClick={() => { sessionStorage.removeItem('emailLogado'); auth.signOut(); router.push('/'); }}
+            title={sidebarColapsada ? 'Sair do Sistema' : undefined}
+            className={`flex items-center justify-center rounded-lg font-medium text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors text-xs ${sidebarColapsada ? 'w-9 h-9 p-0' : 'w-full gap-2 px-4 py-2.5'}`}
+          >
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            {!sidebarColapsada && <span>Sair do Sistema</span>}
+          </button>
+          <button
+            onClick={() => setSidebarColapsada(v => !v)}
+            className="hidden md:flex w-full items-center justify-center p-2 rounded-lg text-slate-300 hover:text-slate-500 hover:bg-slate-50 transition-colors"
+            title={sidebarColapsada ? 'Expandir menu' : 'Minimizar menu'}
+          >
+            <svg className={`w-4 h-4 transition-transform duration-300 ${sidebarColapsada ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
+          </button>
+        </div>
+      </aside>
+
+      {/* ÁREA PRINCIPAL */}
+      <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+        
+        {/* Topbar Mobile */}
+        <div className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setMenuMobileAberto(true)} className="p-2 text-[#060242] bg-slate-50 rounded-lg"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+            <div className="flex items-center gap-2">
+                <img src="/simbolo-azul.png" alt="Intento" className="w-7 h-7 object-contain shrink-0" />
+                <span className="font-semibold text-[#060242] text-base">Mentoria Intento</span>
+              </div>
+          </div>
+        </div>
+
+        <div className="p-4 md:p-8 max-w-6xl mx-auto w-full space-y-8 flex-1">
+          
+          {/* TÍTULO DA ABA ATIVA */}
+          {!simuladoAnalise && (
+            <div className="mb-4 animate-in fade-in">
+              <h1 className="text-2xl font-semibold text-[#060242]">{MENU_ITENS.find(m => m.id === abaAtiva)?.nome}</h1>
+            </div>
+          )}
+
+          {/* ========================================================== */}
+          {/* MODO ANÁLISE DE SIMULADO */}
+          {/* ========================================================== */}
+          {simuladoAnalise ? (
+            <div className="space-y-8 animate-in fade-in duration-500">
+              <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 border-b border-slate-200 pb-6">
+                <div className="flex items-center gap-4">
+                  <button onClick={() => setSimuladoAnalise(null)} className="p-2 bg-white border border-slate-200 rounded-full hover:bg-slate-100 transition-colors shadow-sm">
+                    <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                  </button>
+                  <div>
+                    <h2 className="text-xl font-semibold text-[#060242]">Análise de Simulado</h2>
+                    <p className="text-slate-400 text-sm mt-0.5">{simuladoAnalise.especificacao} · {simuladoAnalise.data}</p>
+                  </div>
+                </div>
+
+                <div className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto">
+                  <button onClick={() => setAbaAnalise('Objetiva')} className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${abaAnalise === 'Objetiva' ? 'bg-[#060242] text-white' : 'text-slate-500 hover:text-slate-700'}`}>Objetiva</button>
+                  <button onClick={() => setAbaAnalise('Subjetiva')} className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${abaAnalise === 'Subjetiva' ? 'bg-[#060242] text-white' : 'text-slate-500 hover:text-slate-700'}`}>Subjetiva</button>
+                </div>
+              </div>
+
+              {/* CARD DE APROVEITAMENTO */}
+              {(() => {
+                const acertosTotais = parseInt(simuladoAnalise.lg) + parseInt(simuladoAnalise.ch) + parseInt(simuladoAnalise.cn) + parseInt(simuladoAnalise.mat);
+                const aproveitamento = Math.round((acertosTotais / 180) * 100);
+                
+                let corBg = "bg-red-50 border-red-200"; let corText = "text-red-700"; let corLabel = "text-red-600";
+                if (aproveitamento >= 71 && aproveitamento <= 84) { corBg = "bg-yellow-50 border-yellow-200"; corText = "text-yellow-700"; corLabel = "text-yellow-600"; }
+                if (aproveitamento >= 85) { corBg = "bg-emerald-50 border-emerald-200"; corText = "text-emerald-700"; corLabel = "text-emerald-600"; }
+
+                return (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className={`${corBg} border rounded-xl text-center py-6 flex flex-col justify-center`}>
+                      <p className={`text-[10px] ${corLabel} font-medium uppercase tracking-wide`}>Aproveitamento</p>
+                      <p className={`text-4xl font-bold ${corText} mt-1`}>{aproveitamento}%</p>
+                    </div>
+                    <div className={`${cardClass} text-center py-6`}><p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Total</p><p className="text-4xl font-bold text-[#060242] mt-2">180</p></div>
+                    <div className={`${cardClass} text-center py-6`}><p className="text-[10px] text-emerald-500 font-medium uppercase tracking-wide">Acertos</p><p className="text-4xl font-bold text-emerald-600 mt-2">{acertosTotais}</p></div>
+                    <div className={`${cardClass} text-center py-6 bg-slate-50`}><p className="text-[10px] text-red-400 font-medium uppercase tracking-wide">Erros</p><p className="text-4xl font-bold text-red-500 mt-2">{formAutopsia.erros.length}</p></div>
+                  </div>
+                )
+              })()}
+
+              {/* TELA DE ANÁLISE OBJETIVA COM SANFONA */}
+              {abaAnalise === 'Objetiva' && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 fade-in">
+                  <div className="flex justify-between items-end mb-4">
+                    <h3 className="text-lg font-semibold text-[#060242]">Classificação de Erros</h3>
+                    <p className="text-sm font-medium text-slate-400 bg-white px-4 py-2 rounded-lg border border-slate-200">
+                      <span className="text-[#060242] font-semibold">{formAutopsia.erros.filter(e => e.questao && e.disciplina && e.topico && e.tipo).length}</span> / {formAutopsia.erros.length} classificados
+                    </p>
+                  </div>
+                  
+                  {['Linguagens', 'Humanas', 'Natureza', 'Matemática'].map(area => {
+                    const errosDaArea = formAutopsia.erros.filter(e => e.area === area);
+                    if (errosDaArea.length === 0) return null;
+
+                    const isExpanded = areaExpandida === area;
+                    const errosClassificadosNaArea = errosDaArea.filter(e => e.questao && e.disciplina && e.topico && e.tipo).length;
+                    const tudoClassificado = errosClassificadosNaArea === errosDaArea.length;
+
+                    // Cores do Header da Sanfona
+                    let headerColor = "text-slate-600 bg-slate-50 border-slate-200";
+                    if (tudoClassificado) headerColor = "text-emerald-700 bg-emerald-50 border-emerald-200";
+                    else if (isExpanded) headerColor = "text-blue-800 bg-blue-50 border-blue-200";
+
+                    return (
+                      <div key={area} className="bg-white rounded-xl border border-slate-200 overflow-hidden transition-all">
+                        {/* CABEÇALHO DA SANFONA */}
+                        <button
+                          onClick={() => setAreaExpandida(isExpanded ? null : area)}
+                          className={`w-full px-5 py-4 flex justify-between items-center transition-colors border-b ${headerColor}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="font-semibold uppercase tracking-wide text-sm">{area}</span>
+                            <span className={`text-[10px] font-medium px-2 py-1 rounded uppercase tracking-wide ${tudoClassificado ? 'bg-emerald-100 text-emerald-700' : 'bg-white border border-slate-200 text-slate-400'}`}>
+                              {errosClassificadosNaArea}/{errosDaArea.length}
+                            </span>
+                          </div>
+                          <span className="text-xl font-light text-slate-300">{isExpanded ? '−' : '+'}</span>
+                        </button>
+
+                        {/* CONTEÚDO DA SANFONA */}
+                        {isExpanded && (
+                          <div className="p-6 space-y-4 animate-in fade-in">
+                            {errosDaArea.map((erro) => (
+                              <div key={erro.id} className="flex flex-col md:flex-row gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm relative group hover:border-[#D4B726] transition-colors">
+                                
+                                <div className="w-full md:w-20 shrink-0">
+                                  <label className={labelClass}>Questão</label>
+                                  <input type="number" placeholder="Nº" className="w-full p-3 border border-slate-200 rounded-lg font-black text-slate-700 outline-none focus:border-[#D4B726] text-center bg-white" value={erro.questao} onChange={e => atualizarErro(erro.id, { questao: e.target.value })} />
+                                </div>
+
+                                <div className="w-full md:w-48 shrink-0">
+                                  <label className={labelClass}>Disciplina</label>
+                                  <select className="w-full p-3 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-[#D4B726] bg-white appearance-none" value={erro.disciplina} onChange={e => atualizarErro(erro.id, { disciplina: e.target.value, topico: '' })}>
+                                    <option value="">Selecione...</option>
+                                    {DISCIPLINAS_ENEM[area].map(d => <option key={d} value={d}>{d}</option>)}
+                                  </select>
+                                </div>
+
+                                <div className="flex-1">
+                                  <label className={labelClass}>Tópico do Currículo</label>
+                                  <select className="w-full p-3 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-[#D4B726] bg-white appearance-none" value={erro.topico} onChange={e => atualizarErro(erro.id, { topico: e.target.value })} disabled={!erro.disciplina}>
+                                    <option value="">{erro.disciplina ? "Selecione o Tópico..." : "Escolha a disciplina primeiro"}</option>
+                                    {(topicosDicionario[erro.disciplina] || []).map(t => <option key={t} value={t}>{t}</option>)}
+                                  </select>
+                                </div>
+
+                                <div className="w-full md:w-48 shrink-0">
+                                  <label className={labelClass}>Motivo (Causa Raiz)</label>
+                                  <select className="w-full p-3 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-[#D4B726] bg-white appearance-none" value={erro.tipo} onChange={e => atualizarErro(erro.id, { tipo: e.target.value })}>
+                                    <option value="">Classificar Erro...</option>
+                                    <option value="Atenção">Deslize / Atenção</option>
+                                    <option value="Interpretação">Interpretação</option>
+                                    <option value="Recordação">Recordação / Branco</option>
+                                    <option value="Lacuna">Lacuna Teórica</option>
+                                  </select>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  
+                  <div className="flex justify-between items-center pt-6 border-t border-slate-200 mt-6">
+                    <button onClick={salvarProgressoObjetiva} className={btnGhost}>
+                      Gravar Progresso (Sair)
+                    </button>
+                    <button onClick={() => setAbaAnalise('Subjetiva')} className={`${btnPrimary} flex items-center gap-2 px-8 py-4`}>
+                      Análise Subjetiva <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* TELA DE ANÁLISE SUBJETIVA */}
+              {abaAnalise === 'Subjetiva' && (
+                <div className="space-y-8 animate-in slide-in-from-bottom-4 fade-in pb-10">
+                  <div className="bg-[#060242] p-6 md:p-8 rounded-xl border border-blue-900/30 relative overflow-hidden">
+                    <h3 className="text-lg font-semibold text-white mb-1">Ciclo de Kolb</h3>
+                    <p className="text-blue-300/70 text-sm mb-8 max-w-2xl">Documente suas percepções emocionais e estratégicas para traçar uma rota de correção para a próxima semana.</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
+                      <div className="bg-white/5 p-5 rounded-xl border border-white/10">
+                        <label className="block text-[10px] font-medium text-[#D4B726]/80 uppercase mb-3 tracking-wider">1. Experiência</label>
+                        <textarea className="w-full bg-transparent text-white placeholder-blue-300/30 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar" rows="4" placeholder="Como você se sentiu durante a prova? Houve cansaço, nervosismo, ansiedade ou falta de tempo?" value={formAutopsia.kolb.exp} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, exp: e.target.value}})}></textarea>
+                      </div>
+                      <div className="bg-white/5 p-5 rounded-xl border border-white/10">
+                        <label className="block text-[10px] font-medium text-[#D4B726]/80 uppercase mb-3 tracking-wider">2. Reflexão</label>
+                        <textarea className="w-full bg-transparent text-white placeholder-blue-300/30 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar" rows="4" placeholder="Olhando para os seus erros, qual foi o seu maior gargalo real?" value={formAutopsia.kolb.ref} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, ref: e.target.value}})}></textarea>
+                      </div>
+                      <div className="bg-white/5 p-5 rounded-xl border border-white/10">
+                        <label className="block text-[10px] font-medium text-[#D4B726]/80 uppercase mb-3 tracking-wider">3. Conceituação</label>
+                        <textarea className="w-full bg-transparent text-white placeholder-blue-300/30 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar" rows="4" placeholder="O que você aprendeu com a correção destas questões?" value={formAutopsia.kolb.con} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, con: e.target.value}})}></textarea>
+                      </div>
+                      <div className="bg-emerald-900/30 p-5 rounded-xl border border-emerald-500/30">
+                        <label className="block text-[10px] font-medium text-emerald-400/80 uppercase mb-3 tracking-wider">4. Ação</label>
+                        <textarea className="w-full bg-transparent text-white placeholder-emerald-300/30 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar" rows="4" placeholder="O que você vai mudar na sua rotina de estudos imediatamente?" value={formAutopsia.kolb.acao} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, acao: e.target.value}})}></textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-6 md:p-8 rounded-xl border border-slate-200">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="w-9 h-9 bg-purple-50 text-purple-500 rounded-lg flex items-center justify-center shrink-0"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></div>
+                      <div>
+                        <h3 className="text-base font-semibold text-[#060242]">Kolb de Redação</h3>
+                        <p className="text-slate-400 text-sm">Nota: <span className="text-purple-500 font-medium">{simuladoAnalise.redacao}</span></p>
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 border border-slate-100 rounded-xl p-5">
+                      <label className="block text-[10px] font-medium text-slate-400 uppercase mb-3 tracking-wider">Reflexão da Produção Textual</label>
+                      <textarea className="w-full bg-transparent text-slate-700 placeholder-slate-300 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar" rows="6" placeholder="Faça os 4 passos do Kolb aqui. Em qual competência você perdeu nota? Faltou repertório? Teve problema de coesão? Como vai corrigir na próxima redação?" value={formAutopsia.kolb.redacao} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, redacao: e.target.value}})}></textarea>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-6">
+                    <button onClick={() => setAbaAnalise('Objetiva')} className={`${btnGhost} flex items-center gap-2`}>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Voltar
+                    </button>
+                    <button onClick={salvarAutopsia} disabled={salvandoAutopsia} className={`${btnCTA} px-12 py-4 flex items-center gap-2 disabled:opacity-70`}>
+                      {salvandoAutopsia && <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>}
+                      {salvandoAutopsia ? 'Gravando...' : 'Gravar Análise Completa'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            // =========================================================================
+            // VISÃO NORMAL (Quando não está na tela de análise)
+            // =========================================================================
+            <>
+              {abaAtiva === 1 && (
+                <div className="space-y-6 animate-in fade-in duration-500">
+
+                  {/* HERO — Lista de Tarefas + Stats */}
+                  {(() => {
+                    const dominioGeral = snapshot.dom?.length ? Math.round(snapshot.dom.reduce((a, b) => a + (parseFloat(b) || 0), 0) / snapshot.dom.length) : 0;
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
+
+                        {/* LISTA DE TAREFAS */}
+                        <div className={`md:col-span-3 ${cardClass} flex flex-col`}>
+                          <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-base font-semibold text-[#060242]">Minhas Tarefas</h2>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-slate-400 font-medium">{tarefas.filter(t => !t.concluida).length} pendentes</span>
+                              {tarefas.length > 0 && (
+                                <button
+                                  onClick={() => { setTarefas([]); localStorage.removeItem(alunoNameKey + 'tarefas'); }}
+                                  className="text-xs text-slate-300 hover:text-red-400 font-medium transition-colors"
+                                >
+                                  Zerar
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2 mb-4">
+                            <input
+                              type="text"
+                              value={novaTarefa}
+                              onChange={e => setNovaTarefa(e.target.value)}
+                              onKeyDown={e => e.key === 'Enter' && adicionarTarefa()}
+                              placeholder="Adicionar tarefa..."
+                              className={inputClass + " text-sm py-2.5"}
+                            />
+                            <button onClick={adicionarTarefa} className={`${btnPrimary} px-4 py-2 shrink-0`}>+</button>
+                          </div>
+                          {tarefas.length === 0 ? (
+                            <p className="text-sm text-slate-300 font-medium text-center py-6">Nenhuma tarefa ainda.</p>
+                          ) : (
+                            <ul className="space-y-2 flex-1 overflow-y-auto max-h-56">
+                              {tarefas.map(t => (
+                                <li key={t.id} className="flex items-center gap-3 group py-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={t.concluida}
+                                    onChange={() => toggleTarefa(t.id)}
+                                    className="w-4 h-4 rounded shrink-0 accent-[#060242]"
+                                  />
+                                  <span className={`flex-1 text-sm font-medium transition-colors ${t.concluida ? 'line-through text-slate-300' : 'text-slate-700'}`}>
+                                    {t.texto}
+                                  </span>
+                                  <button onClick={() => removerTarefa(t.id)} className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-all text-xs">✕</button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+
+                        {/* STATS + PLANO DE AÇÃO */}
+                        <div className="md:col-span-2 flex flex-col gap-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-[#D4B726] rounded-xl p-5 text-center shadow-sm flex flex-col items-center justify-center">
+                              <p className="text-[11px] font-medium text-white/70 uppercase tracking-wider mb-1">Progresso Geral</p>
+                              <p className="text-5xl font-bold text-white leading-none">{progressoGeral}<span className="text-2xl font-medium text-white/60">%</span></p>
+                            </div>
+                            <div className="bg-[#060242] rounded-xl p-5 text-center shadow-sm flex flex-col items-center justify-center">
+                              <p className="text-[11px] font-medium text-white/50 uppercase tracking-wider mb-1">Domínio Geral</p>
+                              <p className="text-5xl font-bold text-white leading-none">{dominioGeral}<span className="text-2xl font-medium text-white/40">%</span></p>
+                            </div>
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 px-5 py-3 flex items-center justify-between shadow-sm">
+                            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Dias para o ENEM</p>
+                            <p className="text-2xl font-bold text-slate-600">{diasEnem}</p>
+                          </div>
+                          <div className={`${cardClass} flex-1 overflow-y-auto max-h-64`}>
+                            <p className="text-[11px] font-medium text-[#D4B726] uppercase mb-3 tracking-wider">Plano de Ação</p>
+                            {(plano.acao || []).length === 0 ? (
+                              <p className="text-sm text-slate-400 font-medium">Nenhuma ação definida pelo mentor ainda.</p>
+                            ) : (
+                              <ol className="space-y-2.5">
+                                {(plano.acao || []).map((item, i) => (
+                                  <li key={i} className="flex items-start gap-2.5 cursor-pointer group" onClick={() => togglePlanoCheck(i)}>
+                                    <span className={`shrink-0 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center mt-0.5 transition-colors ${planoChecks[i] ? 'bg-emerald-500' : 'bg-[#060242]'}`}>
+                                      {planoChecks[i] ? '✓' : i + 1}
+                                    </span>
+                                    <span className={`text-sm font-medium leading-relaxed transition-colors ${planoChecks[i] ? 'line-through text-slate-300' : 'text-slate-700'}`}>{item}</span>
+                                  </li>
+                                ))}
+                              </ol>
+                            )}
+                          </div>
+                        </div>
+
+                      </div>
+                    );
+                  })()}
+
+                  {/* PROGRESSIVE DISCLOSURE — Análise Completa */}
+                  <div>
+                    <button
+                      onClick={() => setShowCharts(v => !v)}
+                      className="w-full flex items-center justify-between px-5 py-3.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+                    >
+                      <span className="font-medium text-slate-600 text-sm">Análise completa</span>
+                      <span className="text-slate-300 font-light text-xl">{showCharts ? '−' : '+'}</span>
+                    </button>
+
+                    {showCharts && (
+                      <div className="mt-4 space-y-6 animate-in fade-in">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {[
+                            { label: 'Biologia',    color: '#10b981', dom: snapshot.dom?.[0] || 0, prog: snapshot.prog?.[0] || 0 },
+                            { label: 'Química',     color: '#a855f7', dom: snapshot.dom?.[1] || 0, prog: snapshot.prog?.[1] || 0 },
+                            { label: 'Física',      color: '#3b82f6', dom: snapshot.dom?.[2] || 0, prog: snapshot.prog?.[2] || 0 },
+                            { label: 'Matemática',  color: '#ef4444', dom: snapshot.dom?.[3] || 0, prog: snapshot.prog?.[3] || 0 },
+                          ].map(({ label, color, dom, prog }) => (
+                            <div key={label} style={{ borderColor: color + '55', background: color + '0a' }} className="rounded-xl border p-5 flex flex-col gap-3 shadow-sm">
+                              <div className="flex items-center justify-between">
+                                <p style={{ color }} className="text-[11px] font-semibold uppercase tracking-wider">{label}</p>
+                                {getBadge(dom)}
+                              </div>
+                              <div>
+                                <p className="text-4xl font-bold text-[#060242] leading-none">{dom}<span className="text-lg font-medium text-slate-300 ml-0.5">%</span></p>
+                                <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium mt-1">Domínio</p>
+                              </div>
+                              <div>
+                                <div className="flex justify-between items-center mb-1.5">
+                                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Progresso</p>
+                                  <p style={{ color }} className="text-[11px] font-bold">{prog}%</p>
+                                </div>
+                                <div className="w-full bg-slate-100 rounded-full h-1.5">
+                                  <div style={{ width: `${prog}%`, background: color }} className="h-1.5 rounded-full transition-all duration-700"></div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className={cardClass}>
+                          <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-4">Progresso por Área</h3>
+                          <div className="h-64"><Bar data={{ labels: ['Biologia', 'Química', 'Física', 'Matemática'], datasets: [{ label: 'Progresso (%)', data: snapshot.prog || [0,0,0,0], backgroundColor: ['#10b981', '#a855f7', '#3b82f6', '#ef4444'], borderRadius: 4 }] }} options={{ indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100, grid: { color: 'rgba(150, 150, 150, 0.1)' } }, y: { grid: { display: false } } } }} /></div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className={cardClass}><h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-4">Execução (Horas vs Meta)</h3><div className="h-64"><Bar data={{ labels: mensal.labels || [], datasets: [{ type: 'line', label: 'Meta', data: mensal.meta || [], borderColor: '#64748b', tension: 0.1 }, { type: 'bar', label: 'Horas', data: mensal.horas || [], backgroundColor: '#D4B726', borderRadius: 4 }] }} options={chartOptions} /></div></div>
+                          <div className={cardClass}><h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-4">Domínio e Progresso</h3><div className="h-64"><Bar data={{ labels: mensal.labels || [], datasets: [{ type: 'line', label: 'Domínio', data: mensal.domTot || [], borderColor: '#3b82f6', tension: 0.3 }, { type: 'bar', label: 'Progresso', data: mensal.progTot || [], backgroundColor: 'rgba(100, 116, 139, 0.2)', borderRadius: 4 }] }} options={chartOptions} /></div></div>
+                          <div className={cardClass}><h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-4">Estilo de Vida</h3><div className="h-64"><Line data={{ labels: mensal.labels || [], datasets: [{ label: 'Estresse', data: mensal.estresse || [], borderColor: '#ef4444' }, { label: 'Ansiedade', data: mensal.ansiedade || [], borderColor: '#f97316' }, { label: 'Sono', data: mensal.sono || [], borderColor: '#8b5cf6' }] }} options={{...chartOptions, scales: { y: { min: 0, max: 5 }}}} /></div></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              )}
+              
+              {abaAtiva === 2 && (
+                <div className="space-y-10 animate-in fade-in duration-500">
+                  <div className={cardClass}>
+                    <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-4">Consistência — Horas vs Meta Semanal</h3>
+                    <div className="flex flex-wrap gap-2">{historicoConsistencia.map((bateuMeta, i) => (<div key={i} title={`Semana ${i + 1}: ${bateuMeta ? 'Meta Cumprida' : 'Meta Não Cumprida'}`} className={`w-7 h-7 rounded ${bateuMeta ? 'bg-emerald-400' : 'bg-red-300'}`}></div>))}{[1, 2, 3, 4].slice(historicoConsistencia.length).map(i => (<div key={`ph${i}`} className="w-7 h-7 rounded border border-slate-200 bg-slate-50"></div>))}</div>
+                    {(() => {
+                      const h = historicoConsistencia;
+                      const n = h.length;
+                      if (n < 2) return null;
+                      const last3 = h.slice(-3);
+                      const prev = h[n - 2];
+                      const curr = h[n - 1];
+                      let msg = null, style = '';
+                      if (n >= 3 && last3.every(Boolean)) {
+                        msg = "Três semanas consecutivas batendo a meta. Esse é o ritmo de quem aprova — mantenha.";
+                        style = "bg-emerald-50 border-emerald-200 text-emerald-800";
+                      } else if (n >= 3 && last3.every(v => !v)) {
+                        msg = "Três semanas abaixo da meta. É hora de agir: revise sua rotina com o mentor e ajuste o plano ainda essa semana.";
+                        style = "bg-red-50 border-red-200 text-red-700";
+                      } else if (!prev && curr) {
+                        msg = "Você se recuperou essa semana! A consistência começa exatamente assim — uma semana de retomada de cada vez.";
+                        style = "bg-emerald-50 border-emerald-200 text-emerald-800";
+                      } else if (prev && !curr) {
+                        msg = "Essa semana ficou abaixo da meta. Seu histórico mostra que você sabe o que fazer — retome o ritmo na próxima.";
+                        style = "bg-amber-50 border-amber-200 text-amber-800";
+                      }
+                      if (!msg) return null;
+                      return (
+                        <p className={`mt-4 text-sm font-medium leading-relaxed px-4 py-3 rounded-lg border ${style}`}>
+                          {msg}
+                        </p>
+                      );
+                    })()}
+                  </div>
+                  {(!semanal.geral || semanal.geral.length === 0) ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mb-5">
+                        <svg className="w-7 h-7 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                      </div>
+                      <p className="text-base font-semibold text-slate-500 mb-1">Aguardando o primeiro encontro com seu mentor</p>
+                      <p className="text-sm text-slate-400 max-w-xs">Os dados do seu acompanhamento semanal serão preenchidos após a sua primeira sessão.</p>
+                    </div>
+                  ) : (
+                    <>
+                      {semanal.isFirstWeek && <div className="bg-blue-50 text-blue-700 p-4 rounded-xl font-medium text-sm border border-blue-100">Esta é a sua primeira semana. Comparativos aparecerão na próxima!</div>}
+                      <div><h2 className="text-base font-semibold text-slate-700 mb-5">Aspectos Gerais</h2><div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10"><RenderMiniCards dataArray={semanal.geral} isFirstWeek={semanal.isFirstWeek} fullBorder={false} /></div></div>
+                      <div><h2 className="text-base font-semibold text-slate-700 mb-5">Estilo de Vida</h2><div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10"><RenderMiniCards dataArray={semanal.estilo} isFirstWeek={semanal.isFirstWeek} fullBorder={false} /></div></div>
+                      <div><h2 className="text-base font-semibold text-slate-700 mb-5">Desempenho</h2><div className="grid grid-cols-1 md:grid-cols-4 gap-4"><div className="space-y-4"><RenderMiniCards dataArray={semanal.desempenho?.slice(0, 2)} isFirstWeek={semanal.isFirstWeek} fullBorder={true} /></div><div className="space-y-4"><RenderMiniCards dataArray={semanal.desempenho?.slice(2, 4)} isFirstWeek={semanal.isFirstWeek} fullBorder={true} /></div><div className="space-y-4"><RenderMiniCards dataArray={semanal.desempenho?.slice(4, 6)} isFirstWeek={semanal.isFirstWeek} fullBorder={true} /></div><div className="space-y-4"><RenderMiniCards dataArray={semanal.desempenho?.slice(6, 8)} isFirstWeek={semanal.isFirstWeek} fullBorder={true} /></div></div></div>
+                    </>
+                  )}
+                </div>
+              )}
+              
+              {abaAtiva === 3 && (
+                <div className="space-y-6 animate-in fade-in duration-500">
+                  <p className="text-slate-400 text-sm">Atualizado em: <span className="font-medium text-slate-500">{plano.data}</span></p>
+                  <div className={`${cardClass} border-t-2 border-t-[#D4B726] text-center py-12`}>
+                    <p className="text-[10px] font-medium text-[#D4B726] uppercase tracking-wider mb-4">Meta Principal</p>
+                    <p className="text-2xl md:text-4xl font-bold text-[#060242]">{plano.meta}</p>
+                  </div>
+                  <div className={`${cardClass} border-t-2 border-t-[#060242]`}>
+                    <h3 className="text-base font-semibold text-[#060242] mb-6">Plano de Ação</h3>
+                    <ul className="list-decimal pl-6 space-y-4 text-base text-slate-600 font-medium">{(plano.acao || []).map((item, i) => <li key={i} className="whitespace-pre-wrap">{item}</li>)}</ul>
+                  </div>
+                </div>
+              )}
+              
+              {abaAtiva === 4 && (() => {
+                const HOUR_START = 5;
+                const HOUR_END = 24;
+                const TOTAL_HOURS = HOUR_END - HOUR_START;
+                const PX_PER_HOUR = 64;
+
+                const parseHora = (horaStr) => {
+                  if (!horaStr) return { start: null, end: null };
+                  const parts = String(horaStr).split('-').map(s => s.trim());
+                  const toMin = (s) => {
+                    const [h, m] = s.split(':').map(Number);
+                    return (isNaN(h) ? 0 : h) * 60 + (isNaN(m) ? 0 : m);
+                  };
+                  const start = toMin(parts[0]);
+                  const end = parts[1] ? toMin(parts[1]) : start + 60;
+                  return { start, end };
+                };
+
+                const getEventStyle = (t) => {
+                  if (t.includes('codificação') || t.includes('priming')) return { bg: 'bg-blue-100 border-blue-400', text: 'text-blue-900', dot: 'bg-blue-400' };
+                  if (t.includes('revisão')) return { bg: 'bg-emerald-100 border-emerald-400', text: 'text-emerald-900', dot: 'bg-emerald-400' };
+                  if (t.includes('simulado')) return { bg: 'bg-red-100 border-red-400', text: 'text-red-900', dot: 'bg-red-400' };
+                  if (t.includes('física')) return { bg: 'bg-yellow-100 border-yellow-400', text: 'text-yellow-900', dot: 'bg-yellow-400' };
+                  if (t.includes('sono') || t.includes('noturna')) return { bg: 'bg-purple-100 border-purple-400', text: 'text-purple-900', dot: 'bg-purple-400' };
+                  return { bg: 'bg-slate-100 border-slate-300', text: 'text-slate-700', dot: 'bg-slate-400' };
+                };
+
+                const today = new Date().getDay();
+                const dayAbbr = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+                return (
+                  <div className="animate-in fade-in duration-500">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-base font-semibold text-[#060242]">Semana Padrão</h2>
+                      <button onClick={zerarRotina} className={btnGhost}>Zerar Rotina</button>
+                    </div>
+
+                    {/* Mobile: card list per day */}
+                    <div className="block md:hidden space-y-4">
+                      {rotinaDias.map((dia, dayIdx) => {
+                        const eventos = rotina[dia] || [];
+                        if (eventos.length === 0) return null;
+                        const abbr = dayAbbr[dayIdx] || dia.slice(0, 3);
+                        const isToday = dayIdx === today;
+                        return (
+                          <div key={dia} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div className={`px-4 py-2.5 border-b border-slate-100 ${isToday ? 'bg-[#D4B726]/10' : 'bg-slate-50'}`}>
+                              <p className={`text-xs font-semibold uppercase tracking-wider ${isToday ? 'text-[#D4B726]' : 'text-slate-500'}`}>{abbr} — {dia}</p>
+                            </div>
+                            <div className="divide-y divide-slate-100">
+                              {eventos.map((att, attIdx) => {
+                                const tId = `t_${dayIdx}_${attIdx}`;
+                                const isChecked = checkboxes[alunoNameKey + tId] || false;
+                                const t = String(att.atividade || '').toLowerCase();
+                                const style = getEventStyle(t);
+                                return (
+                                  <label key={attIdx} className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${isChecked ? 'opacity-40' : ''}`}>
+                                    <input type="checkbox" checked={isChecked} onChange={() => toggleTask(tId)} className="w-4 h-4 rounded shrink-0" onClick={e => e.stopPropagation()} />
+                                    <div className={`w-2 h-2 rounded-full shrink-0 ${style.dot}`} />
+                                    <div className="flex-1 min-w-0">
+                                      <p className={`text-sm font-medium ${isChecked ? 'line-through text-slate-400' : 'text-[#060242]'} truncate`}>{att.atividade}</p>
+                                      {att.hora && <p className="text-xs text-slate-400 mt-0.5">{att.hora}</p>}
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Desktop: Google Calendar grid */}
+                    <div className="hidden md:block bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                      {/* Day headers */}
+                      <div className="flex border-b border-slate-200">
+                        <div className="w-14 shrink-0 border-r border-slate-100" />
+                        {rotinaDias.map((dia, idx) => {
+                          const abbr = dayAbbr[idx] || dia.slice(0, 3);
+                          const isToday = idx === today;
+                          return (
+                            <div key={dia} className="flex-1 text-center py-3 border-r border-slate-100 last:border-r-0">
+                              <p className={`text-[10px] font-medium uppercase tracking-wider ${isToday ? 'text-[#D4B726]' : 'text-slate-400'}`}>{abbr}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {/* Time grid */}
+                      <div className="flex overflow-y-auto" style={{ maxHeight: '70vh' }}>
+                        {/* Hour labels */}
+                        <div className="w-14 shrink-0 border-r border-slate-100 relative" style={{ height: TOTAL_HOURS * PX_PER_HOUR }}>
+                          {Array.from({ length: TOTAL_HOURS }, (_, i) => (
+                            <div key={i} className="absolute w-full flex items-start justify-end pr-2" style={{ top: i * PX_PER_HOUR, height: PX_PER_HOUR }}>
+                              <span className="text-[10px] text-slate-400 -mt-2">{String(HOUR_START + i).padStart(2, '0')}:00</span>
+                            </div>
+                          ))}
+                        </div>
+                        {/* Day columns */}
+                        {rotinaDias.map((dia, dayIdx) => (
+                          <div key={dia} className="flex-1 border-r border-slate-100 last:border-r-0 relative" style={{ height: TOTAL_HOURS * PX_PER_HOUR }}>
+                            {/* Hour lines */}
+                            {Array.from({ length: TOTAL_HOURS }, (_, i) => (
+                              <div key={i} className="absolute w-full border-t border-slate-100" style={{ top: i * PX_PER_HOUR }} />
+                            ))}
+                            {/* Events */}
+                            {(rotina[dia] || []).map((att, attIdx) => {
+                              const { start, end } = parseHora(att.hora);
+                              if (start === null) return null;
+                              const startMin = HOUR_START * 60;
+                              const topPx = ((start - startMin) / 60) * PX_PER_HOUR;
+                              const heightPx = Math.max(((end - start) / 60) * PX_PER_HOUR, 28);
+                              const tId = `t_${dayIdx}_${attIdx}`;
+                              const isChecked = checkboxes[alunoNameKey + tId] || false;
+                              const t = String(att.atividade || '').toLowerCase();
+                              const style = getEventStyle(t);
+                              return (
+                                <label
+                                  key={attIdx}
+                                  className={`absolute left-0.5 right-0.5 border-l-2 rounded-[4px] px-1.5 py-1 cursor-pointer overflow-hidden flex flex-col gap-0.5 ${style.bg} ${style.text} ${isChecked ? 'opacity-40' : ''}`}
+                                  style={{ top: topPx, height: heightPx }}
+                                >
+                                  <div className="flex items-center gap-1 min-w-0">
+                                    <input type="checkbox" checked={isChecked} onChange={() => toggleTask(tId)} className="w-3 h-3 shrink-0 rounded" onClick={e => e.stopPropagation()} />
+                                    <span className={`text-[9px] font-medium opacity-60 shrink-0`}>{att.hora}</span>
+                                  </div>
+                                  <p className={`text-[10px] font-semibold leading-tight truncate ${isChecked ? 'line-through' : ''}`}>{att.atividade}</p>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {abaAtiva === 5 && (
+                <div className="space-y-8 animate-in fade-in duration-500">
+                  <div className="flex justify-end border-b border-slate-200 pb-4">
+                    <button onClick={() => setModalRegistroAberto(true)} className={btnCTA}>
+                      + Registrar Simulado
+                    </button>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-6">Métricas Gerais</h3>
+                    <div className="grid grid-cols-3 gap-4 mb-2">
+                      <div className={`${cardClass} text-center bg-slate-50`}><p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Simulados</p><p className="text-3xl font-bold text-[#060242] mt-1">{simKpi.realizados || 0}</p></div>
+                      <div className={`${cardClass} text-center border-b-2 border-b-[#D4B726]`}><p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Média Acertos</p><p className="text-4xl font-bold text-[#D4B726] mt-1">{simKpi.medAcertos || 0}</p></div>
+                      <div className={`${cardClass} text-center border-b-2 border-b-[#060242]`}><p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Média Redação</p><p className="text-4xl font-bold text-[#060242] mt-1">{simKpi.medRedacao || 0}</p></div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className={`${cardClass} col-span-1`}><h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-4 text-center">Tipos de Erros</h3><div className="h-64 flex justify-center"><Doughnut data={{ labels: ['Atenção', 'Interpretação', 'Recordação', 'Lacuna'], datasets: [{ data: [simKpi.erros?.atencao || 0, simKpi.erros?.inter || 0, simKpi.erros?.rec || 0, simKpi.erros?.lac || 0], backgroundColor: ['#D4B726', '#3b82f6', '#8b5cf6', '#ef4444'] }] }} options={{ cutout: '65%', maintainAspectRatio: false }} /></div></div>
+                      <div className={`${cardClass} col-span-2`}><h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-4">Histórico de Provas</h3><div className="h-64"><Line data={{ labels: histSim.labels || [], datasets: [{ label: 'LG', data: histSim.lg || [], borderColor: '#0ea5e9' }, { label: 'CH', data: histSim.ch || [], borderColor: '#f97316' }, { label: 'CN', data: histSim.cn || [], borderColor: '#10b981' }, { label: 'MAT', data: histSim.mat || [], borderColor: '#ef4444' }] }} options={chartOptions} /></div></div>
+                    </div>
+                  </div>
+
+                  <div className="pt-8 border-t border-slate-200">
+                    <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-6">Seus Últimos Simulados</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {simuladosLista.map((sim) => (
+                        <div key={sim.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all">
+                          {sim.status === 'Pendente' ? (
+                            <div className="bg-amber-500 text-white text-[10px] font-semibold uppercase tracking-wide py-2 text-center">Análise Pendente</div>
+                          ) : (
+                            <div className="bg-emerald-500 text-white text-[10px] font-semibold uppercase tracking-wide py-2 text-center">Análise Concluída</div>
+                          )}
+                          <div className="p-5 flex-1">
+                            <p className="text-xs text-slate-400 font-medium mb-1">{sim.modelo}</p>
+                            <h4 className="text-base font-semibold text-[#060242] mb-1">{sim.especificacao}</h4>
+                            <p className="text-sm text-slate-400 mb-5">Realizado em {sim.data}</p>
+                            <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+                              <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">Acertos</span>
+                              <span className="font-bold text-[#060242] text-sm">{parseInt(sim.lg)+parseInt(sim.ch)+parseInt(sim.cn)+parseInt(sim.mat)} <span className="text-xs text-slate-400 font-normal">/ 180</span></span>
+                            </div>
+                          </div>
+                          <div className="p-4 border-t border-slate-100">
+                            {sim.status === 'Pendente' ? (
+                              <button onClick={() => iniciarAutopsia(sim)} className={`w-full ${btnPrimary} text-xs py-2.5`}>🔍 Iniciar Análise</button>
+                            ) : (
+                              <button onClick={() => iniciarAutopsia(sim)} className={`w-full ${btnGhost} text-xs py-2.5`}>Revisar / Editar Análise</button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {abaAtiva === 6 && (
+                <div className="space-y-6 animate-in fade-in duration-500">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:border-[#060242] transition-colors group">
+                      <div>
+                        <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h3 className="text-xl font-semibold text-[#060242] mb-2">Método de Estudos</h3>
+                        <p className="text-slate-500 text-sm font-medium mb-8">Acesse a nossa plataforma de aulas e domine a metodologia Intento de ponta a ponta.</p>
+                      </div>
+                      <a href="" onClick={e => e.preventDefault()} className="block w-full text-center bg-[#060242] text-white font-semibold py-3 rounded-lg hover:bg-blue-900 transition-colors">Acessar Plataforma</a>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:border-[#D4B726] transition-colors group">
+                      <div>
+                        <div className="w-14 h-14 bg-yellow-50 text-[#D4B726] rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <h3 className="text-xl font-semibold text-[#060242] mb-2">Aplicativo Intento</h3>
+                        <p className="text-slate-500 text-sm font-medium mb-8">Acesse o nosso web app para registrar revisões, tarefas diárias e acompanhar simulados.</p>
+                      </div>
+                      <a href="https://intento.ap1.com.br/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-[#D4B726] text-white font-semibold py-3 rounded-lg hover:bg-yellow-500 transition-colors">Abrir Aplicativo</a>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:border-emerald-500 transition-colors group">
+                      <div>
+                        <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
+                        </div>
+                        <h3 className="text-xl font-semibold text-[#060242] mb-2">Suporte & Comunidade</h3>
+                        <p className="text-slate-500 text-sm font-medium mb-8">Tem alguma dúvida técnica ou quer falar com a equipe de suporte da Intento?</p>
+                      </div>
+                      <a href="" onClick={e => e.preventDefault()} className="block w-full text-center bg-slate-100 text-slate-700 font-semibold py-3 rounded-lg hover:bg-slate-200 transition-colors">Falar com o Suporte</a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {abaAtiva === 7 && (
+                <div className="space-y-6 animate-in fade-in duration-500">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h2 className="text-xl font-bold text-[#060242]">Caderno de Erros</h2>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex gap-2 flex-wrap">
+                        {['Todas', ...disciplinasCaderno].map(d => (
+                          <button key={d} onClick={() => setFiltroCaderno(d)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filtroCaderno === d ? 'bg-[#060242] text-white' : 'bg-white border border-slate-200 text-slate-500 hover:border-[#060242]'}`}>{d}</button>
+                        ))}
+                      </div>
+                      <button onClick={() => setModalCadernoAberto(true)} className="bg-[#D4B726] hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg text-sm shadow-sm transition-all shrink-0">+ Novo Card</button>
+                    </div>
+                  </div>
+
+                  {cadernoCarregando ? (
+                    <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#060242]"></div></div>
+                  ) : caderno.filter(c => filtroCaderno === 'Todas' || c.disciplina === filtroCaderno).length === 0 ? (
+                    <div className="bg-white border border-slate-200 rounded-xl p-10 text-center">
+                      <p className="text-slate-400 font-medium">Nenhum card {filtroCaderno !== 'Todas' ? `em ${filtroCaderno}` : 'criado'} ainda.</p>
+                      <button onClick={() => setModalCadernoAberto(true)} className="mt-4 text-sm text-[#060242] font-semibold underline underline-offset-2 hover:text-[#D4B726] transition">Criar primeiro card →</button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {caderno.filter(c => filtroCaderno === 'Todas' || c.disciplina === filtroCaderno).map(card => (
+                        <div key={card.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col hover:border-[#060242]/30 transition-all">
+                          <div className="px-5 pt-5 pb-4 flex-1">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4B726]">{card.disciplina}</span>
+                                <p className="text-xs text-slate-400 mt-0.5">{card.topico}</p>
+                              </div>
+                              <span className="text-[10px] text-slate-300 font-medium shrink-0 ml-2">{card.data_erro}</span>
+                            </div>
+                            <p className="text-sm font-medium text-[#060242] leading-relaxed mb-4">{card.pergunta}</p>
+                            {cardVirado[card.id] ? (
+                              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Resposta</p>
+                                  <button onClick={() => setCardVirado(v => ({ ...v, [card.id]: false }))} className="text-[10px] text-slate-300 hover:text-slate-500 font-medium transition-colors">Fechar ×</button>
+                                </div>
+                                <p className="text-sm text-slate-700 leading-relaxed">{card.resposta}</p>
+                              </div>
+                            ) : (
+                              <button onClick={() => setCardVirado(v => ({ ...v, [card.id]: true }))} className="w-full text-center text-xs font-semibold text-slate-400 hover:text-[#060242] border border-dashed border-slate-200 rounded-lg py-2.5 transition-all hover:border-[#060242]">
+                                Ver resposta →
+                              </button>
+                            )}
+                          </div>
+                          <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+                            <button onClick={() => incrementarRepeticao(card.id)} className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/></svg>
+                              Já revisei ({card.repeticoes}×)
+                            </button>
+                            <button onClick={() => deletarCardCaderno(card.id)} className="text-xs text-slate-300 hover:text-red-400 transition-colors">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </>
+          )}
+
+        </div>
+      </main>
+
+      {/* ========================================================== */}
+      {/* MODAL DE REGISTRO INICIAL (PASSO 1) */}
+      {/* ========================================================== */}
+      {modalRegistroAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#060242]/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg flex flex-col overflow-hidden">
+            <div className="px-7 py-5 border-b border-slate-100 flex justify-between items-center">
+              <h2 className="text-base font-semibold text-[#060242]">Novo Registro de Simulado</h2>
+              <button onClick={() => setModalRegistroAberto(false)} className="text-slate-300 hover:text-slate-500 transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+
+            <div className="p-7 space-y-5">
+              <div className="flex bg-slate-100 p-1 rounded-lg">
+                <button onClick={() => setTipoModelo("ENEM")} className={`flex-1 py-2.5 rounded-md font-medium text-sm transition-all ${tipoModelo === "ENEM" ? 'bg-[#060242] text-white' : 'text-slate-500 hover:text-slate-700'}`}>ENEM</button>
+                <button onClick={() => setTipoModelo("OUTROS")} className={`flex-1 py-2.5 rounded-md font-medium text-sm transition-all ${tipoModelo === "OUTROS" ? 'bg-[#060242] text-white' : 'text-slate-500 hover:text-slate-700'}`}>Outros Vestibulares</button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className={labelClass}>Data da Prova</label><input type="date" className={inputClass} value={formRegistro.data} onChange={e => setFormRegistro({...formRegistro, data: e.target.value})} /></div>
+                <div><label className={labelClass}>Especificação</label><input type="text" placeholder="Ex: ENEM 2023 - PPL" className={inputClass} value={formRegistro.especificacao} onChange={e => setFormRegistro({...formRegistro, especificacao: e.target.value})} /></div>
+              </div>
+
+              {tipoModelo === "ENEM" ? (
+                <div className="bg-slate-50 p-5 rounded-xl border border-slate-100">
+                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-200 pb-3">Acertos por Área (de 45)</p>
+                  <div className="grid grid-cols-4 gap-3">
+                    <div><label className="block text-[10px] font-medium text-blue-500 uppercase mb-1.5 tracking-wide">Linguagens</label><input type="number" min="0" max="45" placeholder="0" className="w-full p-2 border border-blue-200 rounded-lg font-semibold text-center outline-none focus:border-blue-400 bg-white text-slate-700" value={formRegistro.lg} onChange={e => setFormRegistro({...formRegistro, lg: e.target.value})} /></div>
+                    <div><label className="block text-[10px] font-medium text-orange-500 uppercase mb-1.5 tracking-wide">Humanas</label><input type="number" min="0" max="45" placeholder="0" className="w-full p-2 border border-orange-200 rounded-lg font-semibold text-center outline-none focus:border-orange-400 bg-white text-slate-700" value={formRegistro.ch} onChange={e => setFormRegistro({...formRegistro, ch: e.target.value})} /></div>
+                    <div><label className="block text-[10px] font-medium text-emerald-500 uppercase mb-1.5 tracking-wide">Natureza</label><input type="number" min="0" max="45" placeholder="0" className="w-full p-2 border border-emerald-200 rounded-lg font-semibold text-center outline-none focus:border-emerald-400 bg-white text-slate-700" value={formRegistro.cn} onChange={e => setFormRegistro({...formRegistro, cn: e.target.value})} /></div>
+                    <div><label className="block text-[10px] font-medium text-red-400 uppercase mb-1.5 tracking-wide">Matemática</label><input type="number" min="0" max="45" placeholder="0" className="w-full p-2 border border-red-200 rounded-lg font-semibold text-center outline-none focus:border-red-400 bg-white text-slate-700" value={formRegistro.mat} onChange={e => setFormRegistro({...formRegistro, mat: e.target.value})} /></div>
+                  </div>
+                  <div className="mt-4"><label className="block text-[10px] font-medium text-purple-400 uppercase mb-1.5 tracking-wide">Nota Redação</label><input type="number" placeholder="Ex: 920" className="w-full p-2 border border-purple-200 rounded-lg font-semibold outline-none focus:border-purple-400 bg-white text-slate-700" value={formRegistro.redacao} onChange={e => setFormRegistro({...formRegistro, redacao: e.target.value})} /></div>
+                </div>
+              ) : (
+                <div className="bg-orange-50 text-orange-700 p-5 rounded-xl font-medium text-sm border border-orange-100 text-center">
+                  A interface para outros vestibulares será habilitada em breve.
+                </div>
+              )}
+            </div>
+
+            <div className="px-7 py-5 border-t border-slate-100 flex justify-end gap-3">
+              <button onClick={() => setModalRegistroAberto(false)} className={btnGhost}>Cancelar</button>
+              <button onClick={salvarSimulado} className={btnPrimary}>Salvar Registro</button>            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CADERNO DE ERROS */}
+      {modalCadernoAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#060242]/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white w-full max-w-lg rounded-xl shadow-lg flex flex-col overflow-hidden">
+            <div className="px-7 py-5 border-b border-slate-100 flex justify-between items-center">
+              <h2 className="text-base font-semibold text-[#060242]">Novo Card — Caderno de Erros</h2>
+              <button onClick={() => setModalCadernoAberto(false)} className="text-slate-300 hover:text-slate-500 transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <div className="p-7 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Disciplina</label>
+                  <select className={inputClass} value={formCaderno.disciplina} onChange={e => setFormCaderno({...formCaderno, disciplina: e.target.value})}>
+                    <option value="">Selecionar...</option>
+                    {disciplinasCaderno.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Data do Erro</label>
+                  <input type="date" className={inputClass} value={formCaderno.data} onChange={e => setFormCaderno({...formCaderno, data: e.target.value})} />
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Tópico</label>
+                <input type="text" placeholder="Ex: Funções Orgânicas, Revolução Francesa..." className={inputClass} value={formCaderno.topico} onChange={e => setFormCaderno({...formCaderno, topico: e.target.value})} />
+              </div>
+              <div>
+                <label className={labelClass}>Pergunta / Enunciado</label>
+                <textarea rows={3} placeholder="Escreva a questão ou o conceito que errou..." className={inputClass + " resize-none"} value={formCaderno.pergunta} onChange={e => setFormCaderno({...formCaderno, pergunta: e.target.value})} />
+              </div>
+              <div>
+                <label className={labelClass}>Resposta Correta</label>
+                <textarea rows={3} placeholder="Escreva a resposta ou explicação..." className={inputClass + " resize-none"} value={formCaderno.resposta} onChange={e => setFormCaderno({...formCaderno, resposta: e.target.value})} />
+              </div>
+            </div>
+            <div className="px-7 py-5 border-t border-slate-100 flex justify-end gap-3">
+              <button onClick={() => setModalCadernoAberto(false)} className={btnGhost}>Cancelar</button>
+              <button onClick={salvarCardCaderno} className={btnPrimary}>Salvar Card</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+      `}} />
+    </div>
+  );
+}
