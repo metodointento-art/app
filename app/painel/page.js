@@ -545,12 +545,19 @@ export default function PainelDoAluno() {
 
       <aside className={`fixed inset-y-0 left-0 z-40 bg-white border-r border-slate-200 transform transition-all duration-300 flex flex-col md:translate-x-0 ${menuMobileAberto ? 'translate-x-0' : '-translate-x-full'} md:static ${sidebarColapsada ? 'md:w-16' : 'md:w-72'} w-72`}>
         {/* Header */}
-        <div className={`border-b border-slate-100 flex items-center ${sidebarColapsada ? 'justify-center p-3' : 'justify-between p-6'}`}>
+        <div className={`border-b border-slate-100 flex items-center ${sidebarColapsada ? 'justify-center p-3' : 'justify-between px-5 py-4'}`}>
           <div className="flex items-center gap-3 min-w-0">
-            <img src="/simbolo-azul.png" alt="Símbolo Intento" className="w-8 h-8 object-contain shrink-0" />
-            {!sidebarColapsada && <span className="font-semibold text-intento-blue text-base whitespace-nowrap">Mentoria Intento</span>}
+            <img src="/simbolo-azul.png" alt="Símbolo Intento" className="w-9 h-9 object-contain shrink-0" />
+            {!sidebarColapsada && (
+              <div className="min-w-0">
+                <p className="font-bold text-intento-blue text-sm leading-tight whitespace-nowrap">Mentoria Intento</p>
+                <p className="text-[10px] text-slate-400 font-medium tracking-wide whitespace-nowrap">Plataforma do Aluno</p>
+              </div>
+            )}
           </div>
-          <button className="md:hidden text-slate-400 text-xl" onClick={() => setMenuMobileAberto(false)}>✕</button>
+          <button className="md:hidden text-slate-400 hover:text-slate-600 transition-colors p-1" onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
         </div>
 
         {/* Perfil */}
@@ -623,10 +630,13 @@ export default function PainelDoAluno() {
         <div className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
           <div className="flex items-center gap-3">
             <button onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu" className="p-2 text-intento-blue bg-slate-50 rounded-lg"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
-            <div className="flex items-center gap-2">
-                <img src="/simbolo-azul.png" alt="Intento" className="w-7 h-7 object-contain shrink-0" />
-                <span className="font-semibold text-intento-blue text-base">Mentoria Intento</span>
+            <div className="flex items-center gap-2.5">
+              <img src="/simbolo-azul.png" alt="Intento" className="w-8 h-8 object-contain shrink-0" />
+              <div>
+                <p className="font-bold text-intento-blue text-sm leading-tight">Mentoria Intento</p>
+                <p className="text-[10px] text-slate-400 font-medium tracking-wide">Plataforma do Aluno</p>
               </div>
+            </div>
           </div>
         </div>
 
