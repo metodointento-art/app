@@ -349,8 +349,7 @@ function ExportarAcompanhamento() {
               <p style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>@metodointento</p>
             </div>
           </div>
-        </div>{/* cardRef */}
-        </div>{/* wrapper flex col */}
+        </div>
       )}
     </div>
   );
