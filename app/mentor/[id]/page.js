@@ -2,6 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import {
+  Chart as ChartJS,
+  CategoryScale, LinearScale, PointElement, LineElement,
+  Tooltip, Legend, Filler,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
 // ── Colunas do histórico (índices da array retornada pelo backend) ──────────
 // [0]Semana [1]Mês [2]Data [3]Meta [4]Horas [5]Domínio [6]Progresso [7]Revisões
@@ -37,6 +45,110 @@ function valorColor(colIdx, val) {
   return '';
 }
 
+// Datasets por visão para o gráfico temporal
+const CHART_VISOES = {
+  geral: [
+    { label: 'Horas Estudadas',  col: 4,  color: '#060242' },
+    { label: 'Domínio (%)',      col: 5,  color: '#D4B726' },
+    { label: 'Progresso (%)',    col: 6,  color: '#10b981' },
+    { label: 'Revisões Atras.',  col: 7,  color: '#f87171' },
+  ],
+  emocional: [
+    { label: 'Estresse',   col: 8,  color: '#f87171' },
+    { label: 'Ansiedade',  col: 9,  color: '#fb923c' },
+    { label: 'Motivação',  col: 10, color: '#10b981' },
+    { label: 'Sono',       col: 11, color: '#a855f7' },
+  ],
+  disciplinas: [
+    { label: 'Biologia',   col: 12, color: '#10b981' },
+    { label: 'Química',    col: 14, color: '#3b82f6' },
+    { label: 'Física',     col: 16, color: '#fb923c' },
+    { label: 'Matemática', col: 18, color: '#a855f7' },
+  ],
+};
+
+function GraficoTemporal({ registros, visao }) {
+  const labels = registros.map(r => r[0] || '');
+  const series = CHART_VISOES[visao] || CHART_VISOES.geral;
+
+  const data = {
+    labels,
+    datasets: series.map(s => ({
+      label: s.label,
+      data: registros.map(r => {
+        const v = parseFloat(String(r[s.col] ?? '').replace(',', '.'));
+        return isNaN(v) ? null : v;
+      }),
+      borderColor: s.color,
+      backgroundColor: s.color + '18',
+      pointBackgroundColor: s.color,
+      pointRadius: registros.length <= 8 ? 4 : 2,
+      pointHoverRadius: 6,
+      borderWidth: 2,
+      tension: 0.35,
+      fill: false,
+      spanGaps: true,
+    })),
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: {
+        position: 'top',
+        align: 'end',
+        labels: {
+          boxWidth: 8,
+          boxHeight: 8,
+          borderRadius: 4,
+          useBorderRadius: true,
+          font: { size: 11, family: 'ui-sans-serif, system-ui, sans-serif', weight: '600' },
+          color: '#64748b',
+          padding: 16,
+        },
+      },
+      tooltip: {
+        backgroundColor: '#0f172a',
+        titleColor: '#94a3b8',
+        bodyColor: '#f1f5f9',
+        padding: 12,
+        cornerRadius: 8,
+        titleFont: { size: 11 },
+        bodyFont: { size: 12, weight: '600' },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: {
+          font: { size: 10, family: 'ui-sans-serif, system-ui, sans-serif' },
+          color: '#94a3b8',
+          maxRotation: 35,
+          maxTicksLimit: 12,
+        },
+        border: { display: false },
+      },
+      y: {
+        grid: { color: '#f1f5f9', drawBorder: false },
+        ticks: {
+          font: { size: 10, family: 'ui-sans-serif, system-ui, sans-serif' },
+          color: '#94a3b8',
+          padding: 8,
+        },
+        border: { display: false, dash: [4, 4] },
+      },
+    },
+  };
+
+  return (
+    <div style={{ height: 220 }}>
+      <Line data={data} options={options} />
+    </div>
+  );
+}
+
 function HistoricoAnalitico({ registros, cardClass }) {
   const [visao, setVisao] = useState('geral');
   const cols = VISOES.find(v => v.id === visao)?.cols || VISOES[0].cols;
@@ -50,20 +162,32 @@ function HistoricoAnalitico({ registros, cardClass }) {
   }
 
   return (
-    <div className={cardClass + ' overflow-hidden animate-in fade-in'}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 border-b pb-4">
-        <h2 className="text-sm font-bold text-intento-blue">Histórico Analítico</h2>
-        {/* Toggle de visão */}
-        <div className="flex bg-slate-100 rounded-lg p-1 gap-1">
-          {VISOES.map(v => (
-            <button key={v.id} onClick={() => setVisao(v.id)}
-              className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${visao === v.id ? 'bg-white text-intento-blue shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-              {v.label}
-            </button>
-          ))}
+    <div className="space-y-4 animate-in fade-in">
+
+      {/* ── Card de gráfico temporal ── */}
+      <div className={cardClass}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+          <div>
+            <h2 className="text-sm font-bold text-intento-blue">Evolução Temporal</h2>
+            <p className="text-xs text-slate-400 font-medium mt-0.5">
+              {registros.length} semana{registros.length !== 1 ? 's' : ''} registrada{registros.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <div className="flex bg-slate-100 rounded-lg p-1 gap-1">
+            {VISOES.map(v => (
+              <button key={v.id} onClick={() => setVisao(v.id)}
+                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${visao === v.id ? 'bg-white text-intento-blue shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                {v.label}
+              </button>
+            ))}
+          </div>
         </div>
+        <GraficoTemporal registros={registros} visao={visao} />
       </div>
 
+      {/* ── Tabela de dados brutos ── */}
+      <div className={cardClass + ' overflow-hidden'}>
+        <h2 className="text-sm font-bold text-intento-blue mb-4">Dados Brutos</h2>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
@@ -89,10 +213,9 @@ function HistoricoAnalitico({ registros, cardClass }) {
         </table>
       </div>
 
-      <p className="text-[10px] text-slate-400 font-medium mt-3 text-right">
-        {registros.length} semana{registros.length !== 1 ? 's' : ''} registrada{registros.length !== 1 ? 's' : ''}
-      </p>
+      </div>
     </div>
+
   );
 }
 
