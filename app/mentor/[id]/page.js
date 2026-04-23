@@ -116,15 +116,15 @@ const CATEGORIAS = {
 const CATEGORIAS_DESAFIO = ['Codificação', 'Revisão', 'Hábitos', 'Prova'];
 
 // COMPONENTE: Estrelas de Avaliação
-const StarRating = ({ rating, setRating, readOnly = false }) => {
+const StarRating = ({ rating, setRating, readOnly = false, small = false }) => {
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map(star => (
         <button
           key={star}
           type="button"
           onClick={() => !readOnly && setRating(star)}
-          className={`text-3xl transition-transform ${star <= rating ? 'text-intento-yellow' : 'text-slate-200'} ${readOnly ? 'cursor-default' : 'cursor-pointer hover:scale-110'}`}
+          className={`${small ? 'text-sm' : 'text-3xl'} transition-transform ${star <= rating ? 'text-intento-yellow' : 'text-slate-200'} ${readOnly ? 'cursor-default' : 'cursor-pointer hover:scale-110'}`}
         >
           ★
         </button>
@@ -431,23 +431,39 @@ export default function GestaoIndividualAluno() {
                   {historicoDiarios.map((enc, i) => (
                     <div key={i} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden transition-all">
                       {/* CABEÇALHO DA SANFONA */}
-                      <button 
+                      <button
                         onClick={() => setExpandidoId(expandidoId === i ? null : i)}
-                        className="w-full text-left p-5 flex justify-between items-center hover:bg-slate-50 transition-colors"
+                        className="w-full text-left px-5 py-4 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors"
                       >
-                        <div className="flex items-center gap-6">
-                          <span className="bg-intento-blue text-white px-3 py-1.5 rounded-lg text-xs font-medium min-w-[110px] text-center">
-                            {new Date(enc.data).toLocaleDateString('pt-PT')}
-                          </span>
-                          <div>
-                            <span className="font-semibold text-slate-700 block text-sm">{enc.meta || 'Sem Meta Principal'}</span>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[10px] text-slate-400 uppercase font-medium tracking-wider">Avaliação:</span>
-                              <StarRating rating={parseInt(enc.autoavaliacao) || 0} readOnly={true} />
+                        {/* Data */}
+                        <span className="shrink-0 bg-intento-blue text-white px-3 py-1.5 rounded-lg text-xs font-semibold min-w-[100px] text-center">
+                          {new Date(enc.data).toLocaleDateString('pt-BR')}
+                        </span>
+
+                        {/* Meta + badges */}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-slate-700 text-sm truncate leading-snug">
+                            {enc.meta || 'Sem meta registrada'}
+                          </p>
+                          <div className="flex items-center flex-wrap gap-2 mt-1.5">
+                            {/* Tipo de desafio */}
+                            {enc.categoria && (
+                              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                {enc.categoria}
+                              </span>
+                            )}
+                            {/* Avaliação */}
+                            <div className="flex items-center gap-1">
+                              <span className="text-[10px] text-slate-400 font-medium">Autoav.:</span>
+                              <StarRating rating={parseInt(enc.autoavaliacao) || 0} readOnly={true} small={true} />
                             </div>
                           </div>
                         </div>
-                        <span className="text-3xl text-slate-300 font-light">{expandidoId === i ? '−' : '+'}</span>
+
+                        {/* Chevron */}
+                        <svg className={`w-4 h-4 shrink-0 text-slate-400 transition-transform duration-200 ${expandidoId === i ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
                       </button>
                       
                       {/* CONTEÚDO EXPANDIDO (TODOS OS CAMPOS) */}
