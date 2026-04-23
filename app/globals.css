@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --color-intento-blue: #060242;
+  --color-intento-yellow: #D4B726;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --font-sans: "Ubuntu", ui-sans-serif, system-ui, sans-serif;
+  --font-ubuntu: "Ubuntu", ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-intento: 0 4px 12px rgba(6, 2, 66, 0.03);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #ffffff;
+  color: #171717;
 }

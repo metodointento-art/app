@@ -287,7 +287,7 @@ export default function PainelGlobalMentor() {
                       className={`w-full font-bold py-2 rounded-lg transition-all text-xs
                         ${jaRegistrado
                           ? 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'
-                          : 'bg-intento-yellow/10 border border-intento-yellow/40 text-amber-700 hover:bg-intento-yellow hover:text-white hover:border-intento-yellow'
+                          : 'bg-white border-2 border-intento-yellow text-intento-yellow hover:bg-intento-yellow hover:text-white'
                         }`}
                     >
                       {jaRegistrado ? 'Novo Registro (já feito)' : '+ Novo Registro'}
