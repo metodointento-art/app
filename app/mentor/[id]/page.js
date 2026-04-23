@@ -16,6 +16,16 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 // [8]Estresse [9]Ansiedade [10]Motivação [11]Sono
 // [12]D.BIO [13]P.BIO [14]D.QUI [15]P.QUI [16]D.FIS [17]P.FIS [18]D.MAT [19]P.MAT
 
+// Colunas que chegam como decimal (0–1) e devem ser exibidas como %
+const COLUNAS_PERCENT = new Set([5, 6, 12, 13, 14, 15, 16, 17, 18, 19]);
+
+const toPercent = (val) => {
+  const n = parseFloat(String(val ?? '').replace(',', '.'));
+  if (isNaN(n)) return null;
+  // Se já for maior que 1, assume que veio formatado (ex: 68 = 68%)
+  return n <= 1 ? Math.round(n * 100) : Math.round(n);
+};
+
 const VISOES = [
   { id: 'geral',      label: 'Geral',       cols: [0, 3, 4, 5, 6, 7] },
   { id: 'emocional',  label: 'Emocional',   cols: [0, 8, 9, 10, 11] },
@@ -46,12 +56,14 @@ function valorColor(colIdx, val) {
 }
 
 // Datasets por visão para o gráfico temporal
+// Para a visão "geral", yAxisID separa escalas: yPercent (0-100%) e yRaw (valores brutos)
 const CHART_VISOES = {
   geral: [
-    { label: 'Horas Estudadas',  col: 4,  color: '#060242' },
-    { label: 'Domínio (%)',      col: 5,  color: '#D4B726' },
-    { label: 'Progresso (%)',    col: 6,  color: '#10b981' },
-    { label: 'Revisões Atras.',  col: 7,  color: '#f87171' },
+    { label: 'Domínio (%)',      col: 5,  color: '#D4B726', yAxisID: 'yPercent' },
+    { label: 'Progresso (%)',    col: 6,  color: '#10b981', yAxisID: 'yPercent' },
+    { label: 'Horas Estudadas',  col: 4,  color: '#060242', yAxisID: 'yRaw' },
+    { label: 'Meta Semanal',     col: 3,  color: '#94a3b8', yAxisID: 'yRaw' },
+    { label: 'Revisões Atras.',  col: 7,  color: '#f87171', yAxisID: 'yRaw' },
   ],
   emocional: [
     { label: 'Estresse',   col: 8,  color: '#f87171' },
@@ -71,11 +83,14 @@ function GraficoTemporal({ registros, visao }) {
   const labels = registros.map(r => r[0] || '');
   const series = CHART_VISOES[visao] || CHART_VISOES.geral;
 
+  const isGeral = visao === 'geral';
+
   const data = {
     labels,
     datasets: series.map(s => ({
       label: s.label,
       data: registros.map(r => {
+        if (COLUNAS_PERCENT.has(s.col)) return toPercent(r[s.col]);
         const v = parseFloat(String(r[s.col] ?? '').replace(',', '.'));
         return isNaN(v) ? null : v;
       }),
@@ -88,7 +103,18 @@ function GraficoTemporal({ registros, visao }) {
       tension: 0.35,
       fill: false,
       spanGaps: true,
+      ...(isGeral && s.yAxisID ? { yAxisID: s.yAxisID } : {}),
     })),
+  };
+
+  const axisBase = {
+    grid: { color: '#f1f5f9' },
+    ticks: {
+      font: { size: 10, family: 'ui-sans-serif, system-ui, sans-serif' },
+      color: '#94a3b8',
+      padding: 8,
+    },
+    border: { display: false, dash: [4, 4] },
   };
 
   const options = {
@@ -117,6 +143,13 @@ function GraficoTemporal({ registros, visao }) {
         cornerRadius: 8,
         titleFont: { size: 11 },
         bodyFont: { size: 12, weight: '600' },
+        callbacks: {
+          label: (ctx) => {
+            const s = series[ctx.datasetIndex];
+            const suffix = COLUNAS_PERCENT.has(s.col) ? '%' : '';
+            return ` ${ctx.dataset.label}: ${ctx.parsed.y ?? '—'}${suffix}`;
+          },
+        },
       },
     },
     scales: {
@@ -130,15 +163,45 @@ function GraficoTemporal({ registros, visao }) {
         },
         border: { display: false },
       },
-      y: {
-        grid: { color: '#f1f5f9', drawBorder: false },
-        ticks: {
-          font: { size: 10, family: 'ui-sans-serif, system-ui, sans-serif' },
-          color: '#94a3b8',
-          padding: 8,
+      ...(isGeral ? {
+        yPercent: {
+          ...axisBase,
+          type: 'linear',
+          position: 'left',
+          min: 0,
+          max: 100,
+          ticks: {
+            ...axisBase.ticks,
+            callback: (v) => v + '%',
+          },
+          title: {
+            display: true,
+            text: 'Domínio / Progresso',
+            font: { size: 9, weight: '600' },
+            color: '#94a3b8',
+          },
         },
-        border: { display: false, dash: [4, 4] },
-      },
+        yRaw: {
+          ...axisBase,
+          type: 'linear',
+          position: 'right',
+          grid: { display: false },
+          ticks: {
+            ...axisBase.ticks,
+            color: '#cbd5e1',
+          },
+          title: {
+            display: true,
+            text: 'Horas / Revisões',
+            font: { size: 9, weight: '600' },
+            color: '#cbd5e1',
+          },
+        },
+      } : {
+        y: {
+          ...axisBase,
+        },
+      }),
     },
   };
 
@@ -204,7 +267,9 @@ function HistoricoAnalitico({ registros, cardClass }) {
               <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                 {cols.map((ci, j) => (
                   <td key={ci} className={`p-3 whitespace-nowrap ${ci === 0 ? 'sticky left-0 bg-white font-bold text-intento-blue text-xs' : `font-medium ${valorColor(ci, reg[ci]) || 'text-slate-600'}`}`}>
-                    {reg[ci] ?? '—'}
+                    {COLUNAS_PERCENT.has(ci)
+                      ? (toPercent(reg[ci]) !== null ? `${toPercent(reg[ci])}%` : '—')
+                      : (reg[ci] ?? '—')}
                   </td>
                 ))}
               </tr>
