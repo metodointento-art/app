@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import {
   Chart as ChartJS,
   CategoryScale, LinearScale, PointElement, LineElement,
@@ -40,18 +41,12 @@ const COL_LABELS = [
 
 const COL_COLORS = [
   '','','','','','','','',
-  'text-red-500','text-orange-500','text-emerald-600','text-blue-500',
+  '','','','',
   'text-emerald-600','text-emerald-600','text-blue-500','text-blue-500',
   'text-orange-500','text-orange-500','text-purple-500','text-purple-500',
 ];
 
-function valorColor(colIdx, val) {
-  const n = parseFloat(String(val).replace(',', '.'));
-  if (isNaN(n)) return '';
-  // Estresse/Ansiedade: menor = melhor
-  if (colIdx === 8 || colIdx === 9) return n <= 4 ? 'text-emerald-600' : n <= 7 ? 'text-amber-600' : 'text-red-600';
-  // Motivação/Sono: maior = melhor
-  if (colIdx === 10 || colIdx === 11) return n >= 7 ? 'text-emerald-600' : n >= 5 ? 'text-amber-600' : 'text-red-600';
+function valorColor() {
   return '';
 }
 
@@ -473,6 +468,10 @@ export default function GestaoIndividualAluno() {
   const [modalAberto, setModalAberto] = useState(false);
   const [metaPassada, setMetaPassada] = useState("");
 
+  // Edição de encontro do diário
+  const [encontroEdit, setEncontroEdit] = useState(null);
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+
   const [formDiario, setFormDiario] = useState({
     autoavaliacao: 0, vitorias: "", desafios: "", categoriaDesafio: "Codificação",
     meta: "", exploracao: "", planosAcao: ["", "", "", "", ""]
@@ -614,6 +613,58 @@ export default function GestaoIndividualAluno() {
       } else { setStatusMsg("Erro ao salvar."); }
     } catch (e) { setStatusMsg("Erro."); }
     finally { setSalvandoEncontro(false); }
+  };
+
+  const abrirEdicaoEncontro = (enc) => {
+    const dataFmt = enc.data instanceof Date
+      ? enc.data.toLocaleDateString('pt-BR')
+      : (typeof enc.data === 'string' ? new Date(enc.data).toLocaleDateString('pt-BR') : String(enc.data ?? ''));
+    setEncontroEdit({
+      linha: enc.linha,
+      data: dataFmt,
+      autoavaliacao: parseInt(enc.autoavaliacao) || 0,
+      vitorias: enc.vitorias || '',
+      desafios: enc.desafios || '',
+      categoria: enc.categoria || 'Codificação',
+      meta: enc.meta || '',
+      exploracao: enc.exploracao || '',
+      acoes: [0,1,2,3,4].map(i => enc.acoes?.[i] || ''),
+      resultados: [0,1,2,3,4].map(i => enc.resultados?.[i] || ''),
+    });
+  };
+
+  const salvarEdicaoEncontro = async () => {
+    if (salvandoEdicao || !encontroEdit) return;
+    setSalvandoEdicao(true);
+    try {
+      const res = await fetch('/api/mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acao: 'editarEncontro', idPlanilha: params.id, ...encontroEdit }),
+      });
+      const data = await res.json();
+      if (data.status === 'sucesso') {
+        setHistoricoDiarios(prev => prev.map(e => e.linha === encontroEdit.linha ? {
+          ...e,
+          data: encontroEdit.data,
+          autoavaliacao: encontroEdit.autoavaliacao,
+          vitorias: encontroEdit.vitorias,
+          desafios: encontroEdit.desafios,
+          categoria: encontroEdit.categoria,
+          meta: encontroEdit.meta,
+          exploracao: encontroEdit.exploracao,
+          acoes: [...encontroEdit.acoes],
+          resultados: [...encontroEdit.resultados],
+        } : e));
+        setEncontroEdit(null);
+      } else {
+        alert('Erro ao salvar: ' + (data.mensagem || 'desconhecido'));
+      }
+    } catch (e) {
+      alert('Erro de conexão.');
+    } finally {
+      setSalvandoEdicao(false);
+    }
   };
 
   const carregarOnboarding = async () => {
@@ -854,12 +905,30 @@ export default function GestaoIndividualAluno() {
                       {/* CONTEÚDO EXPANDIDO (TODOS OS CAMPOS) */}
                       {expandidoId === i && (
                         <div className="p-6 border-t border-slate-100 bg-slate-50 space-y-6 animate-in fade-in">
-                          
-                          {/* Topo: Categoria */}
-                          <div>
+
+                          {/* Topo: Categoria + ações */}
+                          <div className="flex items-center justify-between gap-3">
                             <span className="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                               Desafio: {enc.categoria || 'Não Categorizado'}
                             </span>
+                            <div className="flex items-center gap-2">
+                              <Link
+                                href={`/mentor/ig/diario?id=${params.id}&linha=${enc.linha}&nome=${encodeURIComponent(nomeAluno || '')}`}
+                                className="text-xs font-semibold text-slate-500 hover:text-intento-blue flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-intento-blue bg-white transition"
+                                title="Exportar este encontro"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                Exportar
+                              </Link>
+                              <button
+                                onClick={() => abrirEdicaoEncontro(enc)}
+                                className="text-xs font-semibold text-slate-500 hover:text-intento-blue flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-intento-blue bg-white transition"
+                                title="Editar este encontro"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                Editar
+                              </button>
+                            </div>
                           </div>
 
                           {/* Grid de Vitórias e Desafios */}
@@ -992,8 +1061,111 @@ export default function GestaoIndividualAluno() {
           </div>
         )}
 
+        {/* MODAL: EDITAR ENCONTRO */}
+        {encontroEdit && (
+          <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-intento-blue/40 backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="bg-slate-50 w-full max-w-6xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+
+              <div className="bg-white px-8 py-5 border-b border-slate-200 flex justify-between items-center">
+                <h2 className="text-base font-semibold text-intento-blue">Editar Encontro — {encontroEdit.data}</h2>
+                <button onClick={() => setEncontroEdit(null)} className="text-slate-400 hover:text-red-500 transition-colors">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                  <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                      <label className={labelClass}>Data do Encontro</label>
+                      <input type="text" className={inputClass} value={encontroEdit.data} onChange={e => setEncontroEdit({...encontroEdit, data: e.target.value})} />
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                      <label className={labelClass}>Autoavaliação</label>
+                      <div className="mt-2"><StarRating rating={encontroEdit.autoavaliacao} setRating={(val) => setEncontroEdit({...encontroEdit, autoavaliacao: val})} /></div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                      <div><label className={labelClass}>Vitórias da Semana</label><textarea className={inputClass} rows="2" value={encontroEdit.vitorias} onChange={e => setEncontroEdit({...encontroEdit, vitorias: e.target.value})} /></div>
+                      <div><label className={labelClass}>Maiores Desafios</label><textarea className={inputClass} rows="2" value={encontroEdit.desafios} onChange={e => setEncontroEdit({...encontroEdit, desafios: e.target.value})} /></div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                      <label className={labelClass}>Exploração</label>
+                      <textarea className={inputClass} rows="6" value={encontroEdit.exploracao} onChange={e => setEncontroEdit({...encontroEdit, exploracao: e.target.value})} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                      <div>
+                        <label className={labelClass}>Categoria do Desafio</label>
+                        <select className={inputClass + " bg-slate-50 font-bold text-intento-blue"} value={encontroEdit.categoria} onChange={e => setEncontroEdit({...encontroEdit, categoria: e.target.value})}>
+                          <option>Codificação</option><option>Revisão</option><option>Hábitos</option><option>Prova</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className={labelClass}>Meta para o Próximo Encontro</label>
+                        <input type="text" className={inputClass} value={encontroEdit.meta} onChange={e => setEncontroEdit({...encontroEdit, meta: e.target.value})} />
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                      <label className={labelClass}>Plano de Ação e Resultados</label>
+                      <div className="space-y-3 mt-2">
+                        {[0,1,2,3,4].map(idx => (
+                          <div key={idx} className="grid grid-cols-1 md:grid-cols-5 gap-2 items-center">
+                            <input
+                              type="text"
+                              placeholder={`Ação ${idx + 1}`}
+                              className={inputClass + " md:col-span-3"}
+                              value={encontroEdit.acoes[idx]}
+                              onChange={e => {
+                                const novas = [...encontroEdit.acoes];
+                                novas[idx] = e.target.value;
+                                setEncontroEdit({...encontroEdit, acoes: novas});
+                              }}
+                            />
+                            <select
+                              className={inputClass + " md:col-span-2 bg-slate-50"}
+                              value={encontroEdit.resultados[idx]}
+                              onChange={e => {
+                                const novos = [...encontroEdit.resultados];
+                                novos[idx] = e.target.value;
+                                setEncontroEdit({...encontroEdit, resultados: novos});
+                              }}
+                            >
+                              <option value="">— Sem avaliação —</option>
+                              <option>Realizado</option>
+                              <option>Realizado Parcialmente</option>
+                              <option>Não realizado</option>
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <div className="bg-white p-6 border-t border-slate-200 flex justify-end gap-4">
+                <button onClick={() => setEncontroEdit(null)} className="px-6 py-2.5 font-medium text-slate-400 hover:text-slate-700 transition-colors text-sm">
+                  Cancelar
+                </button>
+                <button onClick={salvarEdicaoEncontro} disabled={salvandoEdicao} className="bg-intento-blue hover:bg-blue-900 text-white font-semibold px-8 py-2.5 rounded-lg shadow-sm transition-all text-sm disabled:opacity-60">
+                  {salvandoEdicao ? 'Salvando...' : 'Salvar Edição'}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
         {/* ... ABAS SEMANA E REGISTROS AQUI (MANTIDAS INTACTAS) ... */}
-        
+
         {abaInterna === 'semana' && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 animate-in fade-in duration-500">
 

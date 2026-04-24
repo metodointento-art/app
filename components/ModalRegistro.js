@@ -41,7 +41,25 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
     }));
   }, []);
 
-  const handleChange = (campo, valor) => setForm(prev => ({ ...prev, [campo]: valor }));
+  const calcularTotais = (prev, campo, valor) => {
+    const updated = { ...prev, [campo]: valor };
+    const campos = ['dominioBio', 'dominioQui', 'dominioFis', 'dominioMat'];
+    const camposProg = ['progressoBio', 'progressoQui', 'progressoFis', 'progressoMat'];
+    const vals = campos.map(c => parseFloat(updated[c])).filter(n => !isNaN(n));
+    const valsProg = camposProg.map(c => parseFloat(updated[c])).filter(n => !isNaN(n));
+    if (vals.length > 0) updated.dominioTotal = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
+    if (valsProg.length > 0) updated.progressoTotal = (valsProg.reduce((a, b) => a + b, 0) / valsProg.length).toFixed(2);
+    return updated;
+  };
+
+  const handleChange = (campo, valor) => {
+    const isDisciplina = ['dominioBio','dominioQui','dominioFis','dominioMat','progressoBio','progressoQui','progressoFis','progressoMat'].includes(campo);
+    if (isDisciplina) {
+      setForm(prev => calcularTotais(prev, campo, valor));
+    } else {
+      setForm(prev => ({ ...prev, [campo]: valor }));
+    }
+  };
 
   const salvarRegistro = async () => {
     if (salvando) return;
@@ -134,7 +152,7 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
                 </div>
               </div>
               <div>
-                <label className={labelClass}>Meta da Semana Anterior</label>
+                <label className={labelClass}>Meta de Horas da Semana Anterior</label>
                 <input type="text" className={inputClass} placeholder="Ex: Finalizar Revisões de BIO"
                   value={form.metaSemanal} onChange={e => handleChange('metaSemanal', e.target.value)} />
               </div>
@@ -169,13 +187,29 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
                 {[
                   ['horasEstudadas',    'Horas Estudadas'],
                   ['revisoesAtrasadas', 'Revisões Atrasadas'],
-                  ['dominioTotal',      'Domínio Total (%)'],
-                  ['progressoTotal',    'Progresso Total (%)'],
                 ].map(([campo, label]) => (
                   <div key={campo}>
                     <label className={labelClass}>{label}</label>
                     <input type="number" className={inputClass}
                       value={form[campo]} onChange={e => handleChange(campo, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  ['dominioTotal',   'Domínio Total (%)'],
+                  ['progressoTotal', 'Progresso Total (%)'],
+                ].map(([campo, label]) => (
+                  <div key={campo}>
+                    <label className={labelClass}>{label}</label>
+                    <div className={inputClass + ' bg-slate-50 text-slate-400 cursor-not-allowed flex items-center gap-2'}>
+                      <svg className="w-3.5 h-3.5 shrink-0 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      <span className={form[campo] ? 'text-intento-blue font-bold' : 'text-slate-300'}>
+                        {form[campo] || '—'}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
