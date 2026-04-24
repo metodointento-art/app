@@ -824,16 +824,16 @@ export default function PainelDoAluno() {
                         <textarea className="w-full bg-transparent text-white placeholder-blue-300/40 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar focus:placeholder-blue-300/20 transition-all" rows="4" placeholder="Como você se sentiu durante a prova? Houve cansaço, nervosismo, ansiedade ou falta de tempo?" value={formAutopsia.kolb.exp} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, exp: e.target.value}})}></textarea>
                       </div>
                       <div className="bg-white/5 p-5 rounded-xl border border-white/10">
-                        <label className="block text-[10px] font-medium text-intento-yellow/80 uppercase mb-3 tracking-wider">2. Reflexão</label>
-                        <textarea className="w-full bg-transparent text-white placeholder-blue-300/30 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar" rows="4" placeholder="Olhando para os seus erros, qual foi o seu maior gargalo real?" value={formAutopsia.kolb.ref} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, ref: e.target.value}})}></textarea>
+                        <label className="block text-[10px] font-medium text-intento-yellow/80 uppercase mb-3 tracking-wider flex items-center gap-1.5">2. Reflexão <span className="text-blue-300/50 normal-case font-normal">— clique para escrever</span></label>
+                        <textarea className="w-full bg-transparent text-white placeholder-blue-300/40 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar focus:placeholder-blue-300/20 transition-all" rows="4" placeholder="Olhando para os seus erros, qual foi o seu maior gargalo real?" value={formAutopsia.kolb.ref} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, ref: e.target.value}})}></textarea>
                       </div>
                       <div className="bg-white/5 p-5 rounded-xl border border-white/10">
-                        <label className="block text-[10px] font-medium text-intento-yellow/80 uppercase mb-3 tracking-wider">3. Conceituação</label>
-                        <textarea className="w-full bg-transparent text-white placeholder-blue-300/30 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar" rows="4" placeholder="O que você aprendeu com a correção destas questões?" value={formAutopsia.kolb.con} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, con: e.target.value}})}></textarea>
+                        <label className="block text-[10px] font-medium text-intento-yellow/80 uppercase mb-3 tracking-wider flex items-center gap-1.5">3. Conceituação <span className="text-blue-300/50 normal-case font-normal">— clique para escrever</span></label>
+                        <textarea className="w-full bg-transparent text-white placeholder-blue-300/40 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar focus:placeholder-blue-300/20 transition-all" rows="4" placeholder="O que você aprendeu com a correção destas questões?" value={formAutopsia.kolb.con} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, con: e.target.value}})}></textarea>
                       </div>
                       <div className="bg-emerald-900/30 p-5 rounded-xl border border-emerald-500/30">
-                        <label className="block text-[10px] font-medium text-emerald-400/80 uppercase mb-3 tracking-wider">4. Ação</label>
-                        <textarea className="w-full bg-transparent text-white placeholder-emerald-300/30 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar" rows="4" placeholder="O que você vai mudar na sua rotina de estudos imediatamente?" value={formAutopsia.kolb.acao} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, acao: e.target.value}})}></textarea>
+                        <label className="block text-[10px] font-medium text-emerald-400/80 uppercase mb-3 tracking-wider flex items-center gap-1.5">4. Ação <span className="text-emerald-300/40 normal-case font-normal">— clique para escrever</span></label>
+                        <textarea className="w-full bg-transparent text-white placeholder-emerald-300/40 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar focus:placeholder-emerald-300/20 transition-all" rows="4" placeholder="O que você vai mudar na sua rotina de estudos imediatamente?" value={formAutopsia.kolb.acao} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, acao: e.target.value}})}></textarea>
                       </div>
                     </div>
                   </div>
@@ -1327,7 +1327,7 @@ export default function PainelDoAluno() {
                           <button key={d} onClick={() => setFiltroCaderno(d)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filtroCaderno === d ? 'bg-intento-blue text-white' : 'bg-white border border-slate-200 text-slate-500 hover:border-intento-blue'}`}>{d}</button>
                         ))}
                       </div>
-                      <button onClick={() => setModalCadernoAberto(true)} className="bg-intento-yellow hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg text-sm shadow-sm transition-all shrink-0">+ Novo Card</button>
+                      <button onClick={() => { setModalCadernoAberto(true); if (filtroCaderno !== 'Todas') setFormCaderno(f => ({ ...f, disciplina: filtroCaderno })); }} className="bg-intento-yellow hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg text-sm shadow-sm transition-all shrink-0">+ Novo Card</button>
                     </div>
                   </div>
 
@@ -1360,16 +1360,16 @@ export default function PainelDoAluno() {
                                 <p className="text-sm text-slate-700 leading-relaxed">{card.resposta}</p>
                               </div>
                             ) : (
-                              <button onClick={() => setCardVirado(v => ({ ...v, [card.id]: true }))} className="w-full text-center text-xs font-semibold text-slate-400 hover:text-intento-blue border border-dashed border-slate-200 rounded-lg py-2.5 transition-all hover:border-intento-blue">
+                              <button onClick={() => { setCardVirado(v => ({ ...v, [card.id]: true })); incrementarRepeticao(card.id); }} className="w-full text-center text-xs font-semibold text-slate-400 hover:text-intento-blue border border-dashed border-slate-200 rounded-lg py-2.5 transition-all hover:border-intento-blue">
                                 Ver resposta →
                               </button>
                             )}
                           </div>
                           <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-                            <button onClick={() => incrementarRepeticao(card.id)} className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/></svg>
-                              Já revisei ({card.repeticoes}×)
-                            </button>
+                            <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                              {card.repeticoes || 0}× revisado
+                            </span>
                             <button onClick={() => deletarCardCaderno(card.id)} className="text-xs text-slate-300 hover:text-red-400 transition-colors">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             </button>

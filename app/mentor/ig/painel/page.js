@@ -16,11 +16,22 @@ const textColorMap = {
   red: '#7f1d1d', slate: '#475569',
 };
 
+// Converte decimal (0–1) para % se o campo for de porcentagem
+function formatarValor(nome, val) {
+  const n = parseFloat(String(val ?? '').replace(',', '.'));
+  if (isNaN(n)) return String(val ?? '');
+  const isPercent = /domínio|progresso/i.test(String(nome));
+  if (isPercent && n <= 1) return Math.round(n * 100) + '%';
+  return String(val ?? '');
+}
+
 // ─── Mini Card estático (sem animações — html2canvas captura bem) ─────────────
 function MiniCardExport({ item, isFirstWeek, fullBorder }) {
   if (!item) return null;
-  const currNum = parseFloat(String(item.curr ?? '0').replace('%', '').replace(',', '.')) || 0;
-  const prevNum = parseFloat(String(item.prev ?? '0').replace('%', '').replace(',', '.')) || 0;
+  const currFmt = formatarValor(item.name, item.curr);
+  const prevFmt = formatarValor(item.name, item.prev);
+  const currNum = parseFloat(String(currFmt).replace('%', '').replace(',', '.')) || 0;
+  const prevNum = parseFloat(String(prevFmt).replace('%', '').replace(',', '.')) || 0;
   const diff = currNum - prevNum;
   const inverted = String(item.name ?? '').toLowerCase().includes('atrasado');
   const positivo = inverted ? diff < 0 : diff > 0;
@@ -38,7 +49,7 @@ function MiniCardExport({ item, isFirstWeek, fullBorder }) {
         {item.name}
       </p>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-        <span style={{ fontSize: 28, fontWeight: 700, color: '#060242' }}>{item.curr ?? '0'}</span>
+        <span style={{ fontSize: 28, fontWeight: 700, color: '#060242' }}>{currFmt}</span>
         {!isFirstWeek && diff !== 0 && (
           <span style={{
             fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 9999,
@@ -50,7 +61,7 @@ function MiniCardExport({ item, isFirstWeek, fullBorder }) {
         )}
       </div>
       {!isFirstWeek && (
-        <p style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>anterior: {item.prev ?? '—'}</p>
+        <p style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>anterior: {prevFmt || '—'}</p>
       )}
     </div>
   );
