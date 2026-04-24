@@ -8,6 +8,7 @@ const labelClass = "block text-xs font-semibold text-slate-400 uppercase mb-2 tr
 export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, onRegistroSalvo }) {
   const [step, setStep] = useState(1);
   const [statusMsg, setStatusMsg] = useState('');
+  const [salvando, setSalvando] = useState(false);
 
   const [form, setForm] = useState({
     idAluno: alunoPreSelecionado?.id || '',
@@ -43,6 +44,8 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
   const handleChange = (campo, valor) => setForm(prev => ({ ...prev, [campo]: valor }));
 
   const salvarRegistro = async () => {
+    if (salvando) return;
+    setSalvando(true);
     setStatusMsg('Salvando...');
     try {
       const res = await fetch('/api/mentor', {
@@ -60,6 +63,8 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
       }
     } catch {
       setStatusMsg('Erro de conexão.');
+    } finally {
+      setSalvando(false);
     }
   };
 
@@ -139,7 +144,7 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
           {/* PASSO 2 */}
           {step === 2 && (
             <div className="space-y-4">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Indicadores emocionais — escala de 1 a 10</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Indicadores emocionais — escala de 1 a 5</p>
               <div className="grid grid-cols-2 gap-4">
                 {[
                   ['estresse',   'Nível de Estresse'],
@@ -149,7 +154,7 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
                 ].map(([campo, label]) => (
                   <div key={campo}>
                     <label className={labelClass}>{label}</label>
-                    <input type="number" min="1" max="10" className={inputClass}
+                    <input type="number" min="1" max="5" className={inputClass}
                       value={form[campo]} onChange={e => handleChange(campo, e.target.value)} />
                   </div>
                 ))}
@@ -228,9 +233,10 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
                 </button>
               : <button
                   onClick={salvarRegistro}
-                  className="bg-intento-yellow hover:bg-yellow-500 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-all"
+                  disabled={salvando}
+                  className="bg-intento-yellow hover:bg-yellow-500 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-all disabled:opacity-60"
                 >
-                  Sincronizar Registro
+                  {salvando ? 'Sincronizando...' : 'Sincronizar Registro'}
                 </button>
             }
           </div>

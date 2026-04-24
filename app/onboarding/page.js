@@ -409,7 +409,7 @@ export default function OnboardingWizard() {
                     <p className="text-xs text-slate-400 mt-1.5">Vinculado ao seu login — não pode ser alterado.</p>
                   </div>
                   <div>
-                    <label className={labelCls}>Responsável Financeiro</label>
+                    <label className={labelCls}>Responsável Financeiro <span className="text-slate-300 normal-case font-normal">(opcional)</span></label>
                     <input type="text" placeholder="Nome do responsável" className={inputCls('responsavelFinanceiro')} value={respostas.dadosPessoais.responsavelFinanceiro} onChange={e => set('dadosPessoais', 'responsavelFinanceiro', e.target.value)} />
                   </div>
                   <div></div>
@@ -509,8 +509,13 @@ export default function OnboardingWizard() {
               <div className="space-y-6">
                 <div>
                   <h2 className="text-xl font-semibold text-intento-blue">Notas Anteriores</h2>
-                  <p className="text-slate-400 text-sm font-medium mt-1">Se nunca fez o ENEM ou simulado, deixe em branco e avance.</p>
+                  <p className="text-slate-400 text-sm font-medium mt-1">
+                    {respostas.perfilAcademico.fezEnemAntes === 'Sim'
+                      ? 'Informe suas notas do ENEM para que o mentor possa montar seu diagnóstico inicial.'
+                      : 'Você ainda não fez o ENEM — sem problemas! Avance para a próxima etapa.'}
+                  </p>
                 </div>
+                {respostas.perfilAcademico.fezEnemAntes === 'Sim' && (<>
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-500 font-medium">
                   Informe sua nota TRI (0–1000) por área — o mesmo valor que aparece no seu boletim do ENEM.
                 </div>
@@ -531,6 +536,7 @@ export default function OnboardingWizard() {
                     <input type="number" min="0" max="1000" placeholder="Ex: 720" className={inputCls('redacao')} value={respostas.notasAnteriores.redacao} onChange={e => set('notasAnteriores', 'redacao', e.target.value)} />
                   </div>
                 </div>
+                </>)}
               </div>
             )}
 

@@ -365,6 +365,8 @@ export default function GestaoIndividualAluno() {
   const [historicoRegistros, setHistoricoRegistros] = useState([]);
   const [abaInterna, setAbaInterna] = useState('diario');
   const [statusMsg, setStatusMsg] = useState("");
+  const [salvandoEncontro, setSalvandoEncontro] = useState(false);
+  const [gradeModificada, setGradeModificada] = useState(false);
   const [salvandoRotina, setSalvandoRotina] = useState(false);
   const [dadosOnboarding, setDadosOnboarding] = useState(null);
   const [carregandoOnboarding, setCarregandoOnboarding] = useState(false);
@@ -505,6 +507,8 @@ export default function GestaoIndividualAluno() {
   // SALVAR NOVO DIÁRIO
   // =========================================================================
   const salvarNovoEncontro = async () => {
+    if (salvandoEncontro) return;
+    setSalvandoEncontro(true);
     setStatusMsg("Salvando Encontro...");
     try {
       const res = await fetch('/api/mentor', {
@@ -512,12 +516,13 @@ export default function GestaoIndividualAluno() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ acao: 'salvarNovoEncontro', idPlanilha: params.id, ...formDiario, autoavaliacao: formDiario.autoavaliacao, acoes: formDiario.planosAcao })
       });
-      if (res.ok) { 
-        setStatusMsg("Encontro Salvo!"); 
+      if (res.ok) {
+        setStatusMsg("Encontro Salvo!");
         setModalAberto(false);
-        window.location.reload(); 
-      }
+        window.location.reload();
+      } else { setStatusMsg("Erro ao salvar."); }
     } catch (e) { setStatusMsg("Erro."); }
+    finally { setSalvandoEncontro(false); }
   };
 
   const carregarOnboarding = async () => {
@@ -550,6 +555,7 @@ export default function GestaoIndividualAluno() {
     setGrade(novaGrade);
     setSelecaoAtual([]);
     setConfigSemana(prev => ({ ...prev, detalhe: '' }));
+    setGradeModificada(true);
   };
 
   const limparHorarios = () => {
@@ -558,6 +564,7 @@ export default function GestaoIndividualAluno() {
     selecaoAtual.forEach(id => { novaGrade[id] = null; });
     setGrade(novaGrade);
     setSelecaoAtual([]);
+    setGradeModificada(true);
   };
 
   const carregarTemplate = () => {
@@ -578,6 +585,18 @@ export default function GestaoIndividualAluno() {
     return () => window.removeEventListener('keydown', handler);
   }, [abaInterna, gradeHistorico]);
 
+  // Aviso ao tentar sair com alterações não salvas na Semana Padrão
+  useEffect(() => {
+    const handler = (e) => {
+      if (abaInterna === 'semana' && gradeModificada) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [abaInterna, gradeModificada]);
+
   const salvarSemana = async () => {
     setSalvandoRotina(true);
     const rotina = Object.entries(grade).map(([chave, item]) => {
@@ -586,8 +605,10 @@ export default function GestaoIndividualAluno() {
     });
     try {
       await fetch('/api/mentor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'salvarSemanaLote', idPlanilhaAluno: params.id, rotina }) });
-      setStatusMsg("Semana salva!"); setTimeout(() => setStatusMsg(""), 3000);
-    } catch (e) { setStatusMsg("Erro."); }
+      setStatusMsg("Rotina salva com sucesso!");
+      setGradeModificada(false);
+      setTimeout(() => setStatusMsg(""), 3000);
+    } catch (e) { setStatusMsg("Erro ao salvar."); }
     finally { setSalvandoRotina(false); }
   };
 
@@ -611,6 +632,13 @@ export default function GestaoIndividualAluno() {
         <div className="bg-intento-blue text-white p-6 rounded-xl flex justify-between items-center shadow-sm">
           <h1 className="text-2xl font-semibold">{nomeAluno || "Gestão Individual"}</h1>
         </div>
+
+        {/* Toast de status global */}
+        {statusMsg && (
+          <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-semibold animate-in fade-in slide-in-from-bottom-2 ${statusMsg.toLowerCase().includes('erro') ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'}`}>
+            {statusMsg}
+          </div>
+        )}
 
         {/* ================================================================== */}
         {/* ABA DIÁRIO DE BORDO */}
@@ -864,8 +892,8 @@ export default function GestaoIndividualAluno() {
                 <button onClick={() => setModalAberto(false)} className="px-6 py-2.5 font-medium text-slate-400 hover:text-slate-700 transition-colors text-sm">
                   Minimizar
                 </button>
-                <button onClick={salvarNovoEncontro} className="bg-intento-yellow hover:bg-yellow-500 text-white font-semibold px-8 py-2.5 rounded-lg shadow-sm transition-all text-sm">
-                  Salvar Encontro
+                <button onClick={salvarNovoEncontro} disabled={salvandoEncontro} className="bg-intento-yellow hover:bg-yellow-500 text-white font-semibold px-8 py-2.5 rounded-lg shadow-sm transition-all text-sm disabled:opacity-60">
+                  {salvandoEncontro ? 'Salvando...' : 'Salvar Encontro'}
                 </button>
               </div>
 

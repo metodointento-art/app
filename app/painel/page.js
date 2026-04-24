@@ -91,7 +91,12 @@ export default function PainelDoAluno() {
   const [fotoUsuario, setFotoUsuario] = useState(null);
   
   // Estados de Interface e Layout
-  const [abaAtiva, setAbaAtiva] = useState(1);
+  const [abaAtiva, setAbaAtiva] = useState(() => {
+    if (typeof window === 'undefined') return 1;
+    const salva = sessionStorage.getItem('_painelAba');
+    if (salva) { sessionStorage.removeItem('_painelAba'); return parseInt(salva); }
+    return 1;
+  });
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
   const [sidebarColapsada, setSidebarColapsada] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', tipo: 'success' });
@@ -123,6 +128,8 @@ export default function PainelDoAluno() {
   const [areaExpandida, setAreaExpandida] = useState(null); // O NOVO CONTROLE DA SANFONA
   const [formAutopsia, setFormAutopsia] = useState({ erros: [], kolb: { exp: '', ref: '', con: '', acao: '', redacao: '' } });
   const [salvandoAutopsia, setSalvandoAutopsia] = useState(false);
+  const [salvandoSimulado, setSalvandoSimulado] = useState(false);
+  const [salvandoCaderno, setSalvandoCaderno] = useState(false);
 
   const [simuladosLista, setSimuladosLista] = useState([]);
 
@@ -248,6 +255,12 @@ export default function PainelDoAluno() {
   
   // A FUNÇÃO DE ESTADO CORRIGIDA (Atualização em Lote)
   const atualizarErro = (id, atualizacoes) => {
+    if (atualizacoes.questao !== undefined) {
+      const numQ = parseInt(atualizacoes.questao);
+      if (numQ < 1) atualizacoes.questao = '1';
+      const duplicado = formAutopsia.erros.some(e => e.id !== id && parseInt(e.questao) === numQ);
+      if (duplicado) { mostrarToast('Este número de questão já foi usado.', 'error'); return; }
+    }
     const novosErros = formAutopsia.erros.map(e => e.id === id ? { ...e, ...atualizacoes } : e);
     setFormAutopsia({ ...formAutopsia, erros: novosErros });
   };
@@ -258,12 +271,14 @@ export default function PainelDoAluno() {
   };
 
   const salvarSimulado = async () => {
+    if (salvandoSimulado) return;
     const idPlanilha = getSpreadsheetId();
-    
+
     if (!idPlanilha) {
       mostrarToast("Erro: ID da planilha não encontrado na sessão.", "error");
       return;
     }
+    setSalvandoSimulado(true);
 
     if(!formRegistro.data || !formRegistro.especificacao) {
       mostrarToast("Preencha a data e a especificação.", "error");
@@ -294,15 +309,18 @@ export default function PainelDoAluno() {
       });
       const data = await res.json();
       
-      if (data.status === 'sucesso') { 
+      if (data.status === 'sucesso') {
         mostrarToast("Registro Salvo! A página será atualizada.", "success");
         setModalRegistroAberto(false);
-        setTimeout(() => window.location.reload(), 1500); 
+        sessionStorage.setItem('_painelAba', String(abaAtiva));
+        setTimeout(() => window.location.reload(), 1500);
       } else {
         mostrarToast("Erro no servidor: " + data.mensagem, "error");
       }
-    } catch (e) { 
-      mostrarToast("Erro de conexão ao salvar.", "error"); 
+    } catch (e) {
+      mostrarToast("Erro de conexão ao salvar.", "error");
+    } finally {
+      setSalvandoSimulado(false);
     }
   };
 
@@ -346,6 +364,7 @@ export default function PainelDoAluno() {
       if (data.status === 'sucesso') {
         mostrarToast("Análise gravada com sucesso!", "success");
         setSimuladoAnalise(null);
+        sessionStorage.setItem('_painelAba', String(abaAtiva));
         setTimeout(() => window.location.reload(), 1500);
       }
     } catch (e) {
@@ -380,6 +399,7 @@ export default function PainelDoAluno() {
       });
       mostrarToast("Progresso salvo!", "success");
       setSimuladoAnalise(null);
+      sessionStorage.setItem('_painelAba', String(abaAtiva));
       setTimeout(() => window.location.reload(), 1000);
     } catch (e) {
       mostrarToast("Erro ao salvar progresso.", "error");
@@ -465,12 +485,14 @@ export default function PainelDoAluno() {
   const disciplinasCaderno = ['Biologia', 'Química', 'Física', 'Matemática', 'Linguagens', 'Humanas', 'Redação'];
 
   const salvarCardCaderno = async () => {
+    if (salvandoCaderno) return;
     const idPlanilha = getSpreadsheetId();
     if (!idPlanilha) return;
     if (!formCaderno.disciplina || !formCaderno.pergunta || !formCaderno.resposta) {
       mostrarToast('Preencha disciplina, pergunta e resposta.', 'error');
       return;
     }
+    setSalvandoCaderno(true);
     const novoCard = { ...formCaderno, id: Date.now(), repeticoes: 0 };
     try {
       await fetch('/api/mentor', {
@@ -483,6 +505,7 @@ export default function PainelDoAluno() {
       setFormCaderno({ disciplina: '', topico: '', data: new Date().toLocaleDateString('pt-BR'), pergunta: '', resposta: '' });
       mostrarToast('Card adicionado!');
     } catch { mostrarToast('Erro ao salvar.', 'error'); }
+    finally { setSalvandoCaderno(false); }
   };
 
   const incrementarRepeticao = async (id) => {
@@ -739,8 +762,8 @@ export default function PainelDoAluno() {
                               <div key={erro.id} className="flex flex-col md:flex-row gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm relative group hover:border-intento-yellow transition-colors">
                                 
                                 <div className="w-full md:w-20 shrink-0">
-                                  <label className={labelClass}>Questão</label>
-                                  <input type="number" placeholder="Nº" className="w-full p-3 border border-slate-200 rounded-lg font-black text-slate-700 outline-none focus:border-intento-yellow text-center bg-white" value={erro.questao} onChange={e => atualizarErro(erro.id, { questao: e.target.value })} />
+                                  <label className={labelClass} title="Número da questão na prova">Nº Quest.</label>
+                                  <input type="number" placeholder="Ex: 12" min="1" className="w-full p-3 border border-slate-200 rounded-lg font-black text-slate-700 outline-none focus:border-intento-yellow text-center bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={erro.questao} onChange={e => atualizarErro(erro.id, { questao: e.target.value })} />
                                 </div>
 
                                 <div className="w-full md:w-48 shrink-0">
@@ -797,8 +820,8 @@ export default function PainelDoAluno() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
                       <div className="bg-white/5 p-5 rounded-xl border border-white/10">
-                        <label className="block text-[10px] font-medium text-intento-yellow/80 uppercase mb-3 tracking-wider">1. Experiência</label>
-                        <textarea className="w-full bg-transparent text-white placeholder-blue-300/30 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar" rows="4" placeholder="Como você se sentiu durante a prova? Houve cansaço, nervosismo, ansiedade ou falta de tempo?" value={formAutopsia.kolb.exp} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, exp: e.target.value}})}></textarea>
+                        <label className="block text-[10px] font-medium text-intento-yellow/80 uppercase mb-3 tracking-wider flex items-center gap-1.5">1. Experiência <span className="text-blue-300/50 normal-case font-normal">— clique para escrever</span></label>
+                        <textarea className="w-full bg-transparent text-white placeholder-blue-300/40 outline-none resize-none font-normal text-sm leading-relaxed custom-scrollbar focus:placeholder-blue-300/20 transition-all" rows="4" placeholder="Como você se sentiu durante a prova? Houve cansaço, nervosismo, ansiedade ou falta de tempo?" value={formAutopsia.kolb.exp} onChange={e => setFormAutopsia({...formAutopsia, kolb: {...formAutopsia.kolb, exp: e.target.value}})}></textarea>
                       </div>
                       <div className="bg-white/5 p-5 rounded-xl border border-white/10">
                         <label className="block text-[10px] font-medium text-intento-yellow/80 uppercase mb-3 tracking-wider">2. Reflexão</label>
@@ -1237,7 +1260,7 @@ export default function PainelDoAluno() {
                           <div className="p-5 flex-1">
                             <p className="text-xs text-slate-400 font-medium mb-1">{sim.modelo}</p>
                             <h4 className="text-base font-semibold text-intento-blue mb-1">{sim.especificacao}</h4>
-                            <p className="text-sm text-slate-400 mb-5">Realizado em {sim.data}</p>
+                            <p className="text-sm text-slate-400 mb-5">Realizado em {String(sim.data || '').split(' ')[0]}</p>
                             <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
                               <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">Acertos</span>
                               <span className="font-bold text-intento-blue text-sm">{parseInt(sim.lg)+parseInt(sim.ch)+parseInt(sim.cn)+parseInt(sim.mat)} <span className="text-xs text-slate-400 font-normal">/ 180</span></span>
@@ -1406,7 +1429,7 @@ export default function PainelDoAluno() {
 
             <div className="px-7 py-5 border-t border-slate-100 flex justify-end gap-3">
               <button onClick={() => setModalRegistroAberto(false)} className={btnGhost}>Cancelar</button>
-              <button onClick={salvarSimulado} className={btnPrimary}>Salvar Registro</button>            </div>
+              <button onClick={salvarSimulado} disabled={salvandoSimulado} className={btnPrimary + ' disabled:opacity-60'}>{salvandoSimulado ? 'Salvando...' : 'Salvar Registro'}</button>            </div>
           </div>
         </div>
       )}
@@ -1448,7 +1471,7 @@ export default function PainelDoAluno() {
             </div>
             <div className="px-7 py-5 border-t border-slate-100 flex justify-end gap-3">
               <button onClick={() => setModalCadernoAberto(false)} className={btnGhost}>Cancelar</button>
-              <button onClick={salvarCardCaderno} className={btnPrimary}>Salvar Card</button>
+              <button onClick={salvarCardCaderno} disabled={salvandoCaderno} className={btnPrimary + ' disabled:opacity-60'}>{salvandoCaderno ? 'Salvando...' : 'Salvar Card'}</button>
             </div>
           </div>
         </div>
