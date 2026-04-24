@@ -819,7 +819,7 @@ export default function PainelDoAluno() {
                   
                   <div className="flex justify-between items-center pt-6 border-t border-slate-200 mt-6">
                     <button onClick={salvarProgressoObjetiva} className={btnGhost}>
-                      Gravar Progresso (Sair)
+                      Gravar Análise Objetiva
                     </button>
                     <button onClick={() => setAbaAnalise('Subjetiva')} className={`${btnPrimary} flex items-center gap-2 px-8 py-4`}>
                       Análise Subjetiva <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
@@ -1260,7 +1260,7 @@ export default function PainelDoAluno() {
                       <div className={`${cardClass} text-center border-b-2 border-b-intento-blue`}><p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Média Redação</p><p className="text-4xl font-bold text-intento-blue mt-1">{simKpi.medRedacao || 0}</p></div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className={`${cardClass} col-span-1`}><h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-4 text-center">Tipos de Erros</h3><div className="h-64 flex justify-center"><Doughnut data={{ labels: ['Atenção', 'Interpretação', 'Recordação', 'Lacuna'], datasets: [{ data: [simKpi.erros?.atencao || 0, simKpi.erros?.inter || 0, simKpi.erros?.rec || 0, simKpi.erros?.lac || 0], backgroundColor: ['#D4B726', '#3b82f6', '#8b5cf6', '#ef4444'] }] }} options={{ cutout: '65%', maintainAspectRatio: false }} /></div></div>
+                      <div className={`${cardClass} col-span-1`}><h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-4 text-center">Tipos de Erros</h3><div className="h-64 flex justify-center"><Doughnut data={{ labels: ['Lacuna', 'Recordação', 'Interpretação', 'Atenção'], datasets: [{ data: [simKpi.erros?.lac || 0, simKpi.erros?.rec || 0, simKpi.erros?.inter || 0, simKpi.erros?.atencao || 0], backgroundColor: ['#ef4444', '#8b5cf6', '#3b82f6', '#D4B726'] }] }} options={{ cutout: '65%', maintainAspectRatio: false }} /></div></div>
                       <div className={`${cardClass} col-span-2`}><h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-4">Histórico de Provas</h3><div className="h-64"><Line data={{ labels: histSim.labels || [], datasets: [{ label: 'LG', data: histSim.lg || [], borderColor: '#0ea5e9' }, { label: 'CH', data: histSim.ch || [], borderColor: '#f97316' }, { label: 'CN', data: histSim.cn || [], borderColor: '#10b981' }, { label: 'MAT', data: histSim.mat || [], borderColor: '#ef4444' }] }} options={chartOptions} /></div></div>
                     </div>
                   </div>
