@@ -8,7 +8,7 @@ export async function POST(request) {
     console.log("👉 [API] Enviando para o Google a ação:", dados.acao);
     
     // O seu link atualizado:
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbymrGWq2BYRu1FZTmWagh9NtII6bhVEoZ2fd63x1IVqm43mz7b7NK23k1XCyxuFONPL0g/exec"; 
+    const GAS_URL = process.env.GOOGLE_APPSCRIPT_URL;
 
     const res = await fetch(GAS_URL, {
       method: 'POST',

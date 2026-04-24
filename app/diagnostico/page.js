@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import questoesData from '../dados/questoes.json';
 
-const API_URL_GOOGLE = 'https://script.google.com/macros/s/AKfycbymrGWq2BYRu1FZTmWagh9NtII6bhVEoZ2fd63x1IVqm43mz7b7NK23k1XCyxuFONPL0g/exec';
 
 const CORES_DISCIPLINA = {
   Biologia:   { bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', barra: 'bg-emerald-500', icone: 'text-emerald-600' },
@@ -77,10 +76,9 @@ export default function DiagnosticoTeorico() {
   const enviarParaGoogle = async () => {
     setEnviando(true);
     try {
-      await fetch(API_URL_GOOGLE, {
+      await fetch('/api/mentor', {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tipo: 'diagnostico',
           email: emailBlindado,

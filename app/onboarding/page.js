@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-const API_URL_GOOGLE = 'https://script.google.com/macros/s/AKfycbymrGWq2BYRu1FZTmWagh9NtII6bhVEoZ2fd63x1IVqm43mz7b7NK23k1XCyxuFONPL0g/exec';
 
 const PASSOS = [
   { id: 1, nome: 'Dados Pessoais',    icone: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
@@ -210,9 +209,9 @@ export default function OnboardingWizard() {
     setEnviando(true);
     localStorage.setItem('intento_email_aluno', respostas.dadosPessoais.email.toLowerCase().trim());
     try {
-      await fetch(API_URL_GOOGLE, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
+      await fetch('/api/mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tipo: 'onboarding', email: respostas.dadosPessoais.email, ...respostas }),
       });
       localStorage.removeItem(RASCUNHO_KEY);

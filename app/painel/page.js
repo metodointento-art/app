@@ -285,6 +285,7 @@ export default function PainelDoAluno() {
       return;
     }
 
+    // TODO: validation also in backend
     if (tipoModelo === 'ENEM') {
       const invalido = ['lg', 'ch', 'cn', 'mat'].some(k => {
         const v = parseInt(formRegistro[k]);
@@ -493,7 +494,7 @@ export default function PainelDoAluno() {
       return;
     }
     setSalvandoCaderno(true);
-    const novoCard = { ...formCaderno, id: Date.now(), repeticoes: 0 };
+    const novoCard = { ...formCaderno, id: 'card_' + Date.now(), estagio: 0 };
     try {
       await fetch('/api/mentor', {
         method: 'POST',
@@ -513,6 +514,7 @@ export default function PainelDoAluno() {
   const registrarRevisao = async (id, acertou) => {
     const idPlanilha = getSpreadsheetId();
     const hoje = new Date();
+    // Atualização otimista local (fallback caso o backend falhe)
     setCaderno(prev => prev.map(c => {
       if (c.id !== id) return c;
       const estagioAtual = c.estagio ?? 0;
@@ -523,11 +525,21 @@ export default function PainelDoAluno() {
       return { ...c, estagio: novoEstagio, proxima_revisao: proxima.toISOString().split('T')[0] };
     }));
     setCardVirado(v => ({ ...v, [id]: false }));
-    if (idPlanilha) fetch('/api/mentor', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ acao: 'registrarRevisaoCaderno', idPlanilha, id, acertou }),
-    });
+    if (idPlanilha) {
+      try {
+        const res = await fetch('/api/mentor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ acao: 'registrarRevisaoCaderno', idPlanilha, id, acertou }),
+        });
+        const data = await res.json();
+        if (data.status === 'sucesso' && data.novoEstagio !== undefined) {
+          setCaderno(prev => prev.map(c =>
+            c.id !== id ? c : { ...c, estagio: data.novoEstagio, proxima_revisao: data.proximaRevisao }
+          ));
+        }
+      } catch { /* mantém atualização otimista */ }
+    }
   };
 
   const deletarCardCaderno = async (id) => {
