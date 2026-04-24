@@ -682,8 +682,8 @@ export default function PainelDoAluno() {
 
         <div className="p-4 md:p-8 max-w-6xl mx-auto w-full space-y-8 flex-1">
           
-          {/* TÍTULO DA ABA ATIVA */}
-          {!simuladoAnalise && (
+          {/* TÍTULO DA ABA ATIVA — oculto nas abas com header próprio */}
+          {!simuladoAnalise && abaAtiva !== 5 && abaAtiva !== 7 && (
             <div className="mb-4 animate-in fade-in">
               <h1 className="text-2xl font-semibold text-intento-blue">{MENU_ITENS.find(m => m.id === abaAtiva)?.nome}</h1>
             </div>
@@ -1245,7 +1245,8 @@ export default function PainelDoAluno() {
 
               {abaAtiva === 5 && (
                 <div className="space-y-8 animate-in fade-in duration-500">
-                  <div className="flex justify-end border-b border-slate-200 pb-4">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                    <h1 className="text-2xl font-semibold text-intento-blue">Simulados</h1>
                     <button onClick={() => setModalRegistroAberto(true)} className={btnCTA}>
                       + Registrar Simulado
                     </button>
@@ -1336,8 +1337,8 @@ export default function PainelDoAluno() {
 
               {abaAtiva === 7 && (
                 <div className="space-y-6 animate-in fade-in duration-500">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <h2 className="text-xl font-bold text-intento-blue">Caderno de Erros</h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                    <h1 className="text-2xl font-semibold text-intento-blue">Caderno de Erros</h1>
                     <div className="flex items-center gap-3 flex-wrap">
                       <div className="flex gap-2 flex-wrap">
                         {['Todas', ...disciplinasCaderno].map(d => (
