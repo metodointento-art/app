@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ModalRegistro from '../../components/ModalRegistro';
 import { auth } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useMentor } from '@/lib/MentorContext';
 
 // Chave da semana de referência (semana anterior, dom→sab) — mesma lógica do modal
 function getSemanaKey() {
@@ -41,10 +41,8 @@ function salvarRegistroSemana(idAluno) {
 
 export default function PainelGlobalMentor() {
   const router = useRouter();
+  const { primeiroNome: mentorLogado, alunos, carregandoAlunos: carregando, prefetchAluno } = useMentor();
 
-  const [mentorLogado, setMentorLogado] = useState('');
-  const [alunos, setAlunos] = useState([]);
-  const [carregando, setCarregando] = useState(true);
   const [busca, setBusca] = useState('');
   const [registradosSemana, setRegistradosSemana] = useState({});
 
@@ -55,35 +53,6 @@ export default function PainelGlobalMentor() {
   useEffect(() => {
     setRegistradosSemana(carregarRegistrosSemana());
   }, []);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      const emailMentor = user?.email?.toLowerCase() || sessionStorage.getItem('emailLogado');
-      if (!emailMentor || !emailMentor.endsWith('@metodointento.com.br')) {
-        router.push('/');
-        return;
-      }
-
-      let primeiroNome = emailMentor.split('@')[0];
-      primeiroNome = primeiroNome.charAt(0).toUpperCase() + primeiroNome.slice(1);
-      setMentorLogado(primeiroNome);
-
-      try {
-        const res = await fetch('/api/mentor', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ acao: 'listaAlunosMentor', email: emailMentor }),
-        });
-        const data = await res.json();
-        if (data.status === 'sucesso' || data.status === 200) setAlunos(data.alunos || []);
-      } catch (e) {
-        console.error('Erro ao buscar alunos:', e);
-      } finally {
-        setCarregando(false);
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
 
   const abrirModal = (aluno = null) => {
     setAlunoPreSelecionado(aluno);
@@ -246,6 +215,8 @@ export default function PainelGlobalMentor() {
               const jaRegistrado = registradosSemana[String(aluno.id)];
               return (
                 <div key={aluno.id}
+                  onMouseEnter={() => prefetchAluno(aluno.id)}
+                  onFocus={() => prefetchAluno(aluno.id)}
                   className={`bg-white rounded-xl border-2 p-5 shadow-sm flex flex-col justify-between transition-all group
                     ${jaRegistrado
                       ? 'border-emerald-200 hover:border-emerald-300'

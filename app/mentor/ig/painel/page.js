@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useMentor } from '@/lib/MentorContext';
 
 // ─── Paleta de cores por tema ────────────────────────────────────────────────
 const borderColorMap = {
@@ -101,9 +100,8 @@ function ExportarAcompanhamento() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const cardRef = useRef(null);
+  const { alunos } = useMentor();
 
-  const [emailMentor, setEmailMentor] = useState('');
-  const [alunos, setAlunos] = useState([]);
   const [alunoId, setAlunoId] = useState(searchParams.get('id') || '');
   const [nomeAluno, setNomeAluno] = useState(decodeURIComponent(searchParams.get('nome') || ''));
   const [emailAluno, setEmailAluno] = useState('');
@@ -112,36 +110,15 @@ function ExportarAcompanhamento() {
   const [exportando, setExportando] = useState(false);
   const [erro, setErro] = useState('');
 
-  // Auth
+  // Quando a lista de alunos chega via Context, resolve o email se houver ?id= na URL
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      const email = user?.email?.toLowerCase() || sessionStorage.getItem('emailLogado');
-      if (!email || !email.endsWith('@metodointento.com.br')) { router.push('/'); return; }
-      setEmailMentor(email);
-    });
-    return () => unsub();
-  }, [router]);
-
-  // Lista de alunos para o dropdown; se já há um ID na URL, pré-carrega
-  useEffect(() => {
-    if (!emailMentor) return;
-    fetch('/api/mentor', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ acao: 'listaAlunosMentor', email: emailMentor }),
-    }).then(r => r.json()).then(d => {
-      if (d.status === 'sucesso' || d.status === 200) {
-        const lista = d.alunos || [];
-        setAlunos(lista);
-        // Se viemos com ?id= na URL, resolve o email e carrega os dados
-        const idParam = searchParams.get('id');
-        if (idParam) {
-          const aluno = lista.find(a => String(a.id) === String(idParam));
-          if (aluno) setEmailAluno(aluno.email);
-        }
-      }
-    });
-  }, [emailMentor]);
+    if (!alunos.length) return;
+    const idParam = searchParams.get('id');
+    if (idParam && !emailAluno) {
+      const aluno = alunos.find(a => String(a.id) === String(idParam));
+      if (aluno) setEmailAluno(aluno.email);
+    }
+  }, [alunos, searchParams, emailAluno]);
 
   // Carrega dados do aluno quando o email estiver disponível
   useEffect(() => {

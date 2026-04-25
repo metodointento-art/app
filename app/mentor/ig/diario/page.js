@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useMentor } from '@/lib/MentorContext';
 
 const CATEGORIA_COR = {
   'Codificação': { bg: '#dbeafe', fg: '#1e3a8a' },
@@ -37,22 +36,12 @@ function ExportarDiario() {
   const nomeFromQuery = searchParams.get('nome') || '';
 
   const cardRef = useRef(null);
-  const [emailMentor, setEmailMentor] = useState('');
+  const { emailMentor } = useMentor();
   const [encontro, setEncontro] = useState(null);
   const [nomeAluno, setNomeAluno] = useState(nomeFromQuery);
   const [carregando, setCarregando] = useState(true);
   const [exportando, setExportando] = useState(false);
   const [erro, setErro] = useState('');
-
-  // Auth
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      const email = user?.email?.toLowerCase() || sessionStorage.getItem('emailLogado');
-      if (!email || !email.endsWith('@metodointento.com.br')) { router.push('/'); return; }
-      setEmailMentor(email);
-    });
-    return () => unsub();
-  }, [router]);
 
   // Carrega o encontro específico
   useEffect(() => {
