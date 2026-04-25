@@ -376,7 +376,7 @@ const CATEGORIAS = {
   'Codificação': { cor: 'bg-blue-100 text-blue-800 border-blue-200',    btn: 'bg-blue-500 hover:bg-blue-600 text-white',    dot: 'bg-blue-500'    },
   'Revisão':     { cor: 'bg-emerald-100 text-emerald-800 border-emerald-200', btn: 'bg-emerald-500 hover:bg-emerald-600 text-white', dot: 'bg-emerald-500' },
   'Hábitos':     { cor: 'bg-yellow-100 text-yellow-800 border-yellow-200',  btn: 'bg-yellow-500 hover:bg-yellow-600 text-white',  dot: 'bg-yellow-500'  },
-  'Sono':        { cor: 'bg-purple-100 text-purple-800 border-purple-200',  btn: 'bg-purple-500 hover:bg-purple-600 text-white',  dot: 'bg-purple-500'  },
+  'Simulados':   { cor: 'bg-red-100 text-red-800 border-red-200',          btn: 'bg-red-500 hover:bg-red-600 text-white',          dot: 'bg-red-500'    },
   'Outros':      { cor: 'bg-slate-100 text-slate-800 border-slate-200',    btn: 'bg-slate-400 hover:bg-slate-500 text-white',    dot: 'bg-slate-400'   },
 };
 
@@ -410,7 +410,7 @@ const TEMPLATE_BASE = {
   'Sábado_08:00':        { categoria: 'Revisão',     label: '[Revisão] - Revisão intensiva' },
   'Sábado_09:00':        { categoria: 'Revisão',     label: '[Revisão] - Revisão intensiva' },
   'Sábado_10:00':        { categoria: 'Revisão',     label: '[Revisão] - Revisão intensiva' },
-  'Domingo_22:00':       { categoria: 'Sono',        label: '[Sono] - Dormir' },
+  'Domingo_22:00':       { categoria: 'Hábitos',     label: '[Hábitos] - Dormir' },
 };
 
 // As opções restritas para o Diário
