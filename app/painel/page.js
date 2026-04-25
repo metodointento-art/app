@@ -990,87 +990,6 @@ export default function PainelDoAluno() {
                     );
                   })()}
 
-                  {/* ÚLTIMO DIÁRIO DE BORDO */}
-                  {ultimoEncontro && (() => {
-                    const enc = ultimoEncontro;
-                    const CAT = {
-                      'Codificação': { bg: 'bg-blue-100',    fg: 'text-blue-800' },
-                      'Revisão':     { bg: 'bg-emerald-100', fg: 'text-emerald-800' },
-                      'Hábitos':     { bg: 'bg-yellow-100',  fg: 'text-yellow-800' },
-                      'Simulados':   { bg: 'bg-red-100',     fg: 'text-red-800' },
-                      'Prova':       { bg: 'bg-red-100',     fg: 'text-red-800' },
-                    }[enc.categoria] || { bg: 'bg-slate-100', fg: 'text-slate-700' };
-                    const RES = {
-                      'Realizado':              'bg-emerald-100 text-emerald-800',
-                      'Realizado Parcialmente': 'bg-yellow-100 text-yellow-800',
-                      'Não realizado':          'bg-red-100 text-red-800',
-                    };
-                    const acoesValidas = (enc.acoes || []).map((a, i) => ({ acao: a, resultado: enc.resultados?.[i] || '' })).filter(x => String(x.acao || '').trim() !== '');
-                    const estrelas = parseInt(enc.autoavaliacao) || 0;
-                    return (
-                      <div className={cardClass + ' space-y-5'}>
-                        <div className="flex items-baseline justify-between gap-3 border-b border-slate-100 pb-3">
-                          <div>
-                            <p className="text-xs font-medium text-intento-yellow uppercase tracking-wider">Último encontro</p>
-                            <h3 className="text-base font-semibold text-intento-blue mt-0.5">Diário de Bordo · {enc.data}</h3>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {[1,2,3,4,5].map(n => (
-                              <span key={n} className={`text-base ${n <= estrelas ? 'text-intento-yellow' : 'text-slate-200'}`}>★</span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {enc.categoria && (
-                          <span className={`inline-flex text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${CAT.bg} ${CAT.fg}`}>
-                            Desafio: {enc.categoria}
-                          </span>
-                        )}
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="bg-slate-50 border border-slate-100 rounded-lg p-4">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Vitórias</p>
-                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{enc.vitorias || '—'}</p>
-                          </div>
-                          <div className="bg-slate-50 border border-slate-100 rounded-lg p-4">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Maiores Desafios</p>
-                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{enc.desafios || '—'}</p>
-                          </div>
-                        </div>
-
-                        {enc.exploracao && (
-                          <div className="bg-slate-50 border border-slate-100 rounded-lg p-4">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Exploração</p>
-                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{enc.exploracao}</p>
-                          </div>
-                        )}
-
-                        {enc.meta && (
-                          <div className="bg-amber-50 border border-amber-100 border-l-4 border-l-intento-yellow rounded-lg p-4">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Meta para o próximo encontro</p>
-                            <p className="text-sm font-semibold text-slate-700 leading-relaxed">{enc.meta}</p>
-                          </div>
-                        )}
-
-                        {acoesValidas.length > 0 && (
-                          <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Plano de Ação e Resultados</p>
-                            <div className="space-y-2">
-                              {acoesValidas.map((it, i) => (
-                                <div key={i} className="bg-white border border-slate-200 rounded-lg px-4 py-2.5 flex items-center justify-between gap-3">
-                                  <span className="text-sm text-slate-700 font-medium flex-1">{i + 1}. {it.acao}</span>
-                                  <span className={`text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded ${RES[it.resultado] || 'bg-slate-100 text-slate-500'}`}>
-                                    {it.resultado || 'Aguardando'}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-
                   {/* PROGRESSIVE DISCLOSURE — Análise Completa */}
                   <div>
                     <button
@@ -1263,15 +1182,89 @@ export default function PainelDoAluno() {
               
               {abaAtiva === 3 && (
                 <div className="space-y-6 animate-in fade-in duration-500">
-                  <p className="text-slate-400 text-sm">Atualizado em: <span className="font-medium text-slate-500">{plano.data}</span></p>
-                  <div className={`${cardClass} border-t-2 border-t-intento-yellow text-center py-12`}>
-                    <p className="text-[10px] font-medium text-intento-yellow uppercase tracking-wider mb-4">Meta Principal</p>
-                    <p className="text-2xl md:text-4xl font-bold text-intento-blue">{plano.meta}</p>
-                  </div>
-                  <div className={`${cardClass} border-t-2 border-t-intento-blue`}>
-                    <h3 className="text-base font-semibold text-intento-blue mb-6">Plano de Ação</h3>
-                    <ul className="list-decimal pl-6 space-y-4 text-base text-slate-600 font-medium">{(plano.acao || []).map((item, i) => <li key={i} className="whitespace-pre-wrap">{item}</li>)}</ul>
-                  </div>
+                  {!ultimoEncontro ? (
+                    <div className={cardClass + ' text-center py-16'}>
+                      <p className="text-sm text-slate-400 font-medium">Nenhum encontro registrado pelo seu mentor ainda.</p>
+                    </div>
+                  ) : (() => {
+                    const enc = ultimoEncontro;
+                    const CAT = {
+                      'Codificação': { bg: 'bg-blue-100',    fg: 'text-blue-800' },
+                      'Revisão':     { bg: 'bg-emerald-100', fg: 'text-emerald-800' },
+                      'Hábitos':     { bg: 'bg-yellow-100',  fg: 'text-yellow-800' },
+                      'Simulados':   { bg: 'bg-red-100',     fg: 'text-red-800' },
+                      'Prova':       { bg: 'bg-red-100',     fg: 'text-red-800' },
+                    }[enc.categoria] || { bg: 'bg-slate-100', fg: 'text-slate-700' };
+                    const RES = {
+                      'Realizado':              'bg-emerald-100 text-emerald-800',
+                      'Realizado Parcialmente': 'bg-yellow-100 text-yellow-800',
+                      'Não realizado':          'bg-red-100 text-red-800',
+                    };
+                    const acoesValidas = (enc.acoes || []).map((a, i) => ({ acao: a, resultado: enc.resultados?.[i] || '' })).filter(x => String(x.acao || '').trim() !== '');
+                    const estrelas = parseInt(enc.autoavaliacao) || 0;
+                    return (
+                      <div className={cardClass + ' space-y-5'}>
+                        <div className="flex items-baseline justify-between gap-3 border-b border-slate-100 pb-3">
+                          <div>
+                            <p className="text-xs font-medium text-intento-yellow uppercase tracking-wider">Último encontro</p>
+                            <h3 className="text-base font-semibold text-intento-blue mt-0.5">Diário de Bordo · {enc.data}</h3>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {[1,2,3,4,5].map(n => (
+                              <span key={n} className={`text-base ${n <= estrelas ? 'text-intento-yellow' : 'text-slate-200'}`}>★</span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {enc.categoria && (
+                          <span className={`inline-flex text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${CAT.bg} ${CAT.fg}`}>
+                            Desafio: {enc.categoria}
+                          </span>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-slate-50 border border-slate-100 rounded-lg p-4">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Vitórias</p>
+                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{enc.vitorias || '—'}</p>
+                          </div>
+                          <div className="bg-slate-50 border border-slate-100 rounded-lg p-4">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Maiores Desafios</p>
+                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{enc.desafios || '—'}</p>
+                          </div>
+                        </div>
+
+                        {enc.exploracao && (
+                          <div className="bg-slate-50 border border-slate-100 rounded-lg p-4">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Exploração</p>
+                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{enc.exploracao}</p>
+                          </div>
+                        )}
+
+                        {enc.meta && (
+                          <div className="bg-amber-50 border border-amber-100 border-l-4 border-l-intento-yellow rounded-lg p-4">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Meta para o próximo encontro</p>
+                            <p className="text-sm font-semibold text-slate-700 leading-relaxed">{enc.meta}</p>
+                          </div>
+                        )}
+
+                        {acoesValidas.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Plano de Ação e Resultados</p>
+                            <div className="space-y-2">
+                              {acoesValidas.map((it, i) => (
+                                <div key={i} className="bg-white border border-slate-200 rounded-lg px-4 py-2.5 flex items-center justify-between gap-3">
+                                  <span className="text-sm text-slate-700 font-medium flex-1">{i + 1}. {it.acao}</span>
+                                  <span className={`text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded ${RES[it.resultado] || 'bg-slate-100 text-slate-500'}`}>
+                                    {it.resultado || 'Aguardando'}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
               
