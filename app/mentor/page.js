@@ -42,7 +42,8 @@ function salvarRegistroSemana(idAluno) {
 
 export default function PainelGlobalMentor() {
   const router = useRouter();
-  const { primeiroNome: mentorLogado, alunos, carregandoAlunos: carregando, prefetchAluno } = useMentor();
+  const { emailMentor, primeiroNome: mentorLogado, alunos, carregandoAlunos: carregando, prefetchAluno } = useMentor();
+  const ehLider = emailMentor === 'filippe@metodointento.com.br';
 
   const [busca, setBusca] = useState('');
   const [registradosSemana, setRegistradosSemana] = useState({});
@@ -90,12 +91,22 @@ export default function PainelGlobalMentor() {
             <h1 className="text-2xl font-bold text-intento-blue">Painel do Mentor</h1>
             <p className="text-slate-400 text-sm font-medium mt-0.5">Bem-vindo(a), {mentorLogado}</p>
           </div>
-          <button
-            onClick={() => { auth.signOut(); sessionStorage.removeItem('emailLogado'); router.push('/'); }}
-            className="text-sm font-semibold text-slate-400 hover:text-red-500 transition-colors"
-          >
-            Sair
-          </button>
+          <div className="flex items-center gap-3">
+            {ehLider && (
+              <button
+                onClick={() => router.push('/selecionar-modo')}
+                className="text-xs font-semibold text-intento-yellow border border-intento-yellow hover:bg-intento-yellow hover:text-white px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Painel do Líder ↔
+              </button>
+            )}
+            <button
+              onClick={() => { auth.signOut(); sessionStorage.removeItem('emailLogado'); router.push('/'); }}
+              className="text-sm font-semibold text-slate-400 hover:text-red-500 transition-colors"
+            >
+              Sair
+            </button>
+          </div>
         </div>
 
         {/* Painel de progresso semanal */}

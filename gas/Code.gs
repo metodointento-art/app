@@ -468,9 +468,9 @@ function obterDadosDoPainel(ss, emailAluno) {
 
     if (regCurr) {
       semanal.geral = [
-        mkCard('Autoavaliação',      'blue',    autoAvalCurr,                         autoAvalPrev),
         mkCard('Horas Estudadas',    'emerald', num(regCurr[COL_REG.HORAS]),          regPrev ? num(regPrev[COL_REG.HORAS])          : ''),
-        mkCard('Progresso',          'purple',  pct(regCurr[COL_REG.PROGRESSO_TOTAL]),regPrev ? pct(regPrev[COL_REG.PROGRESSO_TOTAL]): ''),
+        mkCard('Domínio Geral',      'blue',    pct(regCurr[COL_REG.DOMINIO_TOTAL]),  regPrev ? pct(regPrev[COL_REG.DOMINIO_TOTAL])  : ''),
+        mkCard('Progresso Geral',    'purple',  pct(regCurr[COL_REG.PROGRESSO_TOTAL]),regPrev ? pct(regPrev[COL_REG.PROGRESSO_TOTAL]): ''),
         mkCard('Revisões Atrasadas', 'red',     num(regCurr[COL_REG.REVISOES]),       regPrev ? num(regPrev[COL_REG.REVISOES])       : '')
       ];
       semanal.estilo = [
@@ -491,20 +491,38 @@ function obterDadosDoPainel(ss, emailAluno) {
       ];
     }
 
-    // ---- Plano ----
+    // ---- Plano + Último Encontro do Diário (snapshot completo) ----
     const plano = { data: "--", meta: "Nenhuma meta definida", acao: [] };
+    let ultimoEncontro = null;
     if (shEncontros) {
       const dadosEnc = shEncontros.getDataRange().getValues();
       for (let i = dadosEnc.length - 1; i >= 1; i--) {
         const row = dadosEnc[i];
         if (!row[COL_ENC.DATA]) continue;
         const rawData = row[COL_ENC.DATA];
-        plano.data = rawData instanceof Date
+        const dataFmt = rawData instanceof Date
           ? Utilities.formatDate(rawData, Session.getScriptTimeZone(), "dd/MM/yyyy")
           : String(rawData);
+        plano.data = dataFmt;
         plano.meta = txt(row[COL_ENC.META]) || plano.meta;
         const acoes = [row[COL_ENC.ACAO_1], row[COL_ENC.ACAO_2], row[COL_ENC.ACAO_3], row[COL_ENC.ACAO_4], row[COL_ENC.ACAO_5]];
         plano.acao  = acoes.map(function(a) { return txt(a); }).filter(function(a) { return a !== ""; });
+
+        ultimoEncontro = {
+          data:          dataFmt,
+          autoavaliacao: parseInt(row[COL_ENC.AUTOAVALIACAO]) || 0,
+          vitorias:      txt(row[COL_ENC.VITORIAS]),
+          desafios:      txt(row[COL_ENC.DESAFIOS]),
+          categoria:     txt(row[COL_ENC.CATEGORIA]),
+          meta:          txt(row[COL_ENC.META]),
+          exploracao:    txt(row[COL_ENC.EXPLORACAO]),
+          acoes:         acoes.map(txt),
+          resultados:    [
+            txt(row[COL_ENC.RESULTADO_1]), txt(row[COL_ENC.RESULTADO_2]),
+            txt(row[COL_ENC.RESULTADO_3]), txt(row[COL_ENC.RESULTADO_4]),
+            txt(row[COL_ENC.RESULTADO_5])
+          ]
+        };
         break;
       }
     }
@@ -536,7 +554,8 @@ function obterDadosDoPainel(ss, emailAluno) {
 
     return {
       aluno: { nome: nomeAluno }, snapshot: snapshot, mensal: mensal,
-      semanal: semanal, plano: plano, rotina: rotina, rotinaDias: rotinaDias,
+      semanal: semanal, plano: plano, ultimoEncontro: ultimoEncontro,
+      rotina: rotina, rotinaDias: rotinaDias,
       sim: { kpi: simKpi, hist: histSim, lista: listaSimulados },
       registros: historicoRegistros, idPlanilha: ss.getId()
     };

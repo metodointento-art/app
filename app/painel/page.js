@@ -454,6 +454,7 @@ export default function PainelDoAluno() {
   const mensal = dados.mensal || { labels: [], meta: [], horas: [], domTot: [], progTot: [], estresse: [], ansiedade: [], motivacao: [], sono: [] };
   const semanal = dados.semanal || { isFirstWeek: true, streak: [], geral: [], estilo: [], desempenho: [] };
   const plano = dados.plano || { data: '--', meta: 'Nenhuma meta', acao: [] };
+  const ultimoEncontro = dados.ultimoEncontro || null;
   const rotina = dados.rotina || {};
   const rotinaDias = dados.rotinaDias || ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
   const simKpi = dados.sim?.kpi || { realizados: 0, medAcertos: 0, medRedacao: 0, medLG: 0, medCH: 0, medCN: 0, medMAT: 0, erros: { atencao: 0, inter: 0, rec: 0, lac: 0 } };
@@ -989,6 +990,87 @@ export default function PainelDoAluno() {
                     );
                   })()}
 
+                  {/* ÚLTIMO DIÁRIO DE BORDO */}
+                  {ultimoEncontro && (() => {
+                    const enc = ultimoEncontro;
+                    const CAT = {
+                      'Codificação': { bg: 'bg-blue-100',    fg: 'text-blue-800' },
+                      'Revisão':     { bg: 'bg-emerald-100', fg: 'text-emerald-800' },
+                      'Hábitos':     { bg: 'bg-yellow-100',  fg: 'text-yellow-800' },
+                      'Simulados':   { bg: 'bg-red-100',     fg: 'text-red-800' },
+                      'Prova':       { bg: 'bg-red-100',     fg: 'text-red-800' },
+                    }[enc.categoria] || { bg: 'bg-slate-100', fg: 'text-slate-700' };
+                    const RES = {
+                      'Realizado':              'bg-emerald-100 text-emerald-800',
+                      'Realizado Parcialmente': 'bg-yellow-100 text-yellow-800',
+                      'Não realizado':          'bg-red-100 text-red-800',
+                    };
+                    const acoesValidas = (enc.acoes || []).map((a, i) => ({ acao: a, resultado: enc.resultados?.[i] || '' })).filter(x => String(x.acao || '').trim() !== '');
+                    const estrelas = parseInt(enc.autoavaliacao) || 0;
+                    return (
+                      <div className={cardClass + ' space-y-5'}>
+                        <div className="flex items-baseline justify-between gap-3 border-b border-slate-100 pb-3">
+                          <div>
+                            <p className="text-xs font-medium text-intento-yellow uppercase tracking-wider">Último encontro</p>
+                            <h3 className="text-base font-semibold text-intento-blue mt-0.5">Diário de Bordo · {enc.data}</h3>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {[1,2,3,4,5].map(n => (
+                              <span key={n} className={`text-base ${n <= estrelas ? 'text-intento-yellow' : 'text-slate-200'}`}>★</span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {enc.categoria && (
+                          <span className={`inline-flex text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${CAT.bg} ${CAT.fg}`}>
+                            Desafio: {enc.categoria}
+                          </span>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-slate-50 border border-slate-100 rounded-lg p-4">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Vitórias</p>
+                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{enc.vitorias || '—'}</p>
+                          </div>
+                          <div className="bg-slate-50 border border-slate-100 rounded-lg p-4">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Maiores Desafios</p>
+                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{enc.desafios || '—'}</p>
+                          </div>
+                        </div>
+
+                        {enc.exploracao && (
+                          <div className="bg-slate-50 border border-slate-100 rounded-lg p-4">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Exploração</p>
+                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{enc.exploracao}</p>
+                          </div>
+                        )}
+
+                        {enc.meta && (
+                          <div className="bg-amber-50 border border-amber-100 border-l-4 border-l-intento-yellow rounded-lg p-4">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Meta para o próximo encontro</p>
+                            <p className="text-sm font-semibold text-slate-700 leading-relaxed">{enc.meta}</p>
+                          </div>
+                        )}
+
+                        {acoesValidas.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Plano de Ação e Resultados</p>
+                            <div className="space-y-2">
+                              {acoesValidas.map((it, i) => (
+                                <div key={i} className="bg-white border border-slate-200 rounded-lg px-4 py-2.5 flex items-center justify-between gap-3">
+                                  <span className="text-sm text-slate-700 font-medium flex-1">{i + 1}. {it.acao}</span>
+                                  <span className={`text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded ${RES[it.resultado] || 'bg-slate-100 text-slate-500'}`}>
+                                    {it.resultado || 'Aguardando'}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   {/* PROGRESSIVE DISCLOSURE — Análise Completa */}
                   <div>
                     <button
@@ -1503,7 +1585,7 @@ export default function PainelDoAluno() {
 
               {abaAtiva === 6 && (
                 <div className="space-y-6 animate-in fade-in duration-500">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:border-intento-blue transition-colors group">
                       <div>
                         <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -1512,7 +1594,7 @@ export default function PainelDoAluno() {
                         <h3 className="text-xl font-semibold text-intento-blue mb-2">Método de Estudos</h3>
                         <p className="text-slate-500 text-sm font-medium mb-8">Acesse a nossa plataforma de aulas e domine a metodologia Intento de ponta a ponta.</p>
                       </div>
-                      <a href="" onClick={e => e.preventDefault()} className="block w-full text-center bg-intento-blue text-white font-semibold py-3 rounded-lg hover:bg-blue-900 transition-colors">Acessar Plataforma</a>
+                      <a href="https://members.kiwify.com/?club=3044b7cc-8856-438c-bb02-5fca8a83998e" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-intento-blue text-white font-semibold py-3 rounded-lg hover:bg-blue-900 transition-colors">Acessar Plataforma</a>
                     </div>
                     <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:border-intento-yellow transition-colors group">
                       <div>
@@ -1524,15 +1606,25 @@ export default function PainelDoAluno() {
                       </div>
                       <a href="https://intento.ap1.com.br/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-intento-yellow text-white font-semibold py-3 rounded-lg hover:bg-yellow-500 transition-colors">Abrir Aplicativo</a>
                     </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:border-purple-500 transition-colors group">
+                      <div>
+                        <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        </div>
+                        <h3 className="text-xl font-semibold text-intento-blue mb-2">Banco de Questões</h3>
+                        <p className="text-slate-500 text-sm font-medium mb-8">Pratique com milhares de questões filtradas por matéria, tópico e nível de dificuldade.</p>
+                      </div>
+                      <a href="https://escolas.estuda.com/usuarios_login" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-purple-600 text-white font-semibold py-3 rounded-lg hover:bg-purple-700 transition-colors">Abrir Estuda.com</a>
+                    </div>
                     <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:border-emerald-500 transition-colors group">
                       <div>
                         <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
                         </div>
-                        <h3 className="text-xl font-semibold text-intento-blue mb-2">Suporte & Comunidade</h3>
+                        <h3 className="text-xl font-semibold text-intento-blue mb-2">Suporte</h3>
                         <p className="text-slate-500 text-sm font-medium mb-8">Tem alguma dúvida técnica ou quer falar com a equipe de suporte da Intento?</p>
                       </div>
-                      <a href="" onClick={e => e.preventDefault()} className="block w-full text-center bg-slate-100 text-slate-700 font-semibold py-3 rounded-lg hover:bg-slate-200 transition-colors">Falar com o Suporte</a>
+                      <a href="https://wa.me/5561981166909" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-emerald-600 text-white font-semibold py-3 rounded-lg hover:bg-emerald-700 transition-colors">Falar com o Suporte</a>
                     </div>
                   </div>
                 </div>

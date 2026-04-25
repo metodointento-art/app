@@ -153,7 +153,7 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
               </div>
               <div>
                 <label className={labelClass}>Meta de Horas da Semana Anterior</label>
-                <input type="text" className={inputClass} placeholder="Ex: Finalizar Revisões de BIO"
+                <input type="number" min="0" step="0.5" className={inputClass} placeholder="Ex: 30"
                   value={form.metaSemanal} onChange={e => handleChange('metaSemanal', e.target.value)} />
               </div>
             </div>
