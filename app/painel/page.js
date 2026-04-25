@@ -1130,14 +1130,25 @@ export default function PainelDoAluno() {
                   return { start, end };
                 };
 
-                const getEventStyle = (t) => {
-                  if (t.includes('codificação') || t.includes('priming')) return { bg: 'bg-blue-100 border-blue-400', text: 'text-blue-900', dot: 'bg-blue-400' };
-                  if (t.includes('revisão')) return { bg: 'bg-emerald-100 border-emerald-400', text: 'text-emerald-900', dot: 'bg-emerald-400' };
-                  if (t.includes('simulado')) return { bg: 'bg-red-100 border-red-400', text: 'text-red-900', dot: 'bg-red-400' };
-                  if (t.includes('física')) return { bg: 'bg-yellow-100 border-yellow-400', text: 'text-yellow-900', dot: 'bg-yellow-400' };
-                  if (t.includes('sono') || t.includes('noturna')) return { bg: 'bg-purple-100 border-purple-400', text: 'text-purple-900', dot: 'bg-purple-400' };
-                  return { bg: 'bg-slate-100 border-slate-300', text: 'text-slate-700', dot: 'bg-slate-400' };
+                const STYLES_CATEGORIA = {
+                  'Codificação': { bg: 'bg-blue-100 border-blue-400',       text: 'text-blue-900',    dot: 'bg-blue-400'    },
+                  'Revisão':     { bg: 'bg-emerald-100 border-emerald-400', text: 'text-emerald-900', dot: 'bg-emerald-400' },
+                  'Hábitos':     { bg: 'bg-yellow-100 border-yellow-400',   text: 'text-yellow-900',  dot: 'bg-yellow-400'  },
+                  'Sono':        { bg: 'bg-purple-100 border-purple-400',   text: 'text-purple-900',  dot: 'bg-purple-400'  },
+                  'Prova':       { bg: 'bg-red-100 border-red-400',         text: 'text-red-900',     dot: 'bg-red-400'     },
+                  'Outros':      { bg: 'bg-slate-100 border-slate-300',     text: 'text-slate-700',   dot: 'bg-slate-400'   },
                 };
+                const parseAtividade = (raw) => {
+                  const s = String(raw || '').trim();
+                  const m = s.match(/^\[([^\]]+)\]\s*-?\s*(.*)$/);
+                  if (m) {
+                    const categoria = m[1].trim();
+                    const label     = m[2].trim() || categoria;
+                    return { categoria, label };
+                  }
+                  return { categoria: 'Outros', label: s };
+                };
+                const getEventStyle = (categoria) => STYLES_CATEGORIA[categoria] || STYLES_CATEGORIA['Outros'];
 
                 const today = new Date().getDay();
                 const dayAbbr = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -1165,15 +1176,17 @@ export default function PainelDoAluno() {
                               {eventos.map((att, attIdx) => {
                                 const tId = `t_${dayIdx}_${attIdx}`;
                                 const isChecked = checkboxes[alunoNameKey + tId] || false;
-                                const t = String(att.atividade || '').toLowerCase();
-                                const style = getEventStyle(t);
+                                const { categoria, label } = parseAtividade(att.atividade);
+                                const style = getEventStyle(categoria);
                                 return (
                                   <label key={attIdx} className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${isChecked ? 'opacity-40' : ''}`}>
                                     <input type="checkbox" checked={isChecked} onChange={() => toggleTask(tId)} className="w-4 h-4 rounded shrink-0" onClick={e => e.stopPropagation()} />
                                     <div className={`w-2 h-2 rounded-full shrink-0 ${style.dot}`} />
                                     <div className="flex-1 min-w-0">
-                                      <p className={`text-sm font-medium ${isChecked ? 'line-through text-slate-400' : 'text-intento-blue'} truncate`}>{att.atividade}</p>
-                                      {att.hora && <p className="text-xs text-slate-400 mt-0.5">{att.hora}</p>}
+                                      <p className={`text-sm font-medium ${isChecked ? 'line-through text-slate-400' : 'text-intento-blue'} truncate`}>{label}</p>
+                                      <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                                        <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />{categoria}{att.hora && <span className="ml-1">· {att.hora}</span>}
+                                      </p>
                                     </div>
                                   </label>
                                 );
@@ -1225,19 +1238,20 @@ export default function PainelDoAluno() {
                               const heightPx = Math.max(((end - start) / 60) * PX_PER_HOUR, 28);
                               const tId = `t_${dayIdx}_${attIdx}`;
                               const isChecked = checkboxes[alunoNameKey + tId] || false;
-                              const t = String(att.atividade || '').toLowerCase();
-                              const style = getEventStyle(t);
+                              const { categoria, label } = parseAtividade(att.atividade);
+                              const style = getEventStyle(categoria);
                               return (
                                 <label
                                   key={attIdx}
                                   className={`absolute left-0.5 right-0.5 border-l-2 rounded-[4px] px-1.5 py-1 cursor-pointer overflow-hidden flex flex-col gap-0.5 ${style.bg} ${style.text} ${isChecked ? 'opacity-40' : ''}`}
                                   style={{ top: topPx, height: heightPx }}
+                                  title={`${categoria} — ${label}`}
                                 >
                                   <div className="flex items-center gap-1 min-w-0">
                                     <input type="checkbox" checked={isChecked} onChange={() => toggleTask(tId)} className="w-3 h-3 shrink-0 rounded" onClick={e => e.stopPropagation()} />
                                     <span className={`text-[9px] font-medium opacity-60 shrink-0`}>{att.hora}</span>
                                   </div>
-                                  <p className={`text-[10px] font-semibold leading-tight truncate ${isChecked ? 'line-through' : ''}`}>{att.atividade}</p>
+                                  <p className={`text-[10px] font-semibold leading-tight truncate ${isChecked ? 'line-through' : ''}`}>{label}</p>
                                 </label>
                               );
                             })}
