@@ -515,7 +515,29 @@ function obterDadosDoPainel(ss, emailAluno) {
           ? Utilities.formatDate(row[COL_SIM.DATA], Session.getScriptTimeZone(), "yyyy-MM-dd")
           : String(row[COL_SIM.DATA]).split(" ")[0];
         let errosObj = { atencao: 0, inter: 0, rec: 0, lac: 0 };
-        try { if (row[COL_SIM.ERROS_JSON]) errosObj = JSON.parse(String(row[COL_SIM.ERROS_JSON])); } catch (e) {}
+        try {
+          if (row[COL_SIM.ERROS_JSON]) {
+            const parsed = JSON.parse(String(row[COL_SIM.ERROS_JSON]));
+            if (Array.isArray(parsed)) {
+              // formato novo: array de erros classificados — contar por tipo
+              parsed.forEach(function(e) {
+                const tipo = txt(e && e.tipo);
+                if (tipo === 'Atenção')        errosObj.atencao++;
+                else if (tipo === 'Interpretação') errosObj.inter++;
+                else if (tipo === 'Recordação')    errosObj.rec++;
+                else if (tipo === 'Lacuna')        errosObj.lac++;
+              });
+            } else if (parsed && typeof parsed === 'object') {
+              // formato antigo: objeto agregado já pronto
+              errosObj = {
+                atencao: parsed.atencao || 0,
+                inter:   parsed.inter   || 0,
+                rec:     parsed.rec     || 0,
+                lac:     parsed.lac     || 0,
+              };
+            }
+          }
+        } catch (e) {}
         const sim = {
           id: String(row[COL_SIM.ID]), status: txt(row[COL_SIM.STATUS]) || "Pendente",
           data: dataStr, modelo: "ENEM", especificacao: txt(row[COL_SIM.ESPECIFICACAO]),
