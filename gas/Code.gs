@@ -500,85 +500,10 @@ function obterDadosDoPainel(ss, emailAluno) {
     }
 
     // ---- Simulados ----
-    const simKpi = { realizados: 0, medAcertos: 0, medRedacao: 0, medLG: 0, medCH: 0, medCN: 0, medMAT: 0, erros: { atencao: 0, inter: 0, rec: 0, lac: 0 } };
-    const histSim = { labels: [], lg: [], ch: [], cn: [], mat: [] };
-    const listaSimulados = [];
-
-    const shSimulados = ss.getSheetByName(ABA.SIMULADOS);
-    if (shSimulados) {
-      const dadosSim  = shSimulados.getDataRange().getValues();
-      const concluidos = [];
-      for (let i = 1; i < dadosSim.length; i++) {
-        const row = dadosSim[i];
-        if (!row[COL_SIM.ID]) continue;
-        const dataStr = row[COL_SIM.DATA] instanceof Date
-          ? Utilities.formatDate(row[COL_SIM.DATA], Session.getScriptTimeZone(), "yyyy-MM-dd")
-          : String(row[COL_SIM.DATA]).split(" ")[0];
-        let errosObj = { atencao: 0, inter: 0, rec: 0, lac: 0 };
-        try {
-          if (row[COL_SIM.ERROS_JSON]) {
-            const parsed = JSON.parse(String(row[COL_SIM.ERROS_JSON]));
-            if (Array.isArray(parsed)) {
-              // formato novo: array de erros classificados — contar por tipo
-              parsed.forEach(function(e) {
-                const tipo = txt(e && e.tipo);
-                if (tipo === 'Atenção')        errosObj.atencao++;
-                else if (tipo === 'Interpretação') errosObj.inter++;
-                else if (tipo === 'Recordação')    errosObj.rec++;
-                else if (tipo === 'Lacuna')        errosObj.lac++;
-              });
-            } else if (parsed && typeof parsed === 'object') {
-              // formato antigo: objeto agregado já pronto
-              errosObj = {
-                atencao: parsed.atencao || 0,
-                inter:   parsed.inter   || 0,
-                rec:     parsed.rec     || 0,
-                lac:     parsed.lac     || 0,
-              };
-            }
-          }
-        } catch (e) {}
-        const sim = {
-          id: String(row[COL_SIM.ID]), status: txt(row[COL_SIM.STATUS]) || "Pendente",
-          data: dataStr, modelo: "ENEM", especificacao: txt(row[COL_SIM.ESPECIFICACAO]),
-          lg: num(row[COL_SIM.LG]), ch: num(row[COL_SIM.CH]), cn: num(row[COL_SIM.CN]),
-          mat: num(row[COL_SIM.MAT]), redacao: num(row[COL_SIM.REDACAO]), erros: errosObj,
-          kolb: {
-            exp: txt(row[COL_SIM.KOLB_EXP]), ref: txt(row[COL_SIM.KOLB_REF]),
-            con: txt(row[COL_SIM.KOLB_CON]), acao: txt(row[COL_SIM.KOLB_ACAO]),
-            redacao: txt(row[COL_SIM.KOLB_REDACAO])
-          }
-        };
-        listaSimulados.push(sim);
-        if (sim.status === "Concluída") concluidos.push(sim);
-      }
-
-      concluidos.forEach(function(s) {
-        histSim.labels.push(s.data); histSim.lg.push(s.lg); histSim.ch.push(s.ch);
-        histSim.cn.push(s.cn); histSim.mat.push(s.mat);
-      });
-      simKpi.realizados = concluidos.length;
-      if (concluidos.length > 0) {
-        const ultimas3 = concluidos.slice(-3);
-        const nn = ultimas3.length;
-        let somaLG = 0, somaCH = 0, somaCN = 0, somaMAT = 0, somaTotal = 0;
-        let somaAt = 0, somaIn = 0, somaRec = 0, somaLac = 0;
-        ultimas3.forEach(function(s) {
-          somaLG += s.lg; somaCH += s.ch; somaCN += s.cn; somaMAT += s.mat;
-          somaTotal += (s.lg + s.ch + s.cn + s.mat);
-          somaAt += (s.erros.atencao || 0); somaIn += (s.erros.inter || 0);
-          somaRec += (s.erros.rec || 0); somaLac += (s.erros.lac || 0);
-        });
-        simKpi.medLG  = Math.round(somaLG / nn);  simKpi.medCH  = Math.round(somaCH / nn);
-        simKpi.medCN  = Math.round(somaCN / nn);  simKpi.medMAT = Math.round(somaMAT / nn);
-        simKpi.medAcertos = Math.round(somaTotal / nn);
-        simKpi.erros = { atencao: Math.round(somaAt / nn), inter: Math.round(somaIn / nn), rec: Math.round(somaRec / nn), lac: Math.round(somaLac / nn) };
-        const ultimasComRedacao = concluidos.filter(function(s) { return s.redacao > 0; }).slice(-3);
-        if (ultimasComRedacao.length > 0) {
-          simKpi.medRedacao = Math.round(ultimasComRedacao.reduce(function(acc, s) { return acc + s.redacao; }, 0) / ultimasComRedacao.length);
-        }
-      }
-    }
+    const simAgg = lerSimulados(ss);
+    const simKpi = simAgg.kpi;
+    const histSim = simAgg.hist;
+    const listaSimulados = simAgg.lista;
 
     // Semana Padrão (rotina): lê BD_semana e monta { dia: [{hora, atividade}, ...] }
     // BD_semana é gravado pelo mentor com colunas na ordem Seg→Dom; o painel do aluno
@@ -884,6 +809,91 @@ function handleSalvarRegistroGlobal(dados) {
 // LER DADOS COMPLETOS DO ALUNO
 // =====================================================================
 
+// =====================================================================
+// Helper: lê BD_Sim_ENEM e devolve { kpi, hist, lista } (últimos 3)
+// =====================================================================
+function lerSimulados(ss) {
+  const kpi = { realizados: 0, medAcertos: 0, medRedacao: 0, medLG: 0, medCH: 0, medCN: 0, medMAT: 0, erros: { atencao: 0, inter: 0, rec: 0, lac: 0 } };
+  const hist = { labels: [], lg: [], ch: [], cn: [], mat: [] };
+  const lista = [];
+
+  const shSimulados = ss.getSheetByName(ABA.SIMULADOS);
+  if (!shSimulados) return { kpi: kpi, hist: hist, lista: lista };
+
+  const dadosSim  = shSimulados.getDataRange().getValues();
+  const concluidos = [];
+  for (let i = 1; i < dadosSim.length; i++) {
+    const row = dadosSim[i];
+    if (!row[COL_SIM.ID]) continue;
+    const dataStr = row[COL_SIM.DATA] instanceof Date
+      ? Utilities.formatDate(row[COL_SIM.DATA], Session.getScriptTimeZone(), "yyyy-MM-dd")
+      : String(row[COL_SIM.DATA]).split(" ")[0];
+    let errosObj = { atencao: 0, inter: 0, rec: 0, lac: 0 };
+    try {
+      if (row[COL_SIM.ERROS_JSON]) {
+        const parsed = JSON.parse(String(row[COL_SIM.ERROS_JSON]));
+        if (Array.isArray(parsed)) {
+          parsed.forEach(function(e) {
+            const tipo = txt(e && e.tipo);
+            if (tipo === 'Atenção')             errosObj.atencao++;
+            else if (tipo === 'Interpretação')  errosObj.inter++;
+            else if (tipo === 'Recordação')     errosObj.rec++;
+            else if (tipo === 'Lacuna')         errosObj.lac++;
+          });
+        } else if (parsed && typeof parsed === 'object') {
+          errosObj = {
+            atencao: parsed.atencao || 0,
+            inter:   parsed.inter   || 0,
+            rec:     parsed.rec     || 0,
+            lac:     parsed.lac     || 0,
+          };
+        }
+      }
+    } catch (e) {}
+    const sim = {
+      id: String(row[COL_SIM.ID]), status: txt(row[COL_SIM.STATUS]) || "Pendente",
+      data: dataStr, modelo: "ENEM", especificacao: txt(row[COL_SIM.ESPECIFICACAO]),
+      lg: num(row[COL_SIM.LG]), ch: num(row[COL_SIM.CH]), cn: num(row[COL_SIM.CN]),
+      mat: num(row[COL_SIM.MAT]), redacao: num(row[COL_SIM.REDACAO]), erros: errosObj,
+      kolb: {
+        exp: txt(row[COL_SIM.KOLB_EXP]), ref: txt(row[COL_SIM.KOLB_REF]),
+        con: txt(row[COL_SIM.KOLB_CON]), acao: txt(row[COL_SIM.KOLB_ACAO]),
+        redacao: txt(row[COL_SIM.KOLB_REDACAO])
+      }
+    };
+    lista.push(sim);
+    if (sim.status === "Concluída") concluidos.push(sim);
+  }
+
+  concluidos.forEach(function(s) {
+    hist.labels.push(s.data); hist.lg.push(s.lg); hist.ch.push(s.ch);
+    hist.cn.push(s.cn); hist.mat.push(s.mat);
+  });
+  kpi.realizados = concluidos.length;
+  if (concluidos.length > 0) {
+    const ultimas3 = concluidos.slice(-3);
+    const nn = ultimas3.length;
+    let somaLG = 0, somaCH = 0, somaCN = 0, somaMAT = 0, somaTotal = 0;
+    let somaAt = 0, somaIn = 0, somaRec = 0, somaLac = 0;
+    ultimas3.forEach(function(s) {
+      somaLG += s.lg; somaCH += s.ch; somaCN += s.cn; somaMAT += s.mat;
+      somaTotal += (s.lg + s.ch + s.cn + s.mat);
+      somaAt += (s.erros.atencao || 0); somaIn += (s.erros.inter || 0);
+      somaRec += (s.erros.rec || 0); somaLac += (s.erros.lac || 0);
+    });
+    kpi.medLG  = Math.round(somaLG / nn);  kpi.medCH  = Math.round(somaCH / nn);
+    kpi.medCN  = Math.round(somaCN / nn);  kpi.medMAT = Math.round(somaMAT / nn);
+    kpi.medAcertos = Math.round(somaTotal / nn);
+    kpi.erros = { atencao: Math.round(somaAt / nn), inter: Math.round(somaIn / nn), rec: Math.round(somaRec / nn), lac: Math.round(somaLac / nn) };
+    const ultimasComRedacao = concluidos.filter(function(s) { return s.redacao > 0; }).slice(-3);
+    if (ultimasComRedacao.length > 0) {
+      kpi.medRedacao = Math.round(ultimasComRedacao.reduce(function(acc, s) { return acc + s.redacao; }, 0) / ultimasComRedacao.length);
+    }
+  }
+  return { kpi: kpi, hist: hist, lista: lista };
+}
+
+
 function handleBuscarDadosAluno(dados) {
   try {
     const idPlanilha    = exigirIdPlanilha(dados, "idPlanilhaAluno");
@@ -917,6 +927,7 @@ function handleBuscarDadosAluno(dados) {
       }
     }
     pacoteDeDados.diarios = encontros.reverse();
+    pacoteDeDados.simulados = lerSimulados(ssAluno);
     return responderJSON(pacoteDeDados);
   } catch (erro) { return responderJSON({ status: "erro", mensagem: erro.message }); }
 }

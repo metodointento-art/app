@@ -429,6 +429,7 @@ export default function GestaoIndividualAluno() {
   const [carregando, setCarregando] = useState(true);
   const [historicoDiarios, setHistoricoDiarios] = useState([]);
   const [historicoRegistros, setHistoricoRegistros] = useState([]);
+  const [dadosSimulados, setDadosSimulados] = useState({ kpi: null, hist: null, lista: [] });
   const [abaInterna, setAbaInterna] = useState('diario');
   const [statusMsg, setStatusMsg] = useState("");
   const [salvandoEncontro, setSalvandoEncontro] = useState(false);
@@ -519,6 +520,7 @@ export default function GestaoIndividualAluno() {
           }
           setGrade(novaGrade);
           setHistoricoRegistros(data.registros || []);
+          setDadosSimulados(data.simulados || { kpi: null, hist: null, lista: [] });
 
           // DIÁRIOS
           const diariosCarregados = data.diarios || [];
@@ -749,6 +751,7 @@ export default function GestaoIndividualAluno() {
             <button onClick={() => setAbaInterna('diario')} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'diario' ? 'bg-intento-blue text-white' : 'bg-slate-50 text-slate-600 border border-slate-300 hover:border-intento-blue hover:text-intento-blue hover:bg-white'}`}>Diário de Bordo</button>
             <button onClick={() => setAbaInterna('semana')} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'semana' ? 'bg-intento-blue text-white' : 'bg-slate-50 text-slate-600 border border-slate-300 hover:border-intento-blue hover:text-intento-blue hover:bg-white'}`}>Semana Padrão</button>
             <button onClick={() => setAbaInterna('registros')} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'registros' ? 'bg-intento-blue text-white' : 'bg-slate-50 text-slate-600 border border-slate-300 hover:border-intento-blue hover:text-intento-blue hover:bg-white'}`}>Histórico Analítico</button>
+            <button onClick={() => setAbaInterna('simulados')} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'simulados' ? 'bg-intento-blue text-white' : 'bg-slate-50 text-slate-600 border border-slate-300 hover:border-intento-blue hover:text-intento-blue hover:bg-white'}`}>Simulados</button>
             <button onClick={() => { setAbaInterna('onboarding'); carregarOnboarding(); }} className={`px-5 py-2 font-semibold rounded-lg transition-all text-sm ${abaInterna === 'onboarding' ? 'bg-intento-blue text-white' : 'bg-slate-50 text-slate-600 border border-slate-300 hover:border-intento-blue hover:text-intento-blue hover:bg-white'}`}>Onboarding</button>
           </div>
         </div>
@@ -1306,6 +1309,179 @@ export default function GestaoIndividualAluno() {
             </div>
           </div>
         )}
+
+        {/* ================================================================== */}
+        {/* ABA SIMULADOS */}
+        {/* ================================================================== */}
+        {abaInterna === 'simulados' && (() => {
+          const simKpi  = dadosSimulados?.kpi  || { realizados: 0, medAcertos: 0, medRedacao: 0, medLG: 0, medCH: 0, medCN: 0, medMAT: 0, erros: { atencao: 0, inter: 0, rec: 0, lac: 0 } };
+          const histSim = dadosSimulados?.hist || { labels: [], lg: [], ch: [], cn: [], mat: [] };
+          const lista   = dadosSimulados?.lista || [];
+
+          const tipos = [
+            { nome: 'Lacuna',        valor: simKpi.erros?.lac || 0,     trilho: 'bg-red-100',     barra: 'bg-red-500',     dot: 'bg-red-500' },
+            { nome: 'Recordação',    valor: simKpi.erros?.rec || 0,     trilho: 'bg-purple-100',  barra: 'bg-purple-500',  dot: 'bg-purple-500' },
+            { nome: 'Interpretação', valor: simKpi.erros?.inter || 0,   trilho: 'bg-blue-100',    barra: 'bg-blue-500',    dot: 'bg-blue-500' },
+            { nome: 'Atenção',       valor: simKpi.erros?.atencao || 0, trilho: 'bg-yellow-100',  barra: 'bg-yellow-500',  dot: 'bg-yellow-500' },
+          ].sort((a, b) => b.valor - a.valor);
+          const totalErros = tipos.reduce((s, t) => s + t.valor, 0);
+
+          return (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <h2 className="text-base font-semibold text-intento-blue border-b pb-3">Simulados</h2>
+
+              {/* KPIs principais */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className={cardClass + ' text-center bg-slate-50'}>
+                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Simulados Realizados</p>
+                  <p className="text-3xl font-bold text-intento-blue mt-1">{simKpi.realizados || 0}</p>
+                  <p className="text-[10px] font-medium text-slate-400 mt-1">total</p>
+                </div>
+                <div className={cardClass + ' text-center border-b-2 border-b-intento-yellow'}>
+                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Média de Acertos</p>
+                  <p className="text-4xl font-bold text-intento-yellow mt-1">{simKpi.medAcertos || 0}<span className="text-base text-slate-400 font-medium">/180</span></p>
+                  <p className="text-[10px] font-medium text-slate-400 mt-1">últimos 3 simulados</p>
+                </div>
+                <div className={cardClass + ' text-center border-b-2 border-b-intento-blue'}>
+                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Média de Redação</p>
+                  <p className="text-4xl font-bold text-intento-blue mt-1">{simKpi.medRedacao || 0}</p>
+                  <p className="text-[10px] font-medium text-slate-400 mt-1">últimos 3 simulados</p>
+                </div>
+              </div>
+
+              {/* Disciplinas */}
+              <div>
+                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-3">Média por disciplina · últimos 3 simulados</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Linguagens',   key: 'medLG',  color: '#0ea5e9', tw: 'text-sky-600' },
+                    { label: 'Humanas',      key: 'medCH',  color: '#f97316', tw: 'text-orange-500' },
+                    { label: 'Natureza',     key: 'medCN',  color: '#10b981', tw: 'text-emerald-600' },
+                    { label: 'Matemática',   key: 'medMAT', color: '#ef4444', tw: 'text-red-500' },
+                  ].map(d => (
+                    <div key={d.key} className={cardClass + ' text-center py-4'} style={{ borderTop: `3px solid ${d.color}` }}>
+                      <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">{d.label}</p>
+                      <p className={`text-2xl font-bold mt-1 ${d.tw}`}>{simKpi[d.key] || 0}<span className="text-xs text-slate-400 font-medium">/45</span></p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tipos de erros + Histórico */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className={cardClass + ' col-span-1'}>
+                  <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">Tipos de Erros</h3>
+                  <p className="text-[10px] font-medium text-slate-400 mb-5">média dos últimos 3 simulados</p>
+                  {totalErros === 0 ? (
+                    <p className="text-xs text-slate-400 font-medium py-8 text-center">Sem simulados analisados.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {tipos.map(t => {
+                        const pct = Math.round((t.valor / totalErros) * 100);
+                        return (
+                          <div key={t.nome}>
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full ${t.dot}`} />
+                                <span className="text-xs font-semibold text-slate-700">{t.nome}</span>
+                              </div>
+                              <span className="text-[11px] font-medium text-slate-400">{t.valor} <span className="text-slate-300">·</span> {pct}%</span>
+                            </div>
+                            <div className={`w-full h-2 rounded-full ${t.trilho} overflow-hidden`}>
+                              <div className={`h-full rounded-full ${t.barra} transition-all duration-500`} style={{ width: `${pct}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className={cardClass + ' col-span-2'}>
+                  <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-4">Histórico de Provas</h3>
+                  <div className="h-64">
+                    <Line
+                      data={{
+                        labels: histSim.labels || [],
+                        datasets: [
+                          { label: 'LG',  data: histSim.lg  || [], borderColor: '#0ea5e9', backgroundColor: '#0ea5e9', tension: 0.3 },
+                          { label: 'CH',  data: histSim.ch  || [], borderColor: '#f97316', backgroundColor: '#f97316', tension: 0.3 },
+                          { label: 'CN',  data: histSim.cn  || [], borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3 },
+                          { label: 'MAT', data: histSim.mat || [], borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.3 },
+                          { label: 'Meta', data: (histSim.labels || []).map(() => 40), borderColor: '#94a3b8', backgroundColor: 'transparent', borderDash: [6, 4], pointRadius: 0, borderWidth: 1.5 },
+                        ],
+                      }}
+                      options={{
+                        responsive: true, maintainAspectRatio: false,
+                        scales: { y: { min: 0, max: 45, grid: { color: 'rgba(150,150,150,0.1)' } }, x: { grid: { display: false } } },
+                        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } },
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Lista de simulados */}
+              <div className="pt-4 border-t border-slate-100">
+                <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-4">Simulados realizados</h3>
+                {lista.length === 0 ? (
+                  <p className="text-xs text-slate-400 font-medium py-8 text-center">Nenhum simulado registrado.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {lista.slice().reverse().map(sim => {
+                      const total = (sim.lg || 0) + (sim.ch || 0) + (sim.cn || 0) + (sim.mat || 0);
+                      const concluido = sim.status === 'Concluída';
+                      return (
+                        <div key={sim.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                          <div className={`text-white text-[10px] font-semibold uppercase tracking-wide py-2 text-center ${concluido ? 'bg-emerald-500' : 'bg-amber-500'}`}>
+                            {concluido ? 'Análise Concluída' : 'Análise Pendente'}
+                          </div>
+                          <div className="p-4 flex-1 space-y-3">
+                            <div>
+                              <p className="text-xs text-slate-400 font-medium">{sim.modelo || 'ENEM'}</p>
+                              <h4 className="text-sm font-semibold text-intento-blue mt-0.5">{sim.especificacao || '—'}</h4>
+                              <p className="text-[11px] text-slate-400 mt-0.5">{sim.data || '—'}</p>
+                            </div>
+                            <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex justify-between items-center">
+                              <span className="text-xs font-medium text-slate-500">Acertos</span>
+                              <span className="font-bold text-intento-blue text-sm">{total}<span className="text-xs text-slate-400 font-normal">/180</span></span>
+                            </div>
+                            <div className="grid grid-cols-4 gap-1.5 text-center">
+                              {[['LG', sim.lg, 'text-sky-600'], ['CH', sim.ch, 'text-orange-500'], ['CN', sim.cn, 'text-emerald-600'], ['MAT', sim.mat, 'text-red-500']].map(([l, v, tw]) => (
+                                <div key={l} className="bg-slate-50 rounded p-1.5 border border-slate-100">
+                                  <p className="text-[9px] text-slate-400 font-medium uppercase">{l}</p>
+                                  <p className={`text-sm font-bold ${tw}`}>{v || 0}</p>
+                                </div>
+                              ))}
+                            </div>
+                            {sim.redacao > 0 && (
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-slate-500 font-medium">Redação</span>
+                                <span className="font-bold text-intento-blue">{sim.redacao}</span>
+                              </div>
+                            )}
+                            {concluido && (sim.kolb?.exp || sim.kolb?.ref || sim.kolb?.con || sim.kolb?.acao || sim.kolb?.redacao) && (
+                              <details className="border-t border-slate-100 pt-3">
+                                <summary className="text-[11px] font-semibold text-intento-blue cursor-pointer hover:underline">Ver análise (Kolb)</summary>
+                                <div className="mt-3 space-y-2 text-[11px]">
+                                  {sim.kolb?.exp && <div><p className="font-bold text-slate-500 uppercase tracking-wider text-[9px] mb-0.5">Experiência</p><p className="text-slate-700 whitespace-pre-wrap">{sim.kolb.exp}</p></div>}
+                                  {sim.kolb?.ref && <div><p className="font-bold text-slate-500 uppercase tracking-wider text-[9px] mb-0.5">Reflexão</p><p className="text-slate-700 whitespace-pre-wrap">{sim.kolb.ref}</p></div>}
+                                  {sim.kolb?.con && <div><p className="font-bold text-slate-500 uppercase tracking-wider text-[9px] mb-0.5">Conceituação</p><p className="text-slate-700 whitespace-pre-wrap">{sim.kolb.con}</p></div>}
+                                  {sim.kolb?.acao && <div><p className="font-bold text-slate-500 uppercase tracking-wider text-[9px] mb-0.5">Ação</p><p className="text-slate-700 whitespace-pre-wrap">{sim.kolb.acao}</p></div>}
+                                  {sim.kolb?.redacao && <div><p className="font-bold text-slate-500 uppercase tracking-wider text-[9px] mb-0.5">Redação</p><p className="text-slate-700 whitespace-pre-wrap">{sim.kolb.redacao}</p></div>}
+                                </div>
+                              </details>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ================================================================== */}
         {/* ABA ONBOARDING */}
