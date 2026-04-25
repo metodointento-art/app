@@ -1309,6 +1309,13 @@ function agregarMetricasBase_(alunos) {
     var n = parseFloat(valor);
     if (!isNaN(n) && n > 0) { alvo[campoSoma] += n; alvo[campoCount]++; }
   }
+  // Domínio e progresso são gravados em formato misto (decimal 0–1 ou
+  // percentual 0–100). Normaliza pra percentual antes de agregar.
+  function normPct(valor) {
+    var n = parseFloat(valor);
+    if (isNaN(n) || n <= 0) return null;
+    return n <= 1 ? n * 100 : n;
+  }
 
   for (var a = 0; a < alunos.length; a++) {
     try {
@@ -1342,14 +1349,14 @@ function agregarMetricasBase_(alunos) {
 
         for (var w = 0; w < ultimas4.length; w++) {
           var r = ultimas4[w];
-          acc(r[COL_REG.DOM_BIO],  'domBio',  'cDomBio',  somas);
-          acc(r[COL_REG.DOM_QUI],  'domQui',  'cDomQui',  somas);
-          acc(r[COL_REG.DOM_FIS],  'domFis',  'cDomFis',  somas);
-          acc(r[COL_REG.DOM_MAT],  'domMat',  'cDomMat',  somas);
-          acc(r[COL_REG.PROG_BIO], 'progBio', 'cProgBio', somas);
-          acc(r[COL_REG.PROG_QUI], 'progQui', 'cProgQui', somas);
-          acc(r[COL_REG.PROG_FIS], 'progFis', 'cProgFis', somas);
-          acc(r[COL_REG.PROG_MAT], 'progMat', 'cProgMat', somas);
+          acc(normPct(r[COL_REG.DOM_BIO]),  'domBio',  'cDomBio',  somas);
+          acc(normPct(r[COL_REG.DOM_QUI]),  'domQui',  'cDomQui',  somas);
+          acc(normPct(r[COL_REG.DOM_FIS]),  'domFis',  'cDomFis',  somas);
+          acc(normPct(r[COL_REG.DOM_MAT]),  'domMat',  'cDomMat',  somas);
+          acc(normPct(r[COL_REG.PROG_BIO]), 'progBio', 'cProgBio', somas);
+          acc(normPct(r[COL_REG.PROG_QUI]), 'progQui', 'cProgQui', somas);
+          acc(normPct(r[COL_REG.PROG_FIS]), 'progFis', 'cProgFis', somas);
+          acc(normPct(r[COL_REG.PROG_MAT]), 'progMat', 'cProgMat', somas);
         }
       }
 

@@ -234,66 +234,11 @@ export default function PainelLider() {
           </div>
         </div>
 
-        {/* Lista hierárquica */}
-        <div className="space-y-3">
-          <h2 className="text-base font-semibold text-intento-blue">Mentores e mentorados</h2>
-          {alunosAgrupados.length === 0 ? (
-            <div className={cardClass + ' text-center py-10'}>
-              <p className="text-sm text-slate-400 font-medium">Nenhum aluno encontrado com os filtros atuais.</p>
-            </div>
-          ) : alunosAgrupados.map(grupo => {
-            const expandido = mentoresExpandidos[grupo.mentor] !== false; // default expandido
-            const registradosGrupo = grupo.alunos.filter(a => a.registrouSemanaAtual).length;
-            return (
-              <div key={grupo.mentor} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <button
-                  onClick={() => setMentoresExpandidos(prev => ({ ...prev, [grupo.mentor]: !expandido }))}
-                  className="w-full px-5 py-3.5 flex items-center justify-between gap-4 hover:bg-slate-50 transition"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-intento-blue/10 flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-intento-blue">{(grupo.mentorNome || '?').charAt(0).toUpperCase()}</span>
-                    </div>
-                    <div className="text-left min-w-0">
-                      <p className="text-sm font-semibold text-intento-blue truncate">
-                        {grupo.mentorNome}
-                        {!grupo.mentorAtivo && <span className="ml-2 text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded uppercase">não cadastrado</span>}
-                      </p>
-                      <p className="text-[11px] text-slate-400 font-medium">{grupo.alunos.length} mentorado{grupo.alunos.length !== 1 ? 's' : ''} · {registradosGrupo} registrado{registradosGrupo !== 1 ? 's' : ''}</p>
-                    </div>
-                  </div>
-                  <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${expandido ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
-                </button>
-                {expandido && (
-                  <div className="border-t border-slate-100 divide-y divide-slate-100">
-                    {grupo.alunos.map(a => (
-                      <div key={a.idAluno} className="px-5 py-3 flex items-center justify-between gap-4 hover:bg-slate-50 transition">
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <div className={`w-2 h-2 rounded-full shrink-0 ${a.registrouSemanaAtual ? 'bg-emerald-500' : 'bg-red-400'}`} title={a.registrouSemanaAtual ? 'Registrado' : 'Pendente'}/>
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold text-slate-700 truncate">{a.nome}</p>
-                            <p className="text-[10px] text-slate-400 font-medium truncate">
-                              {a.ultimoEncontro ? `Último encontro: ${a.ultimoEncontro}` : 'Sem encontros registrados'}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => window.open(`/mentor/${a.idAluno}?nome=${encodeURIComponent(a.nome)}`, '_blank')}
-                          className="text-[11px] font-semibold text-intento-blue hover:underline shrink-0"
-                        >
-                          Ver detalhes ↗
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        {/* Visão analítica — sempre visão geral, não respeita filtros */}
+        <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-3 pt-4">
+          <h2 className="text-base font-semibold text-intento-blue">Visão analítica</h2>
+          <span className="text-[11px] text-slate-400 font-medium">visão geral da base · não respeita os filtros</span>
         </div>
-
-        {/* Visão analítica */}
-        <h2 className="text-base font-semibold text-intento-blue pt-4">Visão analítica</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -392,6 +337,67 @@ export default function PainelLider() {
               options={chartOptions}
             />
           </div>
+        </div>
+
+        {/* Lista hierárquica — respeita filtros */}
+        <div className="space-y-3 pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-3">
+            <h2 className="text-base font-semibold text-intento-blue">Mentores e mentorados</h2>
+            <span className="text-[11px] text-slate-400 font-medium">respeita os filtros acima</span>
+          </div>
+          {alunosAgrupados.length === 0 ? (
+            <div className={cardClass + ' text-center py-10'}>
+              <p className="text-sm text-slate-400 font-medium">Nenhum aluno encontrado com os filtros atuais.</p>
+            </div>
+          ) : alunosAgrupados.map(grupo => {
+            const expandido = mentoresExpandidos[grupo.mentor] !== false; // default expandido
+            const registradosGrupo = grupo.alunos.filter(a => a.registrouSemanaAtual).length;
+            return (
+              <div key={grupo.mentor} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <button
+                  onClick={() => setMentoresExpandidos(prev => ({ ...prev, [grupo.mentor]: !expandido }))}
+                  className="w-full px-5 py-3.5 flex items-center justify-between gap-4 hover:bg-slate-50 transition"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-intento-blue/10 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-intento-blue">{(grupo.mentorNome || '?').charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div className="text-left min-w-0">
+                      <p className="text-sm font-semibold text-intento-blue truncate">
+                        {grupo.mentorNome}
+                        {!grupo.mentorAtivo && <span className="ml-2 text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded uppercase">não cadastrado</span>}
+                      </p>
+                      <p className="text-[11px] text-slate-400 font-medium">{grupo.alunos.length} mentorado{grupo.alunos.length !== 1 ? 's' : ''} · {registradosGrupo} registrado{registradosGrupo !== 1 ? 's' : ''}</p>
+                    </div>
+                  </div>
+                  <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${expandido ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                {expandido && (
+                  <div className="border-t border-slate-100 divide-y divide-slate-100">
+                    {grupo.alunos.map(a => (
+                      <div key={a.idAluno} className="px-5 py-3 flex items-center justify-between gap-4 hover:bg-slate-50 transition">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className={`w-2 h-2 rounded-full shrink-0 ${a.registrouSemanaAtual ? 'bg-emerald-500' : 'bg-red-400'}`} title={a.registrouSemanaAtual ? 'Registrado' : 'Pendente'}/>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-slate-700 truncate">{a.nome}</p>
+                            <p className="text-[10px] text-slate-400 font-medium truncate">
+                              {a.ultimoEncontro ? `Último encontro: ${a.ultimoEncontro}` : 'Sem encontros registrados'}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => window.open(`/mentor/${a.idAluno}?nome=${encodeURIComponent(a.nome)}`, '_blank')}
+                          className="text-[11px] font-semibold text-intento-blue hover:underline shrink-0"
+                        >
+                          Ver detalhes ↗
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
       </div>
