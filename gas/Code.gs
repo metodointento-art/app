@@ -22,15 +22,14 @@ const ABA = {
   TOPICOS:     "BD_Topicos"
 };
 
+// Layout slim de BD_Alunos (23 cols A–W, snake_case headers)
 const COL_MESTRE = {
   TIMESTAMP: 0, NOME: 1, DATA_NASCIMENTO: 2, TELEFONE: 3,
   RESPONSAVEL_FINANCEIRO: 4, EMAIL: 5, CIDADE: 6, ESTADO: 7,
   ESCOLARIDADE: 8, ORIGEM_ENSINO_MEDIO: 9, COTA: 10, FEZ_ENEM_ANTES: 11,
   PROVAS_INTERESSE: 12, CURSO_INTERESSE: 13, PLATAFORMA_ONLINE: 14,
-  HISTORICO_ESTUDOS: 15, OBSTACULOS: 16, EXPECTATIVAS: 17,
-  NOTA_LINGUAGENS: 18, NOTA_HUMANAS: 19, NOTA_NATUREZA: 20, NOTA_MATEMATICA: 21,
-  ID_PLANILHA: 52,
-  NOTA_REDACAO: 57, MENTOR_RESPONSAVEL: 58, STATUS_ONBOARDING: 59
+  NOTA_LINGUAGENS: 15, NOTA_HUMANAS: 16, NOTA_NATUREZA: 17, NOTA_MATEMATICA: 18,
+  NOTA_REDACAO: 19, ID_PLANILHA: 20, MENTOR_RESPONSAVEL: 21, STATUS_ONBOARDING: 22
 };
 
 // Cache_Alunos: cache em aba separada — escrita em writes, leitura em dashboardLider
@@ -283,7 +282,7 @@ function handleOnboarding(dados) {
     const emailMentorado  = emailNorm(dp.email);
     const idNovaPlanilha  = provisionarPlanilhaAluno(nomeMentorado, emailMentorado, arrayOnboarding);
 
-    const linhaMestre = new Array(60).fill("");
+    const linhaMestre = new Array(23).fill("");
     linhaMestre[COL_MESTRE.TIMESTAMP]         = agora;
     linhaMestre[COL_MESTRE.NOME]              = nomeMentorado;
     linhaMestre[COL_MESTRE.EMAIL]             = emailMentorado;
@@ -976,11 +975,12 @@ function handleLoginGlobal(dados) {
       return responderJSON({ status: "sucesso", perfil: "mentor", rota: "/mentor" });
 
     const ss        = SpreadsheetApp.getActiveSpreadsheet();
-    const abaAlunos = ss.getSheetByName(ABA.MESTRE) || ss.getSheetByName("Controle_Geral") || ss.getSheets()[0];
+    const abaAlunos = ss.getSheetByName(ABA.MESTRE);
+    if (!abaAlunos) throw new Error("Aba '" + ABA.MESTRE + "' não encontrada.");
     const ultimaLinha = abaAlunos.getLastRow();
     if (ultimaLinha < 2) return responderJSON({ status: "sucesso", perfil: "aluno", rota: "/hub", novo: true });
 
-    const matriz = abaAlunos.getRange(1, 1, ultimaLinha, 60).getValues();
+    const matriz = abaAlunos.getRange(1, 1, ultimaLinha, 23).getValues();
     for (let i = matriz.length - 1; i >= 1; i--) {
       if (emailNorm(matriz[i][COL_MESTRE.EMAIL]) === emailStr) {
         const statusBH    = txt(matriz[i][COL_MESTRE.STATUS_ONBOARDING]);

@@ -124,6 +124,143 @@ function smokeTestCompleto() {
 }
 
 /**
+ * Util de migração — cria aba 'BD_Alunos_Slim' com layout enxuto (23 cols
+ * snake_case) copiando dados da BD_Alunos atual. Idempotente: recria a
+ * aba slim a cada execução.
+ *
+ * Após rodar, fazer manualmente o switch:
+ *   1. Renomear BD_Alunos → BD_Alunos_Old_<data>
+ *   2. Renomear BD_Alunos_Slim → BD_Alunos
+ */
+function migrarBDAlunosParaSlim() {
+  Logger.log('===== MIGRAR BD_Alunos PARA SLIM =====');
+  var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+  var abaAntiga = ssMestre.getSheetByName(ABA.MESTRE);
+  if (!abaAntiga) { Logger.log('FAIL: ' + ABA.MESTRE + ' não encontrada'); return; }
+
+  // Recria a aba slim do zero
+  var abaNova = ssMestre.getSheetByName('BD_Alunos_Slim');
+  if (abaNova) ssMestre.deleteSheet(abaNova);
+  abaNova = ssMestre.insertSheet('BD_Alunos_Slim');
+
+  var HEADERS = [
+    'timestamp', 'nome_aluno', 'data_nascimento', 'telefone',
+    'responsavel_financeiro', 'email', 'cidade', 'estado',
+    'escolaridade', 'origem_ensino_medio', 'cota', 'fez_enem_antes',
+    'provas_interesse', 'curso_interesse', 'plataforma_online',
+    'nota_linguagens', 'nota_humanas', 'nota_natureza', 'nota_matematica',
+    'nota_redacao', 'id_planilha', 'mentor_responsavel', 'status_onboarding'
+  ];
+  abaNova.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+  abaNova.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
+  abaNova.setFrozenRows(1);
+
+  var matrizAntiga = abaAntiga.getDataRange().getValues();
+  if (matrizAntiga.length < 2) { Logger.log('Nenhum aluno pra migrar'); return; }
+
+  // Mapping: índices da matriz antiga (60 cols) → posição na nova (23 cols)
+  // Ordem corresponde a HEADERS acima.
+  var mapeamento = [
+    0,   // timestamp (A → A)
+    1,   // nome_aluno (B → B)
+    2,   // data_nascimento (C → C)
+    3,   // telefone (D → D)
+    4,   // responsavel_financeiro (E → E)
+    5,   // email (F → F)
+    6,   // cidade (G → G)
+    7,   // estado (H → H)
+    8,   // escolaridade (I → I)
+    9,   // origem_ensino_medio (J → J)
+    10,  // cota (K → K)
+    11,  // fez_enem_antes (L → L)
+    12,  // provas_interesse (M → M)
+    13,  // curso_interesse (N → N)
+    14,  // plataforma_online (O → O)
+    18,  // nota_linguagens (S → P)
+    19,  // nota_humanas (T → Q)
+    20,  // nota_natureza (U → R)
+    21,  // nota_matematica (V → S)
+    57,  // nota_redacao (BF → T)
+    52,  // id_planilha (BA → U)
+    58,  // mentor_responsavel (BG → V)
+    59   // status_onboarding (BH → W)
+  ];
+
+  var linhasNovas = [];
+  for (var i = 1; i < matrizAntiga.length; i++) {
+    var linha = mapeamento.map(function(idx) { return matrizAntiga[i][idx] || ''; });
+    linhasNovas.push(linha);
+  }
+
+  if (linhasNovas.length > 0) {
+    abaNova.getRange(2, 1, linhasNovas.length, HEADERS.length).setValues(linhasNovas);
+  }
+
+  // Validação de dados (dropdown): mentor_responsavel = col V = posição 22
+  var abaMentores = ssMestre.getSheetByName(ABA.MENTORES);
+  if (abaMentores && abaMentores.getLastRow() >= 2) {
+    var rangeEmails = abaMentores.getRange(2, 1, abaMentores.getLastRow() - 1, 1);
+    var ruleMentor = SpreadsheetApp.newDataValidation()
+      .requireValueInRange(rangeEmails, true)
+      .setAllowInvalid(false)
+      .setHelpText('Selecione um email da aba BD_Mentores')
+      .build();
+    abaNova.getRange(2, 22, Math.max(linhasNovas.length, 1), 1).setDataValidation(ruleMentor);
+  }
+
+  // Validação: status_onboarding = col W = posição 23
+  var ruleStatus = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['Aguardando Diagnóstico', 'Onboarding Completo'], true)
+    .setAllowInvalid(false)
+    .setHelpText('Aguardando Diagnóstico | Onboarding Completo')
+    .build();
+  abaNova.getRange(2, 23, Math.max(linhasNovas.length, 1), 1).setDataValidation(ruleStatus);
+
+  Logger.log('===== OK · ' + linhasNovas.length + ' alunos copiados pra BD_Alunos_Slim · ' + HEADERS.length + ' cols =====');
+}
+
+/**
+ * Lista emails de mentor presentes em BD_Alunos_Slim mas ausentes (ou
+ * inativos) em BD_Mentores. Útil pra você completar a aba Mentores
+ * antes de fazer o switch BD_Alunos_Slim → BD_Alunos.
+ */
+function listarMentoresFaltantes() {
+  Logger.log('===== MENTORES FALTANTES EM BD_Mentores =====');
+  var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+
+  var abaSlim = ssMestre.getSheetByName('BD_Alunos_Slim');
+  if (!abaSlim) { Logger.log('FAIL: BD_Alunos_Slim não existe — rode migrarBDAlunosParaSlim antes'); return; }
+  var matriz = abaSlim.getDataRange().getValues();
+  if (matriz.length < 2) { Logger.log('Sem dados em BD_Alunos_Slim'); return; }
+
+  // mentor_responsavel = coluna V = índice 21
+  var emailsAlunos = {};
+  for (var i = 1; i < matriz.length; i++) {
+    var em = emailNorm(matriz[i][21]);
+    if (em) emailsAlunos[em] = (emailsAlunos[em] || 0) + 1;
+  }
+
+  var ativos = lerMentoresAtivos();
+  var faltantes = [];
+  Object.keys(emailsAlunos).forEach(function(em) {
+    if (!ativos[em]) faltantes.push({ email: em, count: emailsAlunos[em] });
+  });
+
+  faltantes.sort(function(a, b) { return b.count - a.count; });
+
+  if (faltantes.length === 0) {
+    Logger.log('✓ Todos os mentores referenciados estão cadastrados como Ativos em BD_Mentores');
+    return;
+  }
+
+  Logger.log(faltantes.length + ' email(s) usados em BD_Alunos_Slim mas faltando/inativos em BD_Mentores:');
+  faltantes.forEach(function(f) {
+    Logger.log('  · ' + f.email + ' (' + f.count + ' aluno' + (f.count > 1 ? 's' : '') + ')');
+  });
+  Logger.log('===== FIM · adicione-os em BD_Mentores antes do switch =====');
+}
+
+/**
  * Util de migração — roda 1× pra renomear abas legacy nas planilhas
  * individuais (lowercase → TitleCase). Idempotente: pode rodar 2×.
  * Não mexe nas constantes ABA do código — produção continua funcionando
