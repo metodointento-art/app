@@ -8,20 +8,32 @@ const EMAIL_GESTOR       = "filippe@metodointento.com.br";
 const URL_APP            = "https://mentoria.metodointento.com.br";
 
 const ABA = {
-  MESTRE:        "BD_Alunos",
-  MENTORES:      "BD_Mentores",
-  CACHE:         "Cache_Alunos",
-  PUSH_SUBS:     "Push_Subscriptions",
-  LOGS_ERRO:     "Logs_Erro",
-  ONBOARDING:    "BD_Onboarding",
-  DIAGNOSTICO:   "BD_Diagnostico",
-  REGISTROS:     "BD_Registro",
-  ENCONTROS:     "BD_Diario",
-  SEMANA:        "BD_Semana",
-  SIMULADOS:     "BD_Sim_ENEM",
-  CADERNO:       "BD_Caderno",
-  TOPICOS:       "BD_Topicos"
+  MESTRE:           "BD_Alunos",
+  MENTORES:         "BD_Mentores",
+  VENDEDORES:       "BD_Vendedores",
+  LEADS:            "BD_Leads",
+  EVENTOS_PIPELINE: "Eventos_Pipeline",
+  CACHE:            "Cache_Alunos",
+  PUSH_SUBS:        "Push_Subscriptions",
+  LOGS_ERRO:        "Logs_Erro",
+  ONBOARDING:       "BD_Onboarding",
+  DIAGNOSTICO:      "BD_Diagnostico",
+  REGISTROS:        "BD_Registro",
+  ENCONTROS:        "BD_Diario",
+  SEMANA:           "BD_Semana",
+  SIMULADOS:        "BD_Sim_ENEM",
+  CADERNO:          "BD_Caderno",
+  TOPICOS:          "BD_Topicos",
+  LGPD_ACEITES:     "LGPD_Aceites"
 };
+
+const FOLDER_BACKUPS_ID = "1UZjX1mZSsjMBRDDTYHKDHJglAj5iMUmp";
+
+const FASES_LEAD = [
+  'Lead', 'Contactado WPP', 'Ativo WPP', 'Reuniao agendada', 'Reuniao realizada',
+  'Aguardando decisao', 'Convertido', 'Taxa matricula paga', 'Contrato assinado',
+  '1a mensalidade paga', 'Em mentoria', 'Churn'
+];
 
 // Layout slim de BD_Alunos (23 cols A–W, snake_case headers)
 const COL_MESTRE = {
@@ -41,6 +53,43 @@ const COL_CACHE = {
 // Push_Subscriptions: 1 linha por device subscrito
 const COL_PUSH = {
   EMAIL: 0, ENDPOINT: 1, P256DH: 2, AUTH: 3, DT_SUBSCRICAO: 4, USER_AGENT: 5
+};
+
+// BD_Vendedores
+const COL_VENDEDOR = {
+  EMAIL: 0, NOME: 1, STATUS: 2, DT_ENTRADA: 3
+};
+
+// BD_Leads
+const COL_LEAD = {
+  ID:                     0,
+  DT_CADASTRO:            1,
+  NOME:                   2,
+  TIPO_PERFIL:            3,
+  NOME_RELACIONADO:       4,
+  TELEFONE:               5,
+  EMAIL:                  6,
+  CIDADE:                 7,
+  ESTADO:                 8,
+  ORCAMENTO:              9,
+  TEMPO_PREPARANDO:       10,
+  VESTIBULARES:           11,
+  CURSO_INTERESSE:        12,
+  ORIGEM:                 13,
+  INDICADO_POR:           14,
+  VENDEDOR:               15,
+  FASE:                   16,
+  ANOTACOES:              17,
+  PROXIMA_ACAO:           18,
+  DATA_PROXIMA_ACAO:      19,
+  DT_ULTIMA_ATUALIZACAO:  20,
+  ID_ALUNO_GERADO:        21,
+  DADOS_TYPEBOT_RAW:      22
+};
+
+// Eventos_Pipeline (apend-only audit log)
+const COL_EVENTO = {
+  TIMESTAMP: 0, ID_LEAD: 1, ACAO: 2, DE_FASE: 3, PARA_FASE: 4, POR_EMAIL: 5
 };
 
 const COL_REG = {
@@ -165,7 +214,10 @@ function doPost(e) {
     if (acao === "salvarDiario")            return handleSalvarDiario(dados);
     if (acao === "salvarSemanaLote")        return handleSalvarSemanaLote(dados);
     if (acao === "salvarRegistroGlobal")    return handleSalvarRegistroGlobal(dados);
+    if (acao === "deletarRegistro")         return handleDeletarRegistro(dados);
+    if (acao === "verificarRegistroSemana") return handleVerificarRegistroSemana(dados);
     if (acao === "buscarDadosAluno")        return handleBuscarDadosAluno(dados);
+    if (acao === "buscarMetaAnterior")      return handleBuscarMetaAnterior(dados);
     if (acao === "loginGlobal")             return handleLoginGlobal(dados);
     if (acao === "avaliarEncontroPassado")  return handleAvaliarEncontroPassado(dados);
     if (acao === "salvarNovoEncontro")      return handleSalvarNovoEncontro(dados);
@@ -185,6 +237,12 @@ function doPost(e) {
     if (acao === "subscribePush")           return handleSubscribePush(dados);
     if (acao === "unsubscribePush")         return handleUnsubscribePush(dados);
     if (acao === "listarPushSubscriptions") return handleListarPushSubscriptions(dados);
+    if (acao === "criarLead")               return handleCriarLead(dados);
+    if (acao === "editarLead")              return handleEditarLead(dados);
+    if (acao === "moverLeadFase")           return handleMoverLeadFase(dados);
+    if (acao === "listarLeads")             return handleListarLeads(dados);
+    if (acao === "dashboardCrm")            return handleDashboardCrm(dados);
+    if (acao === "converterLeadEmAluno")    return handleConverterLeadEmAluno(dados);
 
     throw new Error("Ação não reconhecida: " + acao);
 
@@ -234,6 +292,34 @@ function handleLogin(dados) {
   return responderJSON({ status: 200, email: emailAluno, idPlanilha: idPlanilhaAluno, dadosPainel: dashboardData });
 }
 
+
+// === LGPD: registra aceite em aba dedicada (append-only audit log) ===
+// Cria a aba LGPD_Aceites na primeira chamada se não existir.
+function registrarAceiteLGPD(dados) {
+  try {
+    var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+    var aba = ssMestre.getSheetByName(ABA.LGPD_ACEITES);
+    if (!aba) {
+      aba = ssMestre.insertSheet(ABA.LGPD_ACEITES);
+      aba.getRange(1, 1, 1, 8).setValues([[
+        'timestamp', 'tipo', 'identificador', 'email',
+        'lgpd_aceito', 'eh_menor', 'responsavel_aceitou', 'user_agent'
+      ]]);
+    }
+    aba.appendRow([
+      new Date(),
+      txt(dados.tipo),
+      txt(dados.identificador),
+      emailNorm(dados.email),
+      dados.lgpdAceito === true,
+      dados.ehMenor === true,
+      dados.responsavelAceitou === true,
+      txt(dados.userAgent)
+    ]);
+  } catch (e) {
+    Logger.log('registrarAceiteLGPD EXCEPTION: ' + e.message);
+  }
+}
 
 function handleOnboarding(dados) {
   const lock = LockService.getScriptLock();
@@ -301,6 +387,20 @@ function handleOnboarding(dados) {
     linhaMestre[COL_MESTRE.STATUS_ONBOARDING] = "Aguardando Diagnóstico";
 
     sheetMestre.appendRow(linhaMestre);
+
+    // Registra aceite LGPD (audit log append-only)
+    if (dados.consentimento) {
+      registrarAceiteLGPD({
+        tipo: 'aluno_onboarding',
+        identificador: idNovaPlanilha,
+        email: emailMentorado,
+        lgpdAceito: dados.consentimento.lgpdAceito,
+        ehMenor: dados.consentimento.ehMenor,
+        responsavelAceitou: dados.consentimento.responsavelLegalAceitou,
+        userAgent: dados.consentimento.userAgent
+      });
+    }
+
     return responderJSON({ status: "sucesso", idPlanilha: idNovaPlanilha });
 
   } finally {
@@ -836,15 +936,34 @@ function _atualizarCacheUltimoRegistro(idPlanilha, abaRegistro) {
         semanaMaisRecente = sem;
       }
     }
-    if (semanaMaisRecente) {
-      var dataFmt = Utilities.formatDate(new Date(dataInicioMaisRecente), Session.getScriptTimeZone(), 'dd/MM/yyyy');
-      atualizarCacheMestre(idPlanilha, {
-        ULTIMA_SEMANA_REGISTRO: semanaMaisRecente,
-        ULTIMA_DATA_REGISTRO:   dataFmt
-      });
-    }
+    var dataFmt = semanaMaisRecente
+      ? Utilities.formatDate(new Date(dataInicioMaisRecente), Session.getScriptTimeZone(), 'dd/MM/yyyy')
+      : '';
+    atualizarCacheMestre(idPlanilha, {
+      ULTIMA_SEMANA_REGISTRO: semanaMaisRecente,
+      ULTIMA_DATA_REGISTRO:   dataFmt
+    });
   } catch (e) {
     Logger.log('_atualizarCacheUltimoRegistro EXCEPTION: ' + e.message);
+  }
+}
+
+// === Handler: lê a meta da última semana registrada (pra preencher rápido o modal) ===
+function handleBuscarMetaAnterior(dados) {
+  try {
+    const idPlanilha = txt(dados.idAluno);
+    if (!idPlanilha) return responderJSON({ status: "erro", mensagem: "idAluno obrigatório" });
+    const ssAluno = SpreadsheetApp.openById(idPlanilha);
+    const aba = ssAluno.getSheetByName(ABA.REGISTROS);
+    if (!aba) return responderJSON({ status: "sucesso", metaSemanal: "" });
+    const last = aba.getLastRow();
+    if (last < 2) return responderJSON({ status: "sucesso", metaSemanal: "" });
+    // Col 4 = meta_semanal (ver handleSalvarRegistroGlobal)
+    const valor = aba.getRange(last, 4).getValue();
+    return responderJSON({ status: "sucesso", metaSemanal: txt(valor) });
+  } catch (e) {
+    Logger.log('buscarMetaAnterior EXCEPTION: ' + e.message);
+    return responderJSON({ status: "erro", mensagem: e.message });
   }
 }
 
@@ -856,6 +975,16 @@ function handleSalvarRegistroGlobal(dados) {
     const ssAluno    = SpreadsheetApp.openById(idPlanilha);
     const abaDB      = ssAluno.getSheetByName(ABA.REGISTROS);
     if (!abaDB) return responderJSON({ status: "erro", mensagem: "Aba '" + ABA.REGISTROS + "' não encontrada." });
+
+    const semanaSalvar = txt(dados.semana);
+    if (semanaSalvar) {
+      const existing = abaDB.getDataRange().getValues();
+      for (let j = 1; j < existing.length; j++) {
+        if (txt(existing[j][COL_REG.SEMANA]) === semanaSalvar) {
+          return responderJSON({ status: "erro", codigo: "duplicado", mensagem: "Já existe registro para essa semana." });
+        }
+      }
+    }
 
     const novaLinha = [
       txt(dados.semana),
@@ -1034,8 +1163,13 @@ function handleLoginGlobal(dados) {
     const emailStr = emailNorm(dados.email);
     if (!emailStr) return responderJSON({ status: "erro", mensagem: "E-mail não fornecido." });
 
-    if (emailStr === "filippe@metodointento.com.br")
+    // Líderes (Filippe e Rafael) — vão pra tela de seleção de modo
+    if (emailStr === "filippe@metodointento.com.br" || emailStr === "rafael@metodointento.com.br")
       return responderJSON({ status: "sucesso", perfil: "lider", rota: "/selecionar-modo" });
+
+    // Vendedor — só painel de vendas
+    if (lerVendedoresAtivos()[emailStr])
+      return responderJSON({ status: "sucesso", perfil: "vendedor", rota: "/vendas" });
 
     if (emailStr.endsWith("@metodointento.com.br"))
       return responderJSON({ status: "sucesso", perfil: "mentor", rota: "/mentor" });
@@ -1342,6 +1476,56 @@ function handleEditarRegistro(dados) {
           num(dados.dominioMat), num(dados.progressoMat)
         ];
         aba.getRange(i + 1, 1, 1, novaLinha.length).setValues([novaLinha]);
+        _atualizarCacheUltimoRegistro(idPlanilha, aba);
+        return responderJSON({ status: "sucesso" });
+      }
+    }
+    return responderJSON({ status: "erro", mensagem: "Registro não encontrado." });
+  } catch (e) { return responderJSON({ status: "erro", mensagem: e.message }); }
+  finally     { lock.releaseLock(); }
+}
+
+
+// =====================================================================
+// VERIFICAR / DELETAR REGISTRO
+// =====================================================================
+
+function handleVerificarRegistroSemana(dados) {
+  try {
+    const idPlanilha = txt(dados.idAluno);
+    const semana     = txt(dados.semana);
+    if (!idPlanilha || !semana) return responderJSON({ status: "erro", mensagem: "idAluno e semana obrigatórios" });
+    const aba = SpreadsheetApp.openById(idPlanilha).getSheetByName(ABA.REGISTROS);
+    if (!aba) return responderJSON({ status: "sucesso", existe: false });
+    const matrix = aba.getDataRange().getValues();
+    for (let i = 1; i < matrix.length; i++) {
+      if (txt(matrix[i][COL_REG.SEMANA]) === semana) {
+        return responderJSON({
+          status: "sucesso",
+          existe: true,
+          dataRegistro: txt(matrix[i][COL_REG.DATA])
+        });
+      }
+    }
+    return responderJSON({ status: "sucesso", existe: false });
+  } catch (e) {
+    return responderJSON({ status: "erro", mensagem: e.message });
+  }
+}
+
+function handleDeletarRegistro(dados) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    const idPlanilha = exigirIdPlanilha(dados, "idAluno");
+    const aba = SpreadsheetApp.openById(idPlanilha).getSheetByName(ABA.REGISTROS);
+    if (!aba) return responderJSON({ status: "erro", mensagem: "'" + ABA.REGISTROS + "' não encontrada." });
+    const semana = txt(dados.semana);
+    if (!semana) return responderJSON({ status: "erro", mensagem: "semana obrigatória" });
+    const matrix = aba.getDataRange().getValues();
+    for (let i = matrix.length - 1; i >= 1; i--) {
+      if (txt(matrix[i][COL_REG.SEMANA]) === semana) {
+        aba.deleteRow(i + 1);
         _atualizarCacheUltimoRegistro(idPlanilha, aba);
         return responderJSON({ status: "sucesso" });
       }
@@ -1924,4 +2108,400 @@ function instalarTriggersCron() {
   Logger.log('· cronLembreteAluno              — Segunda 8h');
   Logger.log('· cronLembreteMentor             — Segunda 9h');
   Logger.log('· cronAlertaLiderMentoresFaltantes — Terça 9h');
+}
+
+
+// =====================================================================
+// CRM / PIPELINE DE VENDAS
+// =====================================================================
+
+// Lê BD_Vendedores e devolve mapa email → { email, nome, dtEntrada } ativos
+function lerVendedoresAtivos() {
+  var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+  var aba = ssMestre.getSheetByName(ABA.VENDEDORES);
+  if (!aba) return {};
+  var matriz = aba.getDataRange().getValues();
+  var map = {};
+  for (var i = 1; i < matriz.length; i++) {
+    var row = matriz[i];
+    var email = emailNorm(row[COL_VENDEDOR.EMAIL]);
+    if (!email || txt(row[COL_VENDEDOR.STATUS]) !== 'Ativo') continue;
+    map[email] = {
+      email: email,
+      nome: txt(row[COL_VENDEDOR.NOME]),
+      dtEntrada: row[COL_VENDEDOR.DT_ENTRADA]
+    };
+  }
+  return map;
+}
+
+// Registra evento na aba Eventos_Pipeline (apend-only)
+function registrarEventoPipeline(idLead, acao, deFase, paraFase, porEmail) {
+  try {
+    var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+    var aba = ssMestre.getSheetByName(ABA.EVENTOS_PIPELINE);
+    if (!aba) { Logger.log('aba Eventos_Pipeline não encontrada'); return; }
+    aba.appendRow([new Date(), idLead, acao, deFase || '', paraFase || '', porEmail || '']);
+  } catch (e) { Logger.log('registrarEventoPipeline EXCEPTION: ' + e.message); }
+}
+
+// Helper interno: converte linha da matriz de leads em objeto normalizado
+function _leadToObj(row) {
+  return {
+    idLead:           txt(row[COL_LEAD.ID]),
+    dtCadastro:       row[COL_LEAD.DT_CADASTRO] instanceof Date ? row[COL_LEAD.DT_CADASTRO].toISOString() : txt(row[COL_LEAD.DT_CADASTRO]),
+    nome:             txt(row[COL_LEAD.NOME]),
+    tipoPerfil:       txt(row[COL_LEAD.TIPO_PERFIL]),
+    nomeRelacionado:  txt(row[COL_LEAD.NOME_RELACIONADO]),
+    telefone:         txt(row[COL_LEAD.TELEFONE]),
+    email:            txt(row[COL_LEAD.EMAIL]),
+    cidade:           txt(row[COL_LEAD.CIDADE]),
+    estado:           txt(row[COL_LEAD.ESTADO]),
+    orcamento:        txt(row[COL_LEAD.ORCAMENTO]),
+    tempoPreparando:  txt(row[COL_LEAD.TEMPO_PREPARANDO]),
+    vestibulares:     txt(row[COL_LEAD.VESTIBULARES]),
+    cursoInteresse:   txt(row[COL_LEAD.CURSO_INTERESSE]),
+    origem:           txt(row[COL_LEAD.ORIGEM]),
+    indicadoPor:      txt(row[COL_LEAD.INDICADO_POR]),
+    vendedor:         emailNorm(row[COL_LEAD.VENDEDOR]),
+    fase:             txt(row[COL_LEAD.FASE]) || 'Lead',
+    anotacoes:        txt(row[COL_LEAD.ANOTACOES]),
+    proximaAcao:      txt(row[COL_LEAD.PROXIMA_ACAO]),
+    dataProximaAcao:  row[COL_LEAD.DATA_PROXIMA_ACAO] instanceof Date ? Utilities.formatDate(row[COL_LEAD.DATA_PROXIMA_ACAO], Session.getScriptTimeZone(), 'yyyy-MM-dd') : txt(row[COL_LEAD.DATA_PROXIMA_ACAO]),
+    dtUltimaAtualizacao: row[COL_LEAD.DT_ULTIMA_ATUALIZACAO] instanceof Date ? row[COL_LEAD.DT_ULTIMA_ATUALIZACAO].toISOString() : txt(row[COL_LEAD.DT_ULTIMA_ATUALIZACAO]),
+    idAlunoGerado:    txt(row[COL_LEAD.ID_ALUNO_GERADO])
+  };
+}
+
+// Helper: localiza linha do lead pelo id na BD_Leads
+function _acharLinhaLead(idLead) {
+  var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+  var aba = ssMestre.getSheetByName(ABA.LEADS);
+  if (!aba) return { aba: null, linha: -1 };
+  var lastRow = aba.getLastRow();
+  if (lastRow < 2) return { aba: aba, linha: -1 };
+  var ids = aba.getRange(2, COL_LEAD.ID + 1, lastRow - 1, 1).getValues();
+  for (var i = 0; i < ids.length; i++) {
+    if (txt(ids[i][0]) === txt(idLead)) return { aba: aba, linha: i + 2 };
+  }
+  return { aba: aba, linha: -1 };
+}
+
+// === Handler: criar lead ===
+function handleCriarLead(dados) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+    var aba = ssMestre.getSheetByName(ABA.LEADS);
+    if (!aba) return responderJSON({ status: 'erro', mensagem: ABA.LEADS + ' não encontrada' });
+
+    if (!txt(dados.nome) || !txt(dados.telefone))
+      return responderJSON({ status: 'erro', mensagem: 'nome e telefone obrigatórios' });
+
+    var idLead = 'lead_' + new Date().getTime() + '_' + Math.floor(Math.random() * 1000);
+    var agora = new Date();
+    var fase = txt(dados.fase) || 'Lead';
+    var vendedor = emailNorm(dados.vendedor);
+
+    var novaLinha = new Array(23).fill('');
+    novaLinha[COL_LEAD.ID]                    = idLead;
+    novaLinha[COL_LEAD.DT_CADASTRO]           = agora;
+    novaLinha[COL_LEAD.NOME]                  = txt(dados.nome);
+    novaLinha[COL_LEAD.TIPO_PERFIL]           = txt(dados.tipoPerfil) || 'self';
+    novaLinha[COL_LEAD.NOME_RELACIONADO]      = txt(dados.nomeRelacionado);
+    novaLinha[COL_LEAD.TELEFONE]              = txt(dados.telefone);
+    novaLinha[COL_LEAD.EMAIL]                 = txt(dados.email);
+    novaLinha[COL_LEAD.CIDADE]                = txt(dados.cidade);
+    novaLinha[COL_LEAD.ESTADO]                = txt(dados.estado);
+    novaLinha[COL_LEAD.ORCAMENTO]             = txt(dados.orcamento);
+    novaLinha[COL_LEAD.TEMPO_PREPARANDO]      = txt(dados.tempoPreparando);
+    novaLinha[COL_LEAD.VESTIBULARES]          = Array.isArray(dados.vestibulares) ? dados.vestibulares.join(',') : txt(dados.vestibulares);
+    novaLinha[COL_LEAD.CURSO_INTERESSE]       = txt(dados.cursoInteresse);
+    novaLinha[COL_LEAD.ORIGEM]                = txt(dados.origem);
+    novaLinha[COL_LEAD.INDICADO_POR]          = txt(dados.indicadoPor);
+    novaLinha[COL_LEAD.VENDEDOR]              = vendedor;
+    novaLinha[COL_LEAD.FASE]                  = fase;
+    novaLinha[COL_LEAD.ANOTACOES]             = txt(dados.anotacoes);
+    novaLinha[COL_LEAD.PROXIMA_ACAO]          = txt(dados.proximaAcao);
+    novaLinha[COL_LEAD.DATA_PROXIMA_ACAO]     = txt(dados.dataProximaAcao);
+    novaLinha[COL_LEAD.DT_ULTIMA_ATUALIZACAO] = agora;
+    novaLinha[COL_LEAD.DADOS_TYPEBOT_RAW]     = dados.dadosTypebotRaw ? JSON.stringify(dados.dadosTypebotRaw) : '';
+
+    aba.appendRow(novaLinha);
+    registrarEventoPipeline(idLead, 'criado', '', fase, emailNorm(dados.porEmail) || vendedor || 'sistema');
+
+    return responderJSON({ status: 'sucesso', idLead: idLead });
+  } catch (e) {
+    Logger.log('criarLead EXCEPTION: ' + e.message);
+    return responderJSON({ status: 'erro', mensagem: e.message });
+  } finally { lock.releaseLock(); }
+}
+
+// === Handler: editar lead (atualiza qualquer campo exceto fase) ===
+function handleEditarLead(dados) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    var loc = _acharLinhaLead(dados.idLead);
+    if (loc.linha === -1) return responderJSON({ status: 'erro', mensagem: 'lead não encontrado' });
+
+    var aba = loc.aba;
+    var matriz = aba.getRange(loc.linha, 1, 1, 23).getValues()[0];
+
+    // Atualiza só os campos que vieram (preserva fase via handler dedicado)
+    var camposEditaveis = {
+      nome: COL_LEAD.NOME,
+      tipoPerfil: COL_LEAD.TIPO_PERFIL,
+      nomeRelacionado: COL_LEAD.NOME_RELACIONADO,
+      telefone: COL_LEAD.TELEFONE,
+      email: COL_LEAD.EMAIL,
+      cidade: COL_LEAD.CIDADE,
+      estado: COL_LEAD.ESTADO,
+      orcamento: COL_LEAD.ORCAMENTO,
+      tempoPreparando: COL_LEAD.TEMPO_PREPARANDO,
+      vestibulares: COL_LEAD.VESTIBULARES,
+      cursoInteresse: COL_LEAD.CURSO_INTERESSE,
+      origem: COL_LEAD.ORIGEM,
+      indicadoPor: COL_LEAD.INDICADO_POR,
+      vendedor: COL_LEAD.VENDEDOR,
+      anotacoes: COL_LEAD.ANOTACOES,
+      proximaAcao: COL_LEAD.PROXIMA_ACAO,
+      dataProximaAcao: COL_LEAD.DATA_PROXIMA_ACAO
+    };
+    Object.keys(camposEditaveis).forEach(function(k) {
+      if (typeof dados[k] !== 'undefined') {
+        var v = dados[k];
+        if (k === 'vestibulares' && Array.isArray(v)) v = v.join(',');
+        if (k === 'vendedor') v = emailNorm(v);
+        else v = txt(v);
+        matriz[camposEditaveis[k]] = v;
+      }
+    });
+    matriz[COL_LEAD.DT_ULTIMA_ATUALIZACAO] = new Date();
+
+    aba.getRange(loc.linha, 1, 1, 23).setValues([matriz]);
+    registrarEventoPipeline(dados.idLead, 'editado', '', '', emailNorm(dados.porEmail) || '');
+
+    return responderJSON({ status: 'sucesso' });
+  } catch (e) {
+    Logger.log('editarLead EXCEPTION: ' + e.message);
+    return responderJSON({ status: 'erro', mensagem: e.message });
+  } finally { lock.releaseLock(); }
+}
+
+// === Handler: mover fase (audita) ===
+function handleMoverLeadFase(dados) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    var loc = _acharLinhaLead(dados.idLead);
+    if (loc.linha === -1) return responderJSON({ status: 'erro', mensagem: 'lead não encontrado' });
+
+    var novaFase = txt(dados.novaFase);
+    if (FASES_LEAD.indexOf(novaFase) === -1)
+      return responderJSON({ status: 'erro', mensagem: 'fase inválida: ' + novaFase });
+
+    var faseAtual = txt(loc.aba.getRange(loc.linha, COL_LEAD.FASE + 1).getValue());
+    loc.aba.getRange(loc.linha, COL_LEAD.FASE + 1).setValue(novaFase);
+    loc.aba.getRange(loc.linha, COL_LEAD.DT_ULTIMA_ATUALIZACAO + 1).setValue(new Date());
+
+    registrarEventoPipeline(dados.idLead, 'fase', faseAtual, novaFase, emailNorm(dados.porEmail) || '');
+
+    return responderJSON({ status: 'sucesso', faseAnterior: faseAtual, faseNova: novaFase });
+  } catch (e) {
+    Logger.log('moverLeadFase EXCEPTION: ' + e.message);
+    return responderJSON({ status: 'erro', mensagem: e.message });
+  } finally { lock.releaseLock(); }
+}
+
+// === Handler: listar leads (filtra por vendedor logado, ou todos se líder) ===
+function handleListarLeads(dados) {
+  try {
+    var emailRequisitante = emailNorm(dados.email);
+    if (!emailRequisitante) return responderJSON({ status: 'erro', mensagem: 'email obrigatório' });
+
+    var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+    var aba = ssMestre.getSheetByName(ABA.LEADS);
+    if (!aba) return responderJSON({ status: 'sucesso', leads: [] });
+    var lastRow = aba.getLastRow();
+    if (lastRow < 2) return responderJSON({ status: 'sucesso', leads: [] });
+
+    var matriz = aba.getRange(2, 1, lastRow - 1, 23).getValues();
+
+    // Permissões: filippe + rafael veem tudo; vendedor só os seus
+    var ehLider = (emailRequisitante === 'filippe@metodointento.com.br' || emailRequisitante === 'rafael@metodointento.com.br');
+    var leads = [];
+    for (var i = 0; i < matriz.length; i++) {
+      var row = matriz[i];
+      if (!txt(row[COL_LEAD.ID])) continue;
+      if (!ehLider && emailNorm(row[COL_LEAD.VENDEDOR]) !== emailRequisitante) continue;
+      leads.push(_leadToObj(row));
+    }
+
+    // Lista também os vendedores ativos (pra filtros e dropdown de atribuição)
+    var vendedores = lerVendedoresAtivos();
+    var listaVendedores = Object.keys(vendedores).map(function(em) {
+      return { email: em, nome: vendedores[em].nome };
+    }).sort(function(a, b) { return a.nome.localeCompare(b.nome); });
+
+    return responderJSON({
+      status: 'sucesso',
+      leads: leads,
+      vendedores: listaVendedores,
+      fases: FASES_LEAD,
+      ehLider: ehLider
+    });
+  } catch (e) {
+    Logger.log('listarLeads EXCEPTION: ' + e.message);
+    return responderJSON({ status: 'erro', mensagem: e.message });
+  }
+}
+
+// === Handler: dashboard CRM (KPIs agregados — só pra líder) ===
+function handleDashboardCrm(dados) {
+  try {
+    var emailRequisitante = emailNorm(dados.email);
+    var ehLider = (emailRequisitante === 'filippe@metodointento.com.br' || emailRequisitante === 'rafael@metodointento.com.br');
+    if (!ehLider) return responderJSON({ status: 'erro', codigo: 403, mensagem: 'apenas líderes' });
+
+    var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+    var aba = ssMestre.getSheetByName(ABA.LEADS);
+    if (!aba) return responderJSON({ status: 'sucesso', total: 0 });
+    var lastRow = aba.getLastRow();
+    if (lastRow < 2) return responderJSON({ status: 'sucesso', total: 0 });
+    var matriz = aba.getRange(2, 1, lastRow - 1, 23).getValues();
+
+    var porFase = {};
+    var porVendedor = {};
+    var porOrigem = {};
+    FASES_LEAD.forEach(function(f) { porFase[f] = 0; });
+
+    for (var i = 0; i < matriz.length; i++) {
+      var row = matriz[i];
+      if (!txt(row[COL_LEAD.ID])) continue;
+      var fase = txt(row[COL_LEAD.FASE]) || 'Lead';
+      porFase[fase] = (porFase[fase] || 0) + 1;
+      var vd = emailNorm(row[COL_LEAD.VENDEDOR]) || 'sem-vendedor';
+      porVendedor[vd] = (porVendedor[vd] || 0) + 1;
+      var og = txt(row[COL_LEAD.ORIGEM]) || 'desconhecida';
+      porOrigem[og] = (porOrigem[og] || 0) + 1;
+    }
+
+    return responderJSON({
+      status: 'sucesso',
+      total: matriz.length,
+      porFase: porFase,
+      porVendedor: porVendedor,
+      porOrigem: porOrigem
+    });
+  } catch (e) {
+    Logger.log('dashboardCrm EXCEPTION: ' + e.message);
+    return responderJSON({ status: 'erro', mensagem: e.message });
+  }
+}
+
+// === Handler: converter lead em aluno (cria spreadsheet + linha na mestre) ===
+function handleConverterLeadEmAluno(dados) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000);
+    var loc = _acharLinhaLead(dados.idLead);
+    if (loc.linha === -1) return responderJSON({ status: 'erro', mensagem: 'lead não encontrado' });
+
+    var matriz = loc.aba.getRange(loc.linha, 1, 1, 23).getValues()[0];
+    var lead = _leadToObj(matriz);
+
+    if (lead.idAlunoGerado) return responderJSON({ status: 'erro', mensagem: 'lead já convertido em aluno: ' + lead.idAlunoGerado });
+
+    // Cria entrada na BD_Alunos com dados do lead
+    var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+    var abaAlunos = ssMestre.getSheetByName(ABA.MESTRE);
+    if (!abaAlunos) return responderJSON({ status: 'erro', mensagem: 'BD_Alunos não encontrada' });
+
+    // Cria spreadsheet individual do aluno (mesma estrutura do handleOnboarding)
+    var nomePlanilha = 'Aluno · ' + lead.nome;
+    var novaPlanilha = SpreadsheetApp.create(nomePlanilha);
+    var idNovaPlanilha = novaPlanilha.getId();
+
+    // Linha na mestre (slim layout 23 cols)
+    var linhaMestre = new Array(23).fill('');
+    linhaMestre[COL_MESTRE.TIMESTAMP]         = new Date();
+    linhaMestre[COL_MESTRE.NOME]              = lead.nome;
+    linhaMestre[COL_MESTRE.EMAIL]             = lead.email;
+    linhaMestre[COL_MESTRE.TELEFONE]          = lead.telefone;
+    linhaMestre[COL_MESTRE.CIDADE]            = lead.cidade;
+    linhaMestre[COL_MESTRE.ESTADO]            = lead.estado;
+    linhaMestre[COL_MESTRE.CURSO_INTERESSE]   = lead.cursoInteresse;
+    linhaMestre[COL_MESTRE.PROVAS_INTERESSE]  = lead.vestibulares;
+    linhaMestre[COL_MESTRE.ID_PLANILHA]       = idNovaPlanilha;
+    linhaMestre[COL_MESTRE.STATUS_ONBOARDING] = 'Aguardando Diagnóstico';
+    abaAlunos.appendRow(linhaMestre);
+
+    // Marca o lead como convertido
+    loc.aba.getRange(loc.linha, COL_LEAD.ID_ALUNO_GERADO + 1).setValue(idNovaPlanilha);
+    loc.aba.getRange(loc.linha, COL_LEAD.FASE + 1).setValue('Em mentoria');
+    loc.aba.getRange(loc.linha, COL_LEAD.DT_ULTIMA_ATUALIZACAO + 1).setValue(new Date());
+
+    registrarEventoPipeline(lead.idLead, 'convertido_em_aluno', lead.fase, 'Em mentoria', emailNorm(dados.porEmail) || lead.vendedor);
+
+    // Notifica líder (pra designar mentor)
+    try { _notificarLiderAlunoAguardando(lead.nome); } catch (e) {}
+
+    return responderJSON({
+      status: 'sucesso',
+      idPlanilhaAluno: idNovaPlanilha,
+      nomeAluno: lead.nome
+    });
+  } catch (e) {
+    Logger.log('converterLeadEmAluno EXCEPTION: ' + e.message);
+    return responderJSON({ status: 'erro', mensagem: e.message });
+  } finally { lock.releaseLock(); }
+}
+
+
+// =====================================================================
+// BACKUP DIÁRIO DA MESTRE
+// =====================================================================
+
+function backupDiarioMestre() {
+  Logger.log('===== BACKUP DIÁRIO MESTRE =====');
+  try {
+    var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+    var fileMestre = DriveApp.getFileById(ssMestre.getId());
+    var folder = DriveApp.getFolderById(FOLDER_BACKUPS_ID);
+    var dataStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd_HH-mm');
+    var nome = 'Backup_Mestre_' + dataStr;
+    fileMestre.makeCopy(nome, folder);
+    Logger.log('✓ backup criado: ' + nome);
+
+    // Mantém só os últimos 30 backups
+    var arquivos = folder.getFilesByType(MimeType.GOOGLE_SHEETS);
+    var lista = [];
+    while (arquivos.hasNext()) {
+      var f = arquivos.next();
+      if (f.getName().indexOf('Backup_Mestre_') === 0) {
+        lista.push({ file: f, date: f.getDateCreated() });
+      }
+    }
+    lista.sort(function(a, b) { return b.date - a.date; });
+    var apagados = 0;
+    for (var i = 30; i < lista.length; i++) {
+      lista[i].file.setTrashed(true);
+      apagados++;
+    }
+    Logger.log('total backups: ' + lista.length + ' · apagados: ' + apagados);
+  } catch (e) {
+    Logger.log('backupDiarioMestre EXCEPTION: ' + e.message);
+  }
+}
+
+// Util: instala trigger diário pra rodar backup às 3h da manhã (rode 1×)
+function instalarTriggerBackup() {
+  var existentes = ScriptApp.getProjectTriggers();
+  existentes.forEach(function(t) {
+    if (t.getHandlerFunction() === 'backupDiarioMestre') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('backupDiarioMestre').timeBased().everyDays(1).atHour(3).create();
+  Logger.log('✓ trigger backupDiarioMestre instalado — diariamente às 3h');
 }

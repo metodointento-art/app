@@ -10,7 +10,10 @@ const TTL_MS = {
   listaAlunosMentor:    5  * 60 * 1000,      // 5min
   buscarOnboarding:     60 * 60 * 1000,      // 1h
   buscarDadosAluno:     60 * 1000,           // 60s
+  buscarMetaAnterior:   60 * 1000,           // 60s — meta da última semana registrada
   dashboardLider:       2  * 60 * 1000,      // 2min — dashboard do líder, dados mudam a cada write
+  listarLeads:          60 * 1000,           // 60s — pipeline de vendas, alta frequência
+  dashboardCrm:         2  * 60 * 1000,      // 2min
 };
 
 // Quais ações de escrita invalidam quais ações de leitura
@@ -19,6 +22,7 @@ function chavesParaInvalidar(acaoEscrita, dados) {
   switch (acaoEscrita) {
     case 'salvarRegistroGlobal':
     case 'editarRegistro':
+    case 'deletarRegistro':
     case 'salvarNovoEncontro':
     case 'avaliarEncontroPassado':
     case 'editarEncontro':
@@ -30,13 +34,19 @@ function chavesParaInvalidar(acaoEscrita, dados) {
     case 'deletarCardCaderno':
     case 'registrarRevisaoCaderno':
       return [
-        ...ids.flatMap(id => [`buscarDadosAluno|${id}`, `buscarOnboarding|${id}`]),
+        ...ids.flatMap(id => [`buscarDadosAluno|${id}`, `buscarOnboarding|${id}`, `buscarMetaAnterior|${id}`]),
         'dashboardLider|*',  // qualquer mutação invalida o dashboard do líder
       ];
     case 'onboarding':
     case 'diagnostico':
     case 'designarMentor':
       return ['listaAlunosMentor|*', 'dashboardLider|*'];
+    case 'criarLead':
+    case 'editarLead':
+    case 'moverLeadFase':
+      return ['listarLeads|*', 'dashboardCrm|*'];
+    case 'converterLeadEmAluno':
+      return ['listarLeads|*', 'dashboardCrm|*', 'listaAlunosMentor|*', 'dashboardLider|*'];
     default:
       return [];
   }

@@ -13,6 +13,10 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
   const [salvando, setSalvando] = useState(false);
   const [salvoComSucesso, setSalvoComSucesso] = useState(false);
   const [buscandoMeta, setBuscandoMeta] = useState(false);
+  const [registroExistente, setRegistroExistente] = useState(false);
+  const [dataRegistroExistente, setDataRegistroExistente] = useState('');
+  const [verificandoRegistro, setVerificandoRegistro] = useState(false);
+  const [apagandoRegistro, setApagandoRegistro] = useState(false);
 
   const [form, setForm] = useState({
     idAluno: alunoPreSelecionado?.id || '',
@@ -80,6 +84,9 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
         setStatusMsg('');
         setSalvoComSucesso(true);
         onRegistroSalvo?.(form.idAluno, form.semana);
+      } else if (data.codigo === 'duplicado') {
+        setRegistroExistente(true);
+        setStatusMsg('Já existe registro para essa semana');
       } else {
         setStatusMsg('Erro: ' + data.mensagem);
       }
@@ -87,6 +94,56 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
       setStatusMsg('Erro de conexão.');
     } finally {
       setSalvando(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!form.idAluno || !form.semana) {
+      setRegistroExistente(false);
+      setDataRegistroExistente('');
+      return;
+    }
+    let cancelado = false;
+    setVerificandoRegistro(true);
+    fetch('/api/mentor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acao: 'verificarRegistroSemana', idAluno: form.idAluno, semana: form.semana }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (cancelado) return;
+        if (d.status === 'sucesso') {
+          setRegistroExistente(!!d.existe);
+          setDataRegistroExistente(d.dataRegistro || '');
+        }
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelado) setVerificandoRegistro(false); });
+    return () => { cancelado = true; };
+  }, [form.idAluno, form.semana]);
+
+  const apagarRegistroExistente = async () => {
+    if (!confirm('Apagar o registro existente desta semana? Essa ação não pode ser desfeita.')) return;
+    setApagandoRegistro(true);
+    setStatusMsg('');
+    try {
+      const res = await fetch('/api/mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acao: 'deletarRegistro', idAluno: form.idAluno, semana: form.semana }),
+      });
+      const data = await res.json();
+      if (data.status === 'sucesso') {
+        setRegistroExistente(false);
+        setDataRegistroExistente('');
+      } else {
+        setStatusMsg('Erro: ' + (data.mensagem || 'falha ao apagar'));
+      }
+    } catch {
+      setStatusMsg('Erro de conexão.');
+    } finally {
+      setApagandoRegistro(false);
     }
   };
 
@@ -179,6 +236,34 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
               <div>
                 <p className="text-xs font-bold text-intento-blue">{alunoSelecionado.nome}</p>
                 <p className="text-[10px] text-slate-400 font-medium">{alunoSelecionado.email}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BANNER — registro já existente nessa semana */}
+        {!salvoComSucesso && registroExistente && (
+          <div className="px-5 pt-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-2.99l-6.93-12a2 2 0 00-3.48 0l-6.93 12A2 2 0 005.07 19z" />
+                </svg>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-amber-900">Já existe um registro para essa semana</p>
+                  <p className="text-xs text-amber-700 mt-1 font-medium">
+                    {alunoSelecionado?.nome || 'Esse aluno'} já tem registro
+                    {dataRegistroExistente ? ` salvo em ${dataRegistroExistente}` : ''} para a semana {form.semana}.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={apagarRegistroExistente}
+                    disabled={apagandoRegistro}
+                    className="mt-2 text-xs font-bold text-red-600 hover:text-red-700 underline underline-offset-2 disabled:opacity-50"
+                  >
+                    {apagandoRegistro ? 'Apagando...' : 'Apagar registro existente'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -372,7 +457,7 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
                 </button>
               : <button
                   onClick={salvarRegistro}
-                  disabled={salvando || !formCompleto}
+                  disabled={salvando || !formCompleto || registroExistente || verificandoRegistro}
                   className="bg-intento-yellow hover:bg-yellow-500 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {salvando ? 'Sincronizando...' : 'Sincronizar Registro'}
