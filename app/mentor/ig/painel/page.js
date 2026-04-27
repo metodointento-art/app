@@ -78,24 +78,6 @@ function getSemanaRef() {
   return `${fmt(domingo)} – ${fmt(sabado)}`;
 }
 
-// ─── Mensagem de consistência ────────────────────────────────────────────────
-function getMsgConsistencia(hist) {
-  const n = hist.length;
-  if (n < 2) return null;
-  const last3 = hist.slice(-3);
-  const prev = hist[n - 2];
-  const curr = hist[n - 1];
-  if (n >= 3 && last3.every(Boolean))
-    return { texto: 'Três semanas consecutivas batendo a meta. Esse é o ritmo de quem aprova.', tipo: 'positivo' };
-  if (n >= 3 && last3.every(v => !v))
-    return { texto: 'Três semanas abaixo da meta. É hora de agir e ajustar o plano.', tipo: 'negativo' };
-  if (!prev && curr)
-    return { texto: 'Retomada! A consistência se constrói exatamente assim — uma semana de cada vez.', tipo: 'positivo' };
-  if (prev && !curr)
-    return { texto: 'Abaixo da meta essa semana. O histórico mostra que você sabe o que fazer — retome.', tipo: 'alerta' };
-  return null;
-}
-
 // ─── Página principal ─────────────────────────────────────────────────────────
 function ExportarAcompanhamento() {
   const searchParams = useSearchParams();
@@ -174,7 +156,6 @@ function ExportarAcompanhamento() {
   const historicoConsistencia = (mensal.horas || []).map((h, i) =>
     parseFloat(h) >= parseFloat(mensal.meta?.[i] || 0) && parseFloat(mensal.meta?.[i] || 0) > 0
   );
-  const msgConsistencia = getMsgConsistencia(historicoConsistencia);
   const semanaRef = getSemanaRef();
 
   const secaoLabel = (texto) => (
@@ -274,16 +255,6 @@ function ExportarAcompanhamento() {
                     <div key={`ph${i}`} style={{ width: 26, height: 26, borderRadius: 6, background: '#f1f5f9', border: '1px solid #e2e8f0' }} />
                   ))}
                 </div>
-                {msgConsistencia && (
-                  <p style={{
-                    marginTop: 10, fontSize: 12, fontWeight: 500, padding: '8px 12px', borderRadius: 8,
-                    background: msgConsistencia.tipo === 'positivo' ? '#ecfdf5' : msgConsistencia.tipo === 'negativo' ? '#fef2f2' : '#fffbeb',
-                    color: msgConsistencia.tipo === 'positivo' ? '#065f46' : msgConsistencia.tipo === 'negativo' ? '#7f1d1d' : '#92400e',
-                    borderLeft: `3px solid ${msgConsistencia.tipo === 'positivo' ? '#10b981' : msgConsistencia.tipo === 'negativo' ? '#ef4444' : '#f59e0b'}`,
-                  }}>
-                    {msgConsistencia.texto}
-                  </p>
-                )}
               </div>
 
               {/* Aspectos Gerais */}
