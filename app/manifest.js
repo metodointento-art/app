@@ -5,7 +5,7 @@ export default function manifest() {
     description: 'Plataforma de mentoria para vestibulares e ENEM',
     start_url: '/',
     display: 'standalone',
-    orientation: 'portrait',
+    orientation: 'any',
     background_color: '#f8fafc',
     theme_color: '#060242',
     lang: 'pt-BR',

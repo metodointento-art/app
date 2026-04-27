@@ -35,7 +35,7 @@ export const viewport = {
 }
 
 // Splash screens iOS — só aparecem quando app está instalado (Add to Home Screen).
-// Apple exige tamanho exato + media query por device.
+// Apple exige tamanho exato + media query por device. iPads também têm variante landscape.
 const SPLASH_IOS = [
   { file: 'iphone-se',          dw: 375, dh: 667, dpr: 2 },
   { file: 'iphone-xr-11',       dw: 414, dh: 896, dpr: 2 },
@@ -45,9 +45,9 @@ const SPLASH_IOS = [
   { file: 'iphone-xs-max-11pm', dw: 414, dh: 896, dpr: 3 },
   { file: 'iphone-12-13-14-pm', dw: 428, dh: 926, dpr: 3 },
   { file: 'iphone-14-15-pm',    dw: 430, dh: 932, dpr: 3 },
-  { file: 'ipad',               dw: 768, dh: 1024, dpr: 2 },
-  { file: 'ipad-air',           dw: 834, dh: 1112, dpr: 2 },
-  { file: 'ipad-pro-12',        dw: 1024, dh: 1366, dpr: 2 },
+  { file: 'ipad',               dw: 768, dh: 1024, dpr: 2, landscape: true },
+  { file: 'ipad-air',           dw: 834, dh: 1112, dpr: 2, landscape: true },
+  { file: 'ipad-pro-12',        dw: 1024, dh: 1366, dpr: 2, landscape: true },
 ]
 
 export default function RootLayout({ children }) {
@@ -56,10 +56,18 @@ export default function RootLayout({ children }) {
       <head>
         {SPLASH_IOS.map(s => (
           <link
-            key={s.file}
+            key={`${s.file}-portrait`}
             rel="apple-touch-startup-image"
             href={`/splash/${s.file}.png`}
             media={`(device-width: ${s.dw}px) and (device-height: ${s.dh}px) and (-webkit-device-pixel-ratio: ${s.dpr}) and (orientation: portrait)`}
+          />
+        ))}
+        {SPLASH_IOS.filter(s => s.landscape).map(s => (
+          <link
+            key={`${s.file}-landscape`}
+            rel="apple-touch-startup-image"
+            href={`/splash/${s.file}-landscape.png`}
+            media={`(device-width: ${s.dw}px) and (device-height: ${s.dh}px) and (-webkit-device-pixel-ratio: ${s.dpr}) and (orientation: landscape)`}
           />
         ))}
       </head>

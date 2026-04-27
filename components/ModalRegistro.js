@@ -1,14 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 const inputClass = "w-full p-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-intento-blue transition-all font-medium text-intento-blue text-sm";
 const labelClass = "block text-xs font-semibold text-slate-400 uppercase mb-2 tracking-wider";
 
 export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, onRegistroSalvo }) {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [statusMsg, setStatusMsg] = useState('');
   const [salvando, setSalvando] = useState(false);
+  const [salvoComSucesso, setSalvoComSucesso] = useState(false);
+  const [buscandoMeta, setBuscandoMeta] = useState(false);
 
   const [form, setForm] = useState({
     idAluno: alunoPreSelecionado?.id || '',
@@ -73,9 +77,9 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
       });
       const data = await res.json();
       if (data.status === 'sucesso') {
-        setStatusMsg('Salvo com sucesso!');
+        setStatusMsg('');
+        setSalvoComSucesso(true);
         onRegistroSalvo?.(form.idAluno, form.semana);
-        setTimeout(() => onClose(), 1200);
       } else {
         setStatusMsg('Erro: ' + data.mensagem);
       }
@@ -86,7 +90,59 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
     }
   };
 
+  const usarMetaAnterior = async () => {
+    if (!form.idAluno) {
+      setStatusMsg('Selecione o aluno primeiro');
+      return;
+    }
+    setBuscandoMeta(true);
+    setStatusMsg('');
+    try {
+      const res = await fetch('/api/mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acao: 'buscarMetaAnterior', idAluno: form.idAluno }),
+      });
+      const data = await res.json();
+      if (data.status === 'sucesso' && data.metaSemanal) {
+        handleChange('metaSemanal', String(data.metaSemanal));
+      } else if (data.status === 'sucesso') {
+        setStatusMsg('Sem registro anterior pra esse aluno');
+      } else {
+        setStatusMsg('Erro: ' + (data.mensagem || 'falha ao buscar'));
+      }
+    } catch {
+      setStatusMsg('Erro de conexão.');
+    } finally {
+      setBuscandoMeta(false);
+    }
+  };
+
+  const irParaPNG = () => {
+    if (!alunoSelecionado) return;
+    router.push(`/mentor/ig/painel?id=${form.idAluno}&nome=${encodeURIComponent(alunoSelecionado.nome)}`);
+  };
+
   const alunoSelecionado = alunos.find(a => String(a.id) === String(form.idAluno));
+
+  const camposObrigatorios = {
+    idAluno: 'Mentorando',
+    metaSemanal: 'Meta semanal',
+    horasEstudadas: 'Horas estudadas',
+    revisoesAtrasadas: 'Revisões atrasadas',
+    dominioBio: 'Domínio Bio',
+    progressoBio: 'Progresso Bio',
+    dominioQui: 'Domínio Qui',
+    progressoQui: 'Progresso Qui',
+    dominioFis: 'Domínio Fis',
+    progressoFis: 'Progresso Fis',
+    dominioMat: 'Domínio Mat',
+    progressoMat: 'Progresso Mat',
+  };
+  const camposFaltando = Object.entries(camposObrigatorios)
+    .filter(([campo]) => form[campo] === '' || form[campo] == null)
+    .map(([, label]) => label);
+  const formCompleto = camposFaltando.length === 0;
 
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -131,8 +187,41 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
         {/* CORPO */}
         <div className="p-5 flex-1 space-y-4">
 
+          {/* TELA DE SUCESSO */}
+          {salvoComSucesso && (
+            <div className="py-8 text-center space-y-5">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
+                <svg className="w-9 h-9 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-intento-blue">Registro sincronizado</h3>
+                <p className="text-sm text-slate-500 font-medium mt-1">{alunoSelecionado?.nome} · {form.semana}</p>
+              </div>
+              <p className="text-xs text-slate-500 font-medium">Quer gerar o PNG do painel pra mandar pro aluno?</p>
+              <div className="flex gap-2 justify-center pt-2">
+                <button
+                  onClick={onClose}
+                  className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                >
+                  Fechar
+                </button>
+                <button
+                  onClick={irParaPNG}
+                  className="px-5 py-2.5 text-sm font-bold bg-intento-blue text-white rounded-lg hover:bg-blue-900 transition flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Gerar PNG do painel
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* PASSO 1 */}
-          {step === 1 && (
+          {!salvoComSucesso && step === 1 && (
             <div className="space-y-4">
               <div>
                 <label className={labelClass}>Mentorando</label>
@@ -152,7 +241,17 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
                 </div>
               </div>
               <div>
-                <label className={labelClass}>Meta de Horas da Semana Anterior</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className={labelClass + ' mb-0'}>Meta de Horas da Semana Anterior</label>
+                  <button
+                    type="button"
+                    onClick={usarMetaAnterior}
+                    disabled={buscandoMeta || !form.idAluno}
+                    className="text-[10px] font-bold text-intento-blue hover:text-blue-900 underline underline-offset-2 disabled:opacity-30 disabled:no-underline"
+                  >
+                    {buscandoMeta ? 'Buscando...' : 'Usar a mesma da semana anterior'}
+                  </button>
+                </div>
                 <input type="number" min="0" step="0.5" className={inputClass} placeholder="Ex: 30"
                   value={form.metaSemanal} onChange={e => handleChange('metaSemanal', e.target.value)} />
               </div>
@@ -160,19 +259,19 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
           )}
 
           {/* PASSO 2 */}
-          {step === 2 && (
+          {!salvoComSucesso && step === 2 && (
             <div className="space-y-4">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Indicadores emocionais — escala de 1 a 5</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Indicadores emocionais — escala de 1 a 6</p>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  ['estresse',   'Nível de Estresse'],
-                  ['ansiedade',  'Nível de Ansiedade'],
-                  ['motivacao',  'Nível de Motivação'],
                   ['sono',       'Qualidade do Sono'],
+                  ['motivacao',  'Nível de Motivação'],
+                  ['ansiedade',  'Nível de Ansiedade'],
+                  ['estresse',   'Nível de Estresse'],
                 ].map(([campo, label]) => (
                   <div key={campo}>
                     <label className={labelClass}>{label}</label>
-                    <input type="number" min="1" max="5" className={inputClass}
+                    <input type="number" min="1" max="6" className={inputClass}
                       value={form[campo]} onChange={e => handleChange(campo, e.target.value)} />
                   </div>
                 ))}
@@ -181,7 +280,7 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
           )}
 
           {/* PASSO 3 */}
-          {step === 3 && (
+          {!salvoComSucesso && step === 3 && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 {[
@@ -246,6 +345,7 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
         </div>
 
         {/* FOOTER */}
+        {!salvoComSucesso && (
         <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-between items-center rounded-b-xl">
           {step > 1
             ? <button onClick={() => setStep(step - 1)} className="text-sm font-semibold text-slate-400 hover:text-intento-blue transition">← Voltar</button>
@@ -255,6 +355,11 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
             {statusMsg && (
               <span className={`text-xs font-semibold ${statusMsg.includes('Erro') ? 'text-red-500' : 'text-emerald-600'}`}>
                 {statusMsg}
+              </span>
+            )}
+            {step === 3 && !formCompleto && !statusMsg && (
+              <span className="text-xs font-semibold text-red-500 max-w-[260px] text-right leading-tight">
+                Preencha: {camposFaltando.join(', ')}
               </span>
             )}
             {step < 3
@@ -267,14 +372,15 @@ export default function ModalRegistro({ alunos, alunoPreSelecionado, onClose, on
                 </button>
               : <button
                   onClick={salvarRegistro}
-                  disabled={salvando}
-                  className="bg-intento-yellow hover:bg-yellow-500 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-all disabled:opacity-60"
+                  disabled={salvando || !formCompleto}
+                  className="bg-intento-yellow hover:bg-yellow-500 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {salvando ? 'Sincronizando...' : 'Sincronizar Registro'}
                 </button>
             }
           </div>
         </div>
+        )}
 
       </div>
     </div>
