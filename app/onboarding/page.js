@@ -94,6 +94,8 @@ export default function OnboardingWizard() {
   const [errosInline, setErrosInline]         = useState({});
   const [rascunhoRecuperado, setRascunhoRecuperado] = useState(false);
   const [respostas, setRespostas]             = useState(ESTADO_INICIAL);
+  const [aceiteLgpd, setAceiteLgpd]           = useState(false);
+  const [aceiteResponsavelMenor, setAceiteResponsavelMenor] = useState(false);
 
   // Carrega rascunho e bloqueia saída acidental
   useEffect(() => {
@@ -136,6 +138,20 @@ export default function OnboardingWizard() {
     if (errosInline[campo]) setErrosInline(prev => { const n = { ...prev }; delete n[campo]; return n; });
   };
 
+  // Calcula idade pela data de nascimento (Y-M-D no formato do input date)
+  const calcularIdade = (dataNasc) => {
+    if (!dataNasc) return null;
+    const nasc = new Date(dataNasc);
+    if (isNaN(nasc.getTime())) return null;
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    const m = hoje.getMonth() - nasc.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade -= 1;
+    return idade;
+  };
+  const idade = calcularIdade(respostas.dadosPessoais.dataNascimento);
+  const ehMenor = idade !== null && idade < 18;
+
   const validar = () => {
     const d = respostas.dadosPessoais;
     const p = respostas.perfilAcademico;
@@ -164,6 +180,10 @@ export default function OnboardingWizard() {
       if (faltam > 0) {
         setErrosInline({});
         return `Responda todas as ${secao.perguntas.length} afirmações para continuar.`;
+      }
+      if (subSecao === SECOES_HABITOS.length - 1) {
+        if (!aceiteLgpd) novosErros.aceiteLgpd = 'É necessário aceitar os termos para continuar';
+        if (ehMenor && !aceiteResponsavelMenor) novosErros.aceiteResponsavelMenor = 'Necessário o consentimento do responsável legal';
       }
     }
 
@@ -212,7 +232,18 @@ export default function OnboardingWizard() {
       await fetch('/api/mentor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo: 'onboarding', email: respostas.dadosPessoais.email, ...respostas }),
+        body: JSON.stringify({
+          tipo: 'onboarding',
+          email: respostas.dadosPessoais.email,
+          ...respostas,
+          consentimento: {
+            lgpdAceito: aceiteLgpd,
+            ehMenor,
+            responsavelLegalAceitou: ehMenor ? aceiteResponsavelMenor : null,
+            timestamp: new Date().toISOString(),
+            userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+          },
+        }),
       });
       localStorage.removeItem(RASCUNHO_KEY);
       setSucesso(true);
@@ -599,6 +630,71 @@ export default function OnboardingWizard() {
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* ── LGPD: aceite final ──────────────────────────────────────── */}
+            {passoAtual === 4 && subSecao === SECOES_HABITOS.length - 1 && (
+              <div className="mt-10 pt-6 border-t border-slate-200 space-y-4">
+                <div>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Aceite de termos</p>
+
+                  <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${aceiteLgpd ? 'border-intento-blue/30 bg-blue-50/40' : errosInline.aceiteLgpd ? 'border-red-300 bg-red-50/30' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                    <input
+                      type="checkbox"
+                      checked={aceiteLgpd}
+                      onChange={(e) => {
+                        setAceiteLgpd(e.target.checked);
+                        if (errosInline.aceiteLgpd) setErrosInline(prev => { const n = { ...prev }; delete n.aceiteLgpd; return n; });
+                      }}
+                      className="mt-0.5 w-4 h-4 shrink-0 accent-intento-blue"
+                    />
+                    <span className="text-sm text-slate-700 leading-relaxed">
+                      Li e aceito a{' '}
+                      <Link href="/privacidade" target="_blank" className="text-intento-blue underline font-semibold">Política de Privacidade</Link>{' '}
+                      e os{' '}
+                      <Link href="/termos" target="_blank" className="text-intento-blue underline font-semibold">Termos de Uso</Link>{' '}
+                      da Intento, e autorizo o tratamento dos meus dados pessoais para as finalidades descritas.
+                    </span>
+                  </label>
+                  {errosInline.aceiteLgpd && (
+                    <p className="text-xs text-red-500 font-medium mt-2 flex items-center gap-1">
+                      <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      {errosInline.aceiteLgpd}
+                    </p>
+                  )}
+                </div>
+
+                {ehMenor && (
+                  <div>
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-3">
+                      <p className="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">Aluno menor de idade</p>
+                      <p className="text-xs text-amber-700 leading-relaxed">
+                        Identificamos que o aluno tem menos de 18 anos. Para tratar os dados pessoais de adolescentes, a LGPD exige consentimento específico do responsável legal.
+                      </p>
+                    </div>
+                    <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${aceiteResponsavelMenor ? 'border-intento-blue/30 bg-blue-50/40' : errosInline.aceiteResponsavelMenor ? 'border-red-300 bg-red-50/30' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                      <input
+                        type="checkbox"
+                        checked={aceiteResponsavelMenor}
+                        onChange={(e) => {
+                          setAceiteResponsavelMenor(e.target.checked);
+                          if (errosInline.aceiteResponsavelMenor) setErrosInline(prev => { const n = { ...prev }; delete n.aceiteResponsavelMenor; return n; });
+                        }}
+                        className="mt-0.5 w-4 h-4 shrink-0 accent-intento-blue"
+                      />
+                      <span className="text-sm text-slate-700 leading-relaxed">
+                        Declaro ser pai, mãe ou responsável legal do aluno e <strong>autorizo expressamente</strong> o tratamento dos dados pessoais do menor para as finalidades descritas na Política de Privacidade.
+                      </span>
+                    </label>
+                    {errosInline.aceiteResponsavelMenor && (
+                      <p className="text-xs text-red-500 font-medium mt-2 flex items-center gap-1">
+                        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        {errosInline.aceiteResponsavelMenor}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

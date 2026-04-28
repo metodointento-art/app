@@ -8,8 +8,9 @@ import { Bar, Line } from '@/components/Charts';
 import { LoadingScreen } from '@/components/Loading';
 import { getCache, setCache, tempoRelativo } from '@/lib/cacheClient';
 import PushToggle from '@/components/PushToggle';
+import PainelLiderPipeline from '@/components/PainelLiderPipeline';
 
-const EMAIL_LIDER = 'filippe@metodointento.com.br';
+const EMAILS_LIDER = ['filippe@metodointento.com.br', 'rafael@metodointento.com.br'];
 
 const cardClass = "bg-white rounded-xl border border-slate-200 p-5 shadow-sm";
 
@@ -24,6 +25,8 @@ const FAIXAS_HORAS = [
 export default function PainelLider() {
   const router = useRouter();
   const [autorizado, setAutorizado] = useState(false);
+  const [emailLogado, setEmailLogado] = useState('');
+  const [aba, setAba] = useState('mentoria');
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
   const [erro, setErro] = useState('');
@@ -47,11 +50,12 @@ export default function PainelLider() {
     const unsub = onAuthStateChanged(auth, (user) => {
       const email = user?.email?.toLowerCase() || (typeof window !== 'undefined' ? sessionStorage.getItem('emailLogado') : null);
       if (!email) { router.push('/'); return; }
-      if (email !== EMAIL_LIDER) {
+      if (!EMAILS_LIDER.includes(email)) {
         if (email.endsWith('@metodointento.com.br')) router.push('/mentor');
         else router.push('/painel');
         return;
       }
+      setEmailLogado(email);
       setAutorizado(true);
     });
     return () => unsub();
@@ -77,7 +81,7 @@ export default function PainelLider() {
     fetch('/api/mentor', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ acao: 'dashboardLider', email: EMAIL_LIDER }),
+      body: JSON.stringify({ acao: 'dashboardLider', email: emailLogado }),
     })
       .then(r => r.json())
       .then(d => {
@@ -91,7 +95,7 @@ export default function PainelLider() {
       })
       .catch(() => { if (!cached) setErro('Erro de conexão.'); })
       .finally(() => { setCarregando(false); setAtualizando(false); });
-  }, [autorizado]);
+  }, [autorizado, emailLogado]);
 
   // Lista de mentores únicos (do agregado)
   const listaMentoresUnicos = useMemo(() => {
@@ -162,7 +166,7 @@ export default function PainelLider() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           acao: 'designarMentor',
-          email: EMAIL_LIDER,
+          email: emailLogado,
           idAluno: alunoDesignar.idAluno,
           emailMentor: mentorEscolhido,
         }),
@@ -182,7 +186,7 @@ export default function PainelLider() {
       // Refetch dashboard pra refletir mudança
       const refetched = await fetch('/api/mentor', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ acao: 'dashboardLider', email: EMAIL_LIDER }),
+        body: JSON.stringify({ acao: 'dashboardLider', email: emailLogado }),
       });
       const novosDados = await refetched.json();
       if (novosDados.status === 'sucesso') setDados(novosDados);
@@ -248,12 +252,32 @@ export default function PainelLider() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <PushToggle email={EMAIL_LIDER} />
+          <PushToggle email={emailLogado} />
           <button onClick={sair} className="text-sm font-semibold text-slate-400 hover:text-red-500 transition">Sair</button>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
+
+        {/* Tabs */}
+        <div className="flex gap-1 border-b border-slate-200 -mt-2">
+          <button
+            onClick={() => setAba('mentoria')}
+            className={`px-4 py-2.5 text-sm font-semibold transition border-b-2 ${aba === 'mentoria' ? 'text-intento-blue border-intento-blue' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
+          >
+            Mentoria
+          </button>
+          <button
+            onClick={() => setAba('pipeline')}
+            className={`px-4 py-2.5 text-sm font-semibold transition border-b-2 ${aba === 'pipeline' ? 'text-intento-blue border-intento-blue' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
+          >
+            Pipeline (CRM)
+          </button>
+        </div>
+
+        {aba === 'pipeline' && <PainelLiderPipeline email={emailLogado} />}
+
+        {aba === 'mentoria' && (<>
 
         {/* KPIs no topo */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -498,14 +522,14 @@ export default function PainelLider() {
             <p className="text-[10px] font-medium text-slate-400 mb-4">semana de referência · escala 0–5</p>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Estresse',  valor: bemEstar.estresse,  cor: '#ef4444', invertido: true },
-                { label: 'Ansiedade', valor: bemEstar.ansiedade, cor: '#f97316', invertido: true },
-                { label: 'Motivação', valor: bemEstar.motivacao, cor: '#10b981' },
                 { label: 'Sono',      valor: bemEstar.sono,      cor: '#a855f7' },
+                { label: 'Motivação', valor: bemEstar.motivacao, cor: '#10b981' },
+                { label: 'Ansiedade', valor: bemEstar.ansiedade, cor: '#f97316', invertido: true },
+                { label: 'Estresse',  valor: bemEstar.estresse,  cor: '#ef4444', invertido: true },
               ].map(b => (
                 <div key={b.label} className="bg-slate-50 rounded-lg p-3 border border-slate-100">
                   <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">{b.label}</p>
-                  <p className="text-2xl font-bold" style={{ color: b.cor }}>{b.valor || 0}<span className="text-xs text-slate-400 font-medium">/5</span></p>
+                  <p className="text-2xl font-bold" style={{ color: b.cor }}>{b.valor || 0}<span className="text-xs text-slate-400 font-medium">/6</span></p>
                   <p className="text-[10px] text-slate-400 font-medium mt-1">{b.invertido ? 'menor é melhor' : 'maior é melhor'}</p>
                 </div>
               ))}
@@ -592,6 +616,8 @@ export default function PainelLider() {
             );
           })}
         </div>
+
+        </>)}
 
       </div>
     </div>

@@ -6,7 +6,7 @@ import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { LoadingScreen } from '@/components/Loading';
 
-const EMAIL_LIDER = 'filippe@metodointento.com.br';
+const EMAILS_LIDER = ['filippe@metodointento.com.br', 'rafael@metodointento.com.br'];
 
 export default function SelecionarModo() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function SelecionarModo() {
 
       if (!email) { router.push('/'); return; }
 
-      if (email !== EMAIL_LIDER) {
+      if (!EMAILS_LIDER.includes(email)) {
         // Outro mentor → manda direto pro painel do mentor
         if (email.endsWith('@metodointento.com.br')) router.push('/mentor');
         else router.push('/painel');
@@ -65,7 +65,7 @@ export default function SelecionarModo() {
             Em qual modo você deseja entrar?
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
             {/* Card Mentor */}
             <button
@@ -102,6 +102,26 @@ export default function SelecionarModo() {
                 Visão geral da operação: mentores, alunos, métricas agregadas e gestão.
               </p>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-intento-yellow group-hover:gap-2.5 transition-all">
+                <span>Entrar</span>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </div>
+            </button>
+
+            {/* Card CRM / Vendas */}
+            <button
+              onClick={() => router.push('/vendas')}
+              className="bg-white rounded-2xl border-2 border-slate-200 p-8 shadow-sm hover:border-emerald-500 hover:shadow-md transition-all text-left group"
+            >
+              <div className="w-14 h-14 rounded-full bg-emerald-500/10 group-hover:bg-emerald-500/15 flex items-center justify-center mb-5 transition-colors">
+                <svg className="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+              </div>
+              <h2 className="text-base font-bold text-intento-blue mb-1.5">CRM / Vendas</h2>
+              <p className="text-xs text-slate-500 leading-relaxed mb-5">
+                Pipeline de leads, acompanhamento de vendedores e conversões.
+              </p>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 group-hover:gap-2.5 transition-all">
                 <span>Entrar</span>
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
               </div>

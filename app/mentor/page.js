@@ -72,7 +72,11 @@ export default function PainelGlobalMentor() {
     setRegistradosSemana(prev => ({ ...prev, [String(idAluno)]: true }));
   }, []);
 
-  const alunosFiltrados = alunos.filter(a =>
+  const alunosOrdenados = [...alunos].sort((a, b) =>
+    (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { sensitivity: 'base' })
+  );
+
+  const alunosFiltrados = alunosOrdenados.filter(a =>
     a.nome?.toLowerCase().includes(busca.toLowerCase()) ||
     a.email?.toLowerCase().includes(busca.toLowerCase())
   );
@@ -151,7 +155,7 @@ export default function PainelGlobalMentor() {
               <div className="mt-4 pt-4 border-t border-slate-100">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pendentes:</p>
                 <div className="flex flex-wrap gap-2">
-                  {alunos.filter(a => !registradosSemana[String(a.id)]).map(a => (
+                  {alunosOrdenados.filter(a => !registradosSemana[String(a.id)]).map(a => (
                     <button
                       key={a.id}
                       onClick={() => abrirModal(a)}

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { auth, googleProvider } from '@/lib/firebase';
 import {
   signInWithPopup,
@@ -276,6 +277,13 @@ export default function Home() {
                     </button>
                   </>
                 )}
+              </p>
+
+              <p className="mt-6 text-center text-[10px] text-slate-400 leading-relaxed">
+                Ao continuar, você concorda com os nossos{' '}
+                <Link href="/termos" className="text-intento-blue underline">Termos de Uso</Link>{' '}
+                e nossa{' '}
+                <Link href="/privacidade" className="text-intento-blue underline">Política de Privacidade</Link>.
               </p>
             </>
           )}
