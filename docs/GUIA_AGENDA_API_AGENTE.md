@@ -9,12 +9,28 @@
 
 A API expõe 4 endpoints que o agente do WhatsApp pode chamar para gerenciar reuniões dos leads com os vendedores. O backend cuida de:
 
-- Verificar se o horário pedido está dentro do plantão de algum vendedor
-- Confirmar se o vendedor está realmente livre (Google Calendar)
+- Verificar se o horário pedido cai dentro de uma **janela declarada** pelo vendedor (no Google Calendar dele)
+- Confirmar que o vendedor não tem outra reunião marcada pelo nosso sistema no mesmo horário
 - Escolher o vendedor de menor carga (round-robin)
 - Criar evento com Google Meet automático
 - Convidar lead, vendedor e suporte por email
 - Atualizar o lead no CRM
+
+---
+
+## Como o vendedor declara disponibilidade
+
+Cada vendedor cria eventos no **próprio Google Calendar** com o **título começando com `[Intento]`**. Esses eventos são lidos como **janelas de plantão**.
+
+Exemplo:
+- Título: `[Intento] Disponível`
+- Início: terça 19:00
+- Fim: terça 21:30
+- Recorrência: semanal (toda terça)
+
+> O vendedor é responsável por ajustar a recorrência/eventos quando estiver de férias, doente, etc. Não declarar uma janela = não receber reuniões nesse período.
+
+> Vendedor também é responsável por não declarar disponibilidade quando tem outros compromissos. O sistema **não** faz duplo-check contra outros eventos do calendar — confia na declaração.
 
 ---
 
@@ -28,7 +44,7 @@ x-agent-token: <AGENT_API_TOKEN>
 
 O secret está no env var `AGENT_API_TOKEN` no Vercel (Production). Pede pro Filippe.
 
-> Se o token estiver errado, ausente ou diferente, todos os endpoints retornam **401**.
+> Token errado, ausente ou diferente → resposta **401**.
 
 ---
 
@@ -58,7 +74,7 @@ x-agent-token: <SECRET>
 |---|---|---|
 | `horarioISO` | sim | ISO 8601 com timezone, recomendado `-03:00` (BRT) |
 | `idLead` | sim | ID do lead em `BD_Leads` (ex: `lead_xyz`). Lead **deve já existir**. |
-| `idempotencyKey` | sim | UUID único da operação. Repetir a mesma chave em 1h retorna o mesmo resultado (sem criar novo evento). |
+| `idempotencyKey` | sim | UUID único da operação. Repetir a mesma chave em 1h retorna o mesmo resultado. |
 | `durMin` | não | Duração em minutos. Padrão: 30. |
 
 **Resposta — sucesso:**
@@ -81,7 +97,7 @@ x-agent-token: <SECRET>
 ```json
 {
   "status": "sem_vaga",
-  "motivo": "Vendedores de plantão estão ocupados nesse horário",
+  "motivo": "Nenhum vendedor com janela declarada disponível nesse horário",
   "sugestoes": [
     { "horarioISO": "2026-05-06T19:30:00-03:00", "horarioBR": "Terça-feira, 06/05 às 19h30" },
     { "horarioISO": "2026-05-06T20:00:00-03:00", "horarioBR": "Terça-feira, 06/05 às 20h00" },
@@ -90,18 +106,11 @@ x-agent-token: <SECRET>
 }
 ```
 
-**Erros:**
-- `400` — body inválido, campos faltando, horário inválido
-- `401` — token inválido
-- `404` — lead não encontrado
-- `500` — falha interna
-
 ---
 
 ### 2. Listar sugestões — `GET /api/agenda/sugestoes?dias=3&durMin=30`
 
-Retorna até 20 horários livres dos próximos `dias` (padrão 3, máximo 14).
-Útil quando o lead pergunta "quais horários vocês têm?" sem propor um específico.
+Retorna até 20 horários livres dos próximos `dias` (padrão 3, máximo 14). Útil quando o lead pergunta "quais horários vocês têm?".
 
 **Resposta:**
 ```json
@@ -121,28 +130,18 @@ Retorna até 20 horários livres dos próximos `dias` (padrão 3, máximo 14).
 
 ### 3. Cancelar reunião — `POST /api/agenda/cancelar`
 
-Cancela evento no Calendar + limpa marcação no lead.
-
-**Body:**
 ```json
 { "idLead": "lead_1234567890" }
 ```
 
-**Resposta:**
-```json
-{ "status": "cancelado", "idLead": "lead_1234567890" }
-```
+Resposta: `{ "status": "cancelado", "idLead": "..." }`
 
-> O sistema usa `gcal_event_id` armazenado no lead pra saber qual evento apagar.
-> Lead também volta pra fase `Ativo WPP`.
+> Lead volta pra fase `Ativo WPP`.
 
 ---
 
 ### 4. Reagendar — `POST /api/agenda/reagendar`
 
-Cancela o atual + cria novo no horário pedido. Atomicamente.
-
-**Body:**
 ```json
 {
   "idLead": "lead_1234567890",
@@ -151,108 +150,53 @@ Cancela o atual + cria novo no horário pedido. Atomicamente.
 }
 ```
 
-**Resposta:** mesma estrutura de `/agendar` (sucesso ou sem_vaga). Se sem_vaga, o evento original permanece cancelado e o lead fica sem reunião — o agente precisa pedir nova sugestão pro lead.
+Resposta: mesma estrutura de `/agendar` (sucesso ou sem_vaga).
 
 ---
 
 ## Fluxo recomendado no n8n
 
 ```
-1. Lead manda mensagem: "quero marcar terça 19h"
-   ↓
-2. Agente parsea com LLM → "2026-05-06T19:00:00-03:00"
-   ↓
-3. Agente gera idempotencyKey (UUID v4)
-   ↓
-4. Agente chama POST /api/agenda/agendar
-   ↓
-5a. Resposta "agendado":
-    → Agente: "Marquei sua reunião com {{vendedor.nome}} em {{horarioBR}}.
-              Link Meet: {{meetLink}}"
-    
-5b. Resposta "sem_vaga":
-    → Agente formata sugestões pro WPP:
-       "Esse horário não tem vaga. Tenho:
-        - Terça 06/05 às 19h30
-        - Terça 06/05 às 20h00
-        - Quarta 07/05 às 19h00
-        Qual prefere?"
-    → Espera resposta → volta ao passo 4
+Lead manda: "quero marcar terça 19h"
+    ↓
+Agente parsea o horário → "2026-05-06T19:00:00-03:00"
+    ↓
+Agente gera idempotencyKey (UUID v4)
+    ↓
+POST /api/agenda/agendar
+    ↓
+"agendado" → "Marquei sua reunião com X em DD/MM HH:MM. Link Meet: ..."
+    ↓
+"sem_vaga" → mostra sugestoes pro lead, espera escolha, repete
 ```
 
 ### Idempotency
 
-**Importante**: gera **um UUID novo por tentativa de marcar**, não por lead. Se o lead disser depois "muda pra 20h", você gera um novo UUID. Mas se o n8n der retry da MESMA marcação por timeout, usa o mesmo UUID — assim evita marcar 2 vezes.
-
-```js
-// Pseudocódigo n8n
-const idempotencyKey = crypto.randomUUID();
-const tentativa = await fetch('/api/agenda/agendar', {
-  method: 'POST', headers: {...}, body: JSON.stringify({...,idempotencyKey})
-});
-// Se der timeout, retry com MESMO idempotencyKey
-```
-
----
-
-## Exemplos de erro
-
-**Token errado:**
-```json
-{ "status": "erro", "mensagem": "Não autorizado" }
-```
-→ HTTP 401
-
-**Lead não existe:**
-```json
-{ "status": "erro", "mensagem": "lead não encontrado: lead_xyz" }
-```
-→ HTTP 404
-
-**Horário muito próximo (< 4h):**
-```json
-{
-  "status": "sem_vaga",
-  "motivo": "Horário precisa ser pelo menos 4h à frente",
-  "sugestoes": []
-}
-```
-→ HTTP 200 (sucesso, mas sem vaga)
-
----
-
-## Configuração do plantão
-
-Cada vendedor tem `horarios_atendimento` em `BD_Vendedores` (col E), em JSON:
-
-```json
-{
-  "seg": ["19:00-21:30"],
-  "ter": ["19:00-21:30"],
-  "qua": ["19:00-21:30"],
-  "qui": [],
-  "sex": [],
-  "sab": [],
-  "dom": []
-}
-```
-
-- Chaves: `seg`, `ter`, `qua`, `qui`, `sex`, `sab`, `dom`
-- Cada dia tem array de janelas no formato `"HH:MM-HH:MM"`
-- Múltiplas janelas no mesmo dia: `["09:00-12:00","14:00-18:00"]`
-- Vendedor sem `horarios_atendimento` (célula vazia) **não recebe reuniões**
+Gera **um UUID novo por tentativa de marcar**, não por lead. Em retry de timeout, **mantém o mesmo UUID** pra evitar marcação duplicada.
 
 ---
 
 ## Limites e observações
 
 - **Antecedência mínima:** 4 horas. Slots dentro de 4h são rejeitados.
-- **Granularidade:** 30 em 30 minutos (19:00, 19:30, 20:00...).
+- **Granularidade:** 30 em 30 minutos.
 - **Janela de busca de sugestões:** padrão 3 dias, máximo 14.
-- **Round-robin:** quando vários vendedores cobrem o mesmo slot, o sistema escolhe o de menor número de reuniões no mês corrente.
+- **Round-robin:** quando vários vendedores têm janela cobrindo o slot, o sistema escolhe o de menor número de reuniões marcadas no mês corrente.
 - **Convidados sempre incluem:** lead, vendedor escolhido, `suporte@metodointento.com.br`.
-- **Email de convite:** o Google Calendar envia automaticamente.
+- **Convite por email:** o Google Calendar envia automaticamente.
 - **Idempotency cache:** 1h em memória do servidor.
+- **Sem horário comercial fixo** — quem define é cada vendedor pelos eventos `[Intento] *` no calendar próprio. Se ninguém declarar disponibilidade, retorna sem vagas.
+
+---
+
+## Erros comuns
+
+| Resposta | Causa |
+|---|---|
+| `401 Não autorizado` | header `x-agent-token` ausente ou errado |
+| `400 horarioISO inválido` | string ISO mal formatada |
+| `404 lead não encontrado` | `idLead` não existe em `BD_Leads` |
+| `sem_vaga` | nenhum vendedor com janela `[Intento]` cobrindo o slot |
 
 ---
 

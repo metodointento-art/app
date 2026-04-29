@@ -2,9 +2,10 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import {
-  freeBusyMulti,
-  dentroJanela,
-  colideComBusy,
+  listarJanelasDisponibilidade,
+  listarReunioesBooked,
+  dentroDeJanela,
+  colideComReuniao,
   slotsDentroJanelas,
   formatarHorarioBR,
 } from '@/lib/googleCalendar';
@@ -38,40 +39,55 @@ export async function GET(request) {
     if (vendResp.status !== 'sucesso') {
       return NextResponse.json({ status: 'erro', mensagem: vendResp.mensagem || 'falha ao listar vendedores' }, { status: 500 });
     }
-    const vendedores = (vendResp.vendedores || []).filter((v) => v.horarios);
-
+    const vendedores = vendResp.vendedores || [];
     if (vendedores.length === 0) {
       return NextResponse.json({ status: 'sucesso', sugestoes: [], total: 0 });
     }
 
-    // Coleta todos os slots candidatos (união entre vendedores)
+    const agora = new Date();
+    const timeMin = new Date(agora.getTime() + ANTECEDENCIA_MIN_HORAS * 60 * 60 * 1000).toISOString();
+    const timeMax = new Date(agora.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
+
+    // Pra cada vendedor, lê janelas + reuniões booked em paralelo
+    const dados = await Promise.all(
+      vendedores.map(async (v) => {
+        try {
+          const [janelas, booked] = await Promise.all([
+            listarJanelasDisponibilidade(v.email, timeMin, timeMax),
+            listarReunioesBooked(v.email, timeMin, timeMax),
+          ]);
+          return { v, janelas, booked };
+        } catch (e) {
+          console.warn(`[sugestoes] erro lendo calendar de ${v.email}:`, e.message);
+          return { v, janelas: [], booked: [] };
+        }
+      })
+    );
+
+    // Une todos os slots candidatos a partir das janelas declaradas
     const slotsSet = new Set();
-    for (const v of vendedores) {
-      const ss = slotsDentroJanelas(v.horarios, dias, dur, ANTECEDENCIA_MIN_HORAS);
+    for (const { janelas } of dados) {
+      const ss = slotsDentroJanelas(janelas, dur, ANTECEDENCIA_MIN_HORAS);
       for (const s of ss) slotsSet.add(s);
     }
     const ordenados = [...slotsSet].sort();
     if (ordenados.length === 0) {
-      return NextResponse.json({ status: 'sucesso', sugestoes: [], total: 0 });
+      return NextResponse.json({ status: 'sucesso', sugestoes: [], total: 0, dias, durMin: dur });
     }
-
-    // freeBusy pra todos os vendedores na janela
-    const timeMin = ordenados[0];
-    const timeMax = new Date(new Date(ordenados[ordenados.length - 1]).getTime() + dur * 60 * 1000).toISOString();
-    const busy = await freeBusyMulti(vendedores.map((v) => v.email), timeMin, timeMax);
 
     const sugestoes = [];
     for (const iso of ordenados) {
       if (sugestoes.length >= MAX_SUGESTOES) break;
       const inicio = new Date(iso);
       const fim = new Date(inicio.getTime() + dur * 60 * 1000);
-      const livres = vendedores.filter((v) => dentroJanela(v.horarios, inicio, dur)
-        && !colideComBusy(inicio, fim, busy[v.email] || []));
-      if (livres.length > 0) {
+      const livresCount = dados.filter(({ janelas, booked }) =>
+        dentroDeJanela(inicio, fim, janelas) && !colideComReuniao(inicio, fim, booked)
+      ).length;
+      if (livresCount > 0) {
         sugestoes.push({
           horarioISO: iso,
           horarioBR: formatarHorarioBR(iso),
-          vendedoresLivres: livres.length,
+          vendedoresLivres: livresCount,
         });
       }
     }
