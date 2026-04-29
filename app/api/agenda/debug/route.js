@@ -44,6 +44,35 @@ export async function GET(request) {
     return NextResponse.json({ status: 'erro', mensagem: 'param email obrigatório' }, { status: 400 });
   }
 
+  // Diagnóstico do env var GOOGLE_SERVICE_ACCOUNT_KEY (sem revelar valores).
+  const envCheck = (() => {
+    const raw = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+    if (!raw) return { setado: false };
+    const out = { setado: true, tamanhoBytes: raw.length };
+    try {
+      const obj = JSON.parse(raw);
+      out.parseOk = true;
+      out.campos = Object.keys(obj);
+      out.tem_client_email = !!obj.client_email;
+      out.tem_private_key = !!obj.private_key;
+      out.tem_client_id = !!obj.client_id;
+      out.tem_project_id = !!obj.project_id;
+      out.tem_type = !!obj.type;
+      out.client_email_dominio = obj.client_email ? obj.client_email.split('@')[1] : null;
+      out.private_key_tamanho = obj.private_key ? obj.private_key.length : 0;
+      out.private_key_comeca_com_BEGIN = obj.private_key ? obj.private_key.startsWith('-----BEGIN') : false;
+      out.private_key_termina_com_END = obj.private_key ? obj.private_key.trim().endsWith('-----') : false;
+      out.private_key_tem_newlines = obj.private_key ? obj.private_key.includes('\n') : false;
+      out.type_value = obj.type;
+    } catch (e) {
+      out.parseOk = false;
+      out.parseErro = e.message;
+      out.primeiros20chars = raw.slice(0, 20);
+      out.ultimos20chars = raw.slice(-20);
+    }
+    return out;
+  })();
+
   try {
     const calendar = getCalendarClient(email);
     const agora = new Date();
@@ -128,6 +157,7 @@ export async function GET(request) {
       status: 'sucesso',
       email,
       janela: { de: agora.toISOString(), ate: fim.toISOString() },
+      envCheck,
       calendarsList,
       eventsByType,
       allEvents,
@@ -136,7 +166,7 @@ export async function GET(request) {
 
   } catch (e) {
     console.error('[/api/agenda/debug]', e);
-    return NextResponse.json({ status: 'erro', mensagem: e.message, stack: e.stack }, { status: 500 });
+    return NextResponse.json({ status: 'erro', mensagem: e.message, stack: e.stack, envCheck }, { status: 500 });
   }
 }
 
