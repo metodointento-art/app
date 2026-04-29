@@ -59,6 +59,9 @@ export async function GET(request) {
       out.tem_project_id = !!obj.project_id;
       out.tem_type = !!obj.type;
       out.client_email_dominio = obj.client_email ? obj.client_email.split('@')[1] : null;
+      out.client_email = obj.client_email; // não é segredo, é a identidade pública da SA
+      out.client_id = obj.client_id;       // mesmo
+      out.project_id = obj.project_id;
       out.private_key_tamanho = obj.private_key ? obj.private_key.length : 0;
       out.private_key_comeca_com_BEGIN = obj.private_key ? obj.private_key.startsWith('-----BEGIN') : false;
       out.private_key_termina_com_END = obj.private_key ? obj.private_key.trim().endsWith('-----') : false;
