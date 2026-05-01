@@ -38,8 +38,8 @@ const FOLDER_BACKUPS_ID = "1UZjX1mZSsjMBRDDTYHKDHJglAj5iMUmp";
 
 const FASES_LEAD = [
   'Lead', 'Numero invalido', 'Contactado WPP', 'Ativo WPP',
-  'Reuniao agendada', 'Reuniao realizada',
-  'Aguardando decisao', 'Convertido', 'Taxa matricula paga', 'Contrato assinado',
+  'Reuniao agendada', 'No-show', 'Reuniao realizada',
+  'Convertido', 'Taxa matricula paga', 'Contrato assinado',
   '1a mensalidade paga', 'Em mentoria', 'Churn'
 ];
 
@@ -2889,6 +2889,27 @@ function handleConverterLeadEmAluno(dados) {
 // =====================================================================
 // BACKUP DIÁRIO DA MESTRE
 // =====================================================================
+
+// One-shot: migra leads em fase 'Aguardando decisao' pra 'Reuniao realizada'.
+// Rodar manualmente no editor do Apps Script após atualizar FASES_LEAD.
+function migrarAguardandoDecisaoParaReuniaoRealizada() {
+  var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+  var aba = ssMestre.getSheetByName(ABA.LEADS);
+  if (!aba) { Logger.log('BD_Leads não encontrada'); return; }
+  var lastRow = aba.getLastRow();
+  if (lastRow < 2) { Logger.log('aba vazia'); return; }
+  var range = aba.getRange(2, COL_LEAD.FASE + 1, lastRow - 1, 1);
+  var valores = range.getValues();
+  var contador = 0;
+  for (var i = 0; i < valores.length; i++) {
+    if (txt(valores[i][0]) === 'Aguardando decisao') {
+      valores[i][0] = 'Reuniao realizada';
+      contador++;
+    }
+  }
+  if (contador > 0) range.setValues(valores);
+  Logger.log('Migrados ' + contador + ' leads de Aguardando decisao → Reuniao realizada');
+}
 
 function backupDiarioMestre() {
   Logger.log('===== BACKUP DIÁRIO MESTRE =====');
