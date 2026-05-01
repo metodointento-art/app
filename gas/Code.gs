@@ -263,6 +263,7 @@ function doPost(e) {
     if (acao === "criarExcecaoDisponibilidade") return handleCriarExcecaoDisponibilidade(dados);
     if (acao === "removerExcecaoDisponibilidade") return handleRemoverExcecaoDisponibilidade(dados);
     if (acao === "listarExcecoesDisponibilidade") return handleListarExcecoesDisponibilidade(dados);
+    if (acao === "cargaPorVendedorNoMes")   return handleCargaPorVendedorNoMes(dados);
 
     throw new Error("Ação não reconhecida: " + acao);
 
@@ -1210,16 +1211,27 @@ function handleLoginGlobal(dados) {
     const emailStr = emailNorm(dados.email);
     if (!emailStr) return responderJSON({ status: "erro", mensagem: "E-mail não fornecido." });
 
-    // Líderes (Filippe e Rafael) — vão pra tela de seleção de modo
-    if (emailStr === "filippe@metodointento.com.br" || emailStr === "rafael@metodointento.com.br")
-      return responderJSON({ status: "sucesso", perfil: "lider", rota: "/selecionar-modo" });
+    // Detecta papéis
+    var ehLider    = (emailStr === "filippe@metodointento.com.br" || emailStr === "rafael@metodointento.com.br");
+    var ehVendedor = !!lerVendedoresAtivos()[emailStr];
+    var ehMentor   = !!lerMentoresAtivos()[emailStr] || (emailStr.endsWith("@metodointento.com.br") && !ehVendedor && !ehLider);
+    // Nota: se está no domínio mas não em BD_Mentores nem BD_Vendedores, considera mentor (legado)
 
-    // Vendedor — só painel de vendas
-    if (lerVendedoresAtivos()[emailStr])
-      return responderJSON({ status: "sucesso", perfil: "vendedor", rota: "/vendas" });
+    // Líderes sempre vão pra selecionar-modo (mantém comportamento atual)
+    if (ehLider)
+      return responderJSON({ status: "sucesso", perfil: "lider", rota: "/selecionar-modo", papeis: { lider: true, vendedor: ehVendedor, mentor: ehMentor } });
 
+    // Híbrido: vendedor + mentor → escolhe entre /vendas e /mentor
+    if (ehVendedor && ehMentor)
+      return responderJSON({ status: "sucesso", perfil: "hibrido", rota: "/selecionar-modo", papeis: { lider: false, vendedor: true, mentor: true } });
+
+    // Só vendedor
+    if (ehVendedor)
+      return responderJSON({ status: "sucesso", perfil: "vendedor", rota: "/vendas", papeis: { lider: false, vendedor: true, mentor: false } });
+
+    // Só mentor (resto do domínio)
     if (emailStr.endsWith("@metodointento.com.br"))
-      return responderJSON({ status: "sucesso", perfil: "mentor", rota: "/mentor" });
+      return responderJSON({ status: "sucesso", perfil: "mentor", rota: "/mentor", papeis: { lider: false, vendedor: false, mentor: true } });
 
     const ss        = SpreadsheetApp.getActiveSpreadsheet();
     const abaAlunos = ss.getSheetByName(ABA.MESTRE);
@@ -2422,6 +2434,41 @@ function handleRemoverExcecaoDisponibilidade(dados) {
     Logger.log('removerExcecao EXCEPTION: ' + e.message);
     return responderJSON({ status: 'erro', mensagem: e.message });
   } finally { lock.releaseLock(); }
+}
+
+// === Handler: carga (qtd de reuniões agendadas) por vendedor no mês corrente ===
+// Conta leads em BD_Leads com fase 'Reuniao agendada' e data_proxima_acao
+// no mês corrente, agrupados por vendedor. Usado pra round-robin no /agendar.
+function handleCargaPorVendedorNoMes(dados) {
+  try {
+    var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+    var aba = ssMestre.getSheetByName(ABA.LEADS);
+    if (!aba) return responderJSON({ status: 'sucesso', cargas: {} });
+    var lastRow = aba.getLastRow();
+    if (lastRow < 2) return responderJSON({ status: 'sucesso', cargas: {} });
+    var matriz = aba.getRange(2, 1, lastRow - 1, 25).getValues();
+    var hoje = new Date();
+    var mesAtual = hoje.getMonth();
+    var anoAtual = hoje.getFullYear();
+    var cargas = {};
+    for (var i = 0; i < matriz.length; i++) {
+      var row = matriz[i];
+      if (txt(row[COL_LEAD.FASE]) !== 'Reuniao agendada') continue;
+      var vendedor = emailNorm(row[COL_LEAD.VENDEDOR]);
+      if (!vendedor) continue;
+      var dataStr = txt(row[COL_LEAD.DATA_PROXIMA_ACAO]);
+      if (!dataStr) continue;
+      // Aceita YYYY-MM-DD ou YYYY-MM-DDTHH...
+      var d = new Date(dataStr);
+      if (isNaN(d.getTime())) continue;
+      if (d.getMonth() !== mesAtual || d.getFullYear() !== anoAtual) continue;
+      cargas[vendedor] = (cargas[vendedor] || 0) + 1;
+    }
+    return responderJSON({ status: 'sucesso', cargas: cargas });
+  } catch (e) {
+    Logger.log('cargaPorVendedorNoMes EXCEPTION: ' + e.message);
+    return responderJSON({ status: 'erro', mensagem: e.message });
+  }
 }
 
 // === Handler: listar exceções de um vendedor (opcionalmente em janela de tempo) ===

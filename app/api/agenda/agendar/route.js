@@ -8,6 +8,7 @@ import {
   formatarHorarioBR,
   gerarSlotsLivres,
   diaDaSemana,
+  vendedorLivreNoCalendar,
 } from '@/lib/googleCalendar';
 
 const SUPORTE_EMAIL = 'suporte@metodointento.com.br';
@@ -124,8 +125,40 @@ export async function POST(request) {
       return NextResponse.json(response);
     }
 
-    // Round-robin: pega o primeiro (sem mais carga calculada por enquanto — pode evoluir)
-    const escolhido = livres[0];
+    // Anti double-booking: descarta vendedores cujo Calendar já tem evento conflitando
+    const checksLivre = await Promise.all(
+      livres.map(async (v) => {
+        try {
+          const free = await vendedorLivreNoCalendar(v.email, inicio.toISOString(), fim.toISOString());
+          return free ? v : null;
+        } catch (e) {
+          console.warn('[agendar] freebusy falhou', v.email, e.message);
+          return v; // se freebusy falhar, considera livre (não bloqueia agendamento)
+        }
+      })
+    );
+    const realmentelivres = checksLivre.filter(Boolean);
+
+    if (realmentelivres.length === 0) {
+      const sugestoes = await gerarSugestoesProximas(vendedores, dur);
+      const response = {
+        status: 'sem_vaga',
+        motivo: 'Vendedores estão ocupados nesse horário (conflito no Calendar)',
+        sugestoes,
+      };
+      saveIdempotency(idempotencyKey, response);
+      return NextResponse.json(response);
+    }
+
+    // Round-robin: menor carga (qtd de "Reuniao agendada" no mês corrente)
+    let escolhido = realmentelivres[0];
+    if (realmentelivres.length > 1) {
+      const cargaResp = await gas({ acao: 'cargaPorVendedorNoMes' });
+      const cargas = (cargaResp.status === 'sucesso' ? cargaResp.cargas : null) || {};
+      escolhido = realmentelivres
+        .map((v) => ({ v, n: cargas[v.email] || 0 }))
+        .sort((a, b) => a.n - b.n)[0].v;
+    }
 
     const evento = await criarEvento({
       vendedorEmail: escolhido.email,
