@@ -95,7 +95,8 @@ const COL_LEAD = {
   DADOS_TYPEBOT_RAW:      21,
   ID_ALUNO_GERADO:        22,
   PLANO:                  23,
-  GCAL_EVENT_ID:          24
+  GCAL_EVENT_ID:          24,
+  DT_ENTRADA_FASE:        25
 };
 
 // Eventos_Pipeline (apend-only audit log)
@@ -2258,7 +2259,7 @@ function handleDeletarLead(dados) {
     if (!idLead) return responderJSON({ status: 'erro', mensagem: 'idLead obrigatório' });
     var loc = _acharLinhaLead(idLead);
     if (loc.linha === -1) return responderJSON({ status: 'erro', mensagem: 'lead não encontrado' });
-    var matriz = loc.aba.getRange(loc.linha, 1, 1, 25).getValues()[0];
+    var matriz = loc.aba.getRange(loc.linha, 1, 1, 26).getValues()[0];
     var lead = _leadToObj(matriz);
     var snapshot = lead.nome + ' / ' + lead.email + ' / ' + lead.telefone + ' (fase: ' + lead.fase + ')';
     registrarEventoPipeline(idLead, 'apagado', lead.fase || '', '', emailNorm(dados.porEmail) || '');
@@ -2285,7 +2286,7 @@ function handleBuscarLead(dados) {
   try {
     var loc = _acharLinhaLead(dados.idLead);
     if (loc.linha === -1) return responderJSON({ status: 'erro', mensagem: 'lead não encontrado' });
-    var matriz = loc.aba.getRange(loc.linha, 1, 1, 25).getValues()[0];
+    var matriz = loc.aba.getRange(loc.linha, 1, 1, 26).getValues()[0];
     var lead = _leadToObj(matriz);
     return responderJSON({ status: 'sucesso', lead: lead });
   } catch (e) {
@@ -2304,7 +2305,7 @@ function handleBuscarLeadPorEmail(dados) {
     if (!aba) return responderJSON({ status: 'sucesso', lead: null });
     var lastRow = aba.getLastRow();
     if (lastRow < 2) return responderJSON({ status: 'sucesso', lead: null });
-    var matriz = aba.getRange(2, 1, lastRow - 1, 25).getValues();
+    var matriz = aba.getRange(2, 1, lastRow - 1, 26).getValues();
     for (var i = 0; i < matriz.length; i++) {
       if (emailNorm(matriz[i][COL_LEAD.EMAIL]) === emailBusca) {
         return responderJSON({ status: 'sucesso', lead: _leadToObj(matriz[i]) });
@@ -2327,7 +2328,7 @@ function handleBuscarLeadPorGcalEventId(dados) {
     if (!aba) return responderJSON({ status: 'sucesso', lead: null });
     var lastRow = aba.getLastRow();
     if (lastRow < 2) return responderJSON({ status: 'sucesso', lead: null });
-    var matriz = aba.getRange(2, 1, lastRow - 1, 25).getValues();
+    var matriz = aba.getRange(2, 1, lastRow - 1, 26).getValues();
     for (var i = 0; i < matriz.length; i++) {
       if (txt(matriz[i][COL_LEAD.GCAL_EVENT_ID]) === idEvento) {
         return responderJSON({ status: 'sucesso', lead: _leadToObj(matriz[i]) });
@@ -2481,7 +2482,7 @@ function handleCargaPorVendedorNoMes(dados) {
     if (!aba) return responderJSON({ status: 'sucesso', cargas: {} });
     var lastRow = aba.getLastRow();
     if (lastRow < 2) return responderJSON({ status: 'sucesso', cargas: {} });
-    var matriz = aba.getRange(2, 1, lastRow - 1, 25).getValues();
+    var matriz = aba.getRange(2, 1, lastRow - 1, 26).getValues();
     var hoje = new Date();
     var mesAtual = hoje.getMonth();
     var anoAtual = hoje.getFullYear();
@@ -2584,7 +2585,8 @@ function _leadToObj(row) {
     dtUltimaAtualizacao: row[COL_LEAD.DT_ULTIMA_ATUALIZACAO] instanceof Date ? row[COL_LEAD.DT_ULTIMA_ATUALIZACAO].toISOString() : txt(row[COL_LEAD.DT_ULTIMA_ATUALIZACAO]),
     idAlunoGerado:    txt(row[COL_LEAD.ID_ALUNO_GERADO]),
     plano:            txt(row[COL_LEAD.PLANO]),
-    gcalEventId:      txt(row[COL_LEAD.GCAL_EVENT_ID])
+    gcalEventId:      txt(row[COL_LEAD.GCAL_EVENT_ID]),
+    dtEntradaFase:    row[COL_LEAD.DT_ENTRADA_FASE] instanceof Date ? row[COL_LEAD.DT_ENTRADA_FASE].toISOString() : txt(row[COL_LEAD.DT_ENTRADA_FASE])
   };
 }
 
@@ -2619,7 +2621,7 @@ function handleCriarLead(dados) {
     var fase = txt(dados.fase) || 'Lead';
     var vendedor = emailNorm(dados.vendedor);
 
-    var novaLinha = new Array(25).fill('');
+    var novaLinha = new Array(26).fill('');
     novaLinha[COL_LEAD.ID]                    = idLead;
     novaLinha[COL_LEAD.DT_CADASTRO]           = agora;
     novaLinha[COL_LEAD.NOME]                  = txt(dados.nome);
@@ -2643,6 +2645,7 @@ function handleCriarLead(dados) {
     novaLinha[COL_LEAD.DT_ULTIMA_ATUALIZACAO] = agora;
     novaLinha[COL_LEAD.DADOS_TYPEBOT_RAW]     = dados.dadosTypebotRaw ? JSON.stringify(dados.dadosTypebotRaw) : '';
     novaLinha[COL_LEAD.PLANO]                 = txt(dados.plano);
+    novaLinha[COL_LEAD.DT_ENTRADA_FASE]       = agora;
 
     aba.appendRow(novaLinha);
     registrarEventoPipeline(idLead, 'criado', '', fase, emailNorm(dados.porEmail) || vendedor || 'sistema');
@@ -2663,7 +2666,7 @@ function handleEditarLead(dados) {
     if (loc.linha === -1) return responderJSON({ status: 'erro', mensagem: 'lead não encontrado' });
 
     var aba = loc.aba;
-    var matriz = aba.getRange(loc.linha, 1, 1, 25).getValues()[0];
+    var matriz = aba.getRange(loc.linha, 1, 1, 26).getValues()[0];
 
     // Atualiza só os campos que vieram (preserva fase via handler dedicado)
     var camposEditaveis = {
@@ -2698,7 +2701,7 @@ function handleEditarLead(dados) {
     });
     matriz[COL_LEAD.DT_ULTIMA_ATUALIZACAO] = new Date();
 
-    aba.getRange(loc.linha, 1, 1, 25).setValues([matriz]);
+    aba.getRange(loc.linha, 1, 1, 26).setValues([matriz]);
     registrarEventoPipeline(dados.idLead, 'editado', '', '', emailNorm(dados.porEmail) || '');
 
     return responderJSON({ status: 'sucesso' });
@@ -2721,8 +2724,10 @@ function handleMoverLeadFase(dados) {
       return responderJSON({ status: 'erro', mensagem: 'fase inválida: ' + novaFase });
 
     var faseAtual = txt(loc.aba.getRange(loc.linha, COL_LEAD.FASE + 1).getValue());
+    var agoraFase = new Date();
     loc.aba.getRange(loc.linha, COL_LEAD.FASE + 1).setValue(novaFase);
-    loc.aba.getRange(loc.linha, COL_LEAD.DT_ULTIMA_ATUALIZACAO + 1).setValue(new Date());
+    loc.aba.getRange(loc.linha, COL_LEAD.DT_ULTIMA_ATUALIZACAO + 1).setValue(agoraFase);
+    loc.aba.getRange(loc.linha, COL_LEAD.DT_ENTRADA_FASE + 1).setValue(agoraFase);
 
     registrarEventoPipeline(dados.idLead, 'fase', faseAtual, novaFase, emailNorm(dados.porEmail) || '');
 
@@ -2745,7 +2750,7 @@ function handleListarLeads(dados) {
     var lastRow = aba.getLastRow();
     if (lastRow < 2) return responderJSON({ status: 'sucesso', leads: [] });
 
-    var matriz = aba.getRange(2, 1, lastRow - 1, 25).getValues();
+    var matriz = aba.getRange(2, 1, lastRow - 1, 26).getValues();
 
     // Permissões: filippe + rafael veem tudo; vendedor só os seus
     var ehLider = (emailRequisitante === 'filippe@metodointento.com.br' || emailRequisitante === 'rafael@metodointento.com.br');
@@ -2788,7 +2793,7 @@ function handleDashboardCrm(dados) {
     if (!aba) return responderJSON({ status: 'sucesso', total: 0 });
     var lastRow = aba.getLastRow();
     if (lastRow < 2) return responderJSON({ status: 'sucesso', total: 0 });
-    var matriz = aba.getRange(2, 1, lastRow - 1, 25).getValues();
+    var matriz = aba.getRange(2, 1, lastRow - 1, 26).getValues();
 
     var porFase = {};
     var porVendedor = {};
@@ -2827,7 +2832,7 @@ function handleConverterLeadEmAluno(dados) {
     var loc = _acharLinhaLead(dados.idLead);
     if (loc.linha === -1) return responderJSON({ status: 'erro', mensagem: 'lead não encontrado' });
 
-    var matriz = loc.aba.getRange(loc.linha, 1, 1, 25).getValues()[0];
+    var matriz = loc.aba.getRange(loc.linha, 1, 1, 26).getValues()[0];
     var lead = _leadToObj(matriz);
 
     if (lead.idAlunoGerado) return responderJSON({ status: 'erro', mensagem: 'lead já convertido em aluno: ' + lead.idAlunoGerado });
@@ -2843,7 +2848,7 @@ function handleConverterLeadEmAluno(dados) {
     var idNovaPlanilha = novaPlanilha.getId();
 
     // Linha na mestre (slim layout 25 cols)
-    var linhaMestre = new Array(25).fill('');
+    var linhaMestre = new Array(26).fill('');
     linhaMestre[COL_MESTRE.TIMESTAMP]         = new Date();
     linhaMestre[COL_MESTRE.NOME]              = lead.nome;
     linhaMestre[COL_MESTRE.EMAIL]             = lead.email;
@@ -2858,9 +2863,11 @@ function handleConverterLeadEmAluno(dados) {
     abaAlunos.appendRow(linhaMestre);
 
     // Marca o lead como convertido
+    var agoraConv = new Date();
     loc.aba.getRange(loc.linha, COL_LEAD.ID_ALUNO_GERADO + 1).setValue(idNovaPlanilha);
     loc.aba.getRange(loc.linha, COL_LEAD.FASE + 1).setValue('Em mentoria');
-    loc.aba.getRange(loc.linha, COL_LEAD.DT_ULTIMA_ATUALIZACAO + 1).setValue(new Date());
+    loc.aba.getRange(loc.linha, COL_LEAD.DT_ULTIMA_ATUALIZACAO + 1).setValue(agoraConv);
+    loc.aba.getRange(loc.linha, COL_LEAD.DT_ENTRADA_FASE + 1).setValue(agoraConv);
 
     registrarEventoPipeline(lead.idLead, 'convertido_em_aluno', lead.fase, 'Em mentoria', emailNorm(dados.porEmail) || lead.vendedor);
 

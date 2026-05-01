@@ -25,6 +25,29 @@ const EMAILS_LIDER = ['filippe@metodointento.com.br', 'rafael@metodointento.com.
 
 // === Subcomponentes Kanban ===
 
+// Tempo decorrido desde dt_entrada_fase (ISO string) — formato curto.
+function tempoNaFase(iso) {
+  if (!iso) return null;
+  const ms = Date.now() - new Date(iso).getTime();
+  if (isNaN(ms) || ms < 0) return null;
+  const dias = Math.floor(ms / (1000 * 60 * 60 * 24));
+  if (dias >= 1) return `${dias}d`;
+  const horas = Math.floor(ms / (1000 * 60 * 60));
+  if (horas >= 1) return `${horas}h`;
+  const mins = Math.floor(ms / (1000 * 60));
+  if (mins >= 1) return `${mins}m`;
+  return 'agora';
+}
+
+// Cor do timer baseada no tempo na fase (alerta visual).
+function corTimer(iso) {
+  if (!iso) return 'text-slate-300';
+  const dias = (Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24);
+  if (dias >= 7) return 'text-red-500';
+  if (dias >= 3) return 'text-amber-500';
+  return 'text-slate-400';
+}
+
 function LeadCard({ lead, ehLider, vendedoresLista = [], onClick, onAtribuir }) {
   const wppUrl = whatsappLink(lead.telefone);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -49,7 +72,17 @@ function LeadCard({ lead, ehLider, vendedoresLista = [], onClick, onAtribuir }) 
       tabIndex={0}
       className="bg-white rounded-md p-3 text-left shadow-sm hover:shadow-md transition-shadow border border-slate-200"
     >
-      <div className="font-semibold text-intento-blue text-sm mb-1 truncate">{lead.nome}</div>
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <div className="font-semibold text-intento-blue text-sm truncate flex-1">{lead.nome}</div>
+        {tempoNaFase(lead.dtEntradaFase) && (
+          <span
+            className={`text-[10px] font-semibold shrink-0 mt-0.5 ${corTimer(lead.dtEntradaFase)}`}
+            title="Tempo nesta fase"
+          >
+            {tempoNaFase(lead.dtEntradaFase)}
+          </span>
+        )}
+      </div>
       <div className="text-xs text-slate-500 mb-1 flex items-center gap-1.5">
         <span>{lead.telefone}</span>
         {wppUrl && (
