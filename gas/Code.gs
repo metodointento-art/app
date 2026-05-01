@@ -2897,6 +2897,27 @@ function handleConverterLeadEmAluno(dados) {
 // BACKUP DIÁRIO DA MESTRE
 // =====================================================================
 
+// One-shot: migra leads em fase 'No-show' pra fase 'Reuniao agendada' + outcome 'no-show'.
+// Rodar manualmente no editor do Apps Script após adicionar a coluna outcome_reuniao.
+function migrarFaseNoShowParaOutcome() {
+  var ssMestre = SpreadsheetApp.getActiveSpreadsheet();
+  var aba = ssMestre.getSheetByName(ABA.LEADS);
+  if (!aba) { Logger.log('BD_Leads não encontrada'); return; }
+  var lastRow = aba.getLastRow();
+  if (lastRow < 2) { Logger.log('aba vazia'); return; }
+  var matriz = aba.getRange(2, 1, lastRow - 1, 27).getValues();
+  var contador = 0;
+  for (var i = 0; i < matriz.length; i++) {
+    if (txt(matriz[i][COL_LEAD.FASE]) === 'No-show') {
+      matriz[i][COL_LEAD.FASE] = 'Reuniao agendada';
+      matriz[i][COL_LEAD.OUTCOME_REUNIAO] = 'no-show';
+      contador++;
+    }
+  }
+  if (contador > 0) aba.getRange(2, 1, lastRow - 1, 27).setValues(matriz);
+  Logger.log('Migrados ' + contador + ' leads de fase=No-show → fase=Reuniao agendada + outcome=no-show');
+}
+
 // One-shot: migra leads em fase 'Aguardando decisao' pra 'Reuniao realizada'.
 // Rodar manualmente no editor do Apps Script após atualizar FASES_LEAD.
 function migrarAguardandoDecisaoParaReuniaoRealizada() {
