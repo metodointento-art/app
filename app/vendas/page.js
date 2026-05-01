@@ -25,7 +25,7 @@ const EMAILS_LIDER = ['filippe@metodointento.com.br', 'rafael@metodointento.com.
 
 // === Subcomponentes Kanban ===
 
-function LeadCard({ lead, ehLider, onClick }) {
+function LeadCard({ lead, ehLider, vendedoresLista = [], onClick, onAtribuir }) {
   const wppUrl = whatsappLink(lead.telefone);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: lead.idLead,
@@ -81,11 +81,29 @@ function LeadCard({ lead, ehLider, onClick }) {
           {lead.proximaAcao}
         </div>
       )}
-      {lead.vendedor && (
-        <div className="mt-2 text-xs text-slate-400 truncate">→ {lead.vendedor.split('@')[0]}</div>
-      )}
-      {!lead.vendedor && ehLider && (
-        <div className="mt-2 text-xs text-red-500 italic">Sem vendedor</div>
+      {ehLider ? (
+        <select
+          value={lead.vendedor || ''}
+          onChange={(e) => { e.stopPropagation(); onAtribuir?.(lead.idLead, e.target.value); }}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          className={`mt-2 w-full text-xs px-1.5 py-1 rounded border cursor-pointer truncate ${
+            lead.vendedor
+              ? 'border-slate-200 bg-white text-slate-600'
+              : 'border-red-300 bg-red-50 text-red-600 italic'
+          }`}
+          title="Atribuir vendedor"
+        >
+          <option value="">— Sem vendedor —</option>
+          {vendedoresLista.map((v) => (
+            <option key={v.email} value={v.email}>{v.nome || v.email.split('@')[0]}</option>
+          ))}
+        </select>
+      ) : (
+        lead.vendedor && (
+          <div className="mt-2 text-xs text-slate-400 truncate">→ {lead.vendedor.split('@')[0]}</div>
+        )
       )}
     </div>
   );
@@ -146,6 +164,30 @@ export default function Vendas() {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
   );
+
+  const atribuirVendedor = useCallback(async (idLead, novoVendedor) => {
+    let anterior = '';
+    setLeads((prev) => {
+      const lead = prev.find((l) => l.idLead === idLead);
+      anterior = lead?.vendedor || '';
+      return prev.map((l) => (l.idLead === idLead ? { ...l, vendedor: novoVendedor } : l));
+    });
+    try {
+      const r = await apiFetch('/api/mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acao: 'editarLead', idLead, vendedor: novoVendedor }),
+      });
+      const data = await r.json();
+      if (data.status !== 'sucesso') {
+        setLeads((prev) => prev.map((l) => (l.idLead === idLead ? { ...l, vendedor: anterior } : l)));
+        alert('Erro ao atribuir: ' + (data.mensagem || 'falha'));
+      }
+    } catch (e) {
+      setLeads((prev) => prev.map((l) => (l.idLead === idLead ? { ...l, vendedor: anterior } : l)));
+      alert('Erro de conexão ao atribuir vendedor');
+    }
+  }, []);
 
   const handleDragEnd = useCallback(async (event) => {
     const { active, over } = event;
@@ -366,6 +408,8 @@ export default function Vendas() {
                       key={lead.idLead}
                       lead={lead}
                       ehLider={ehLider}
+                      vendedoresLista={vendedores}
+                      onAtribuir={atribuirVendedor}
                       onClick={() => setLeadAberto(lead)}
                     />
                   ))}
