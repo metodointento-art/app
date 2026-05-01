@@ -16,6 +16,30 @@ const EMAILS_LIDER = ['filippe@metodointento.com.br', 'rafael@metodointento.com.
 
 const cardClass = "bg-white rounded-xl border border-slate-200 p-5 shadow-sm";
 
+function SeccaoColapsavel({ titulo, subtitulo, resumo, aberto, onToggle, children }) {
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <button
+        onClick={onToggle}
+        aria-expanded={aberto}
+        className="w-full px-5 py-4 flex items-center justify-between gap-4 hover:bg-slate-50 transition text-left"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <h2 className="text-base font-semibold text-intento-blue">{titulo}</h2>
+            {subtitulo && <span className="text-[11px] text-slate-400 font-medium">{subtitulo}</span>}
+          </div>
+          {resumo && <div className="text-[11px] text-slate-500 font-medium mt-1 flex flex-wrap gap-x-3 gap-y-0.5">{resumo}</div>}
+        </div>
+        <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${aberto ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      {aberto && <div className="border-t border-slate-100 p-5 space-y-5">{children}</div>}
+    </div>
+  );
+}
+
 const FAIXAS_HORAS = [
   { faixa: '0–5h',   color: '#ef4444' },
   { faixa: '5–10h',  color: '#f97316' },
@@ -40,6 +64,10 @@ export default function PainelLider() {
   const [filtroDesempenho, setFiltroDesempenho] = useState('');
   const [busca, setBusca] = useState('');
   const [mentoresExpandidos, setMentoresExpandidos] = useState({});
+
+  // Sanfonas das seções principais — só "Encontros" aberto por padrão
+  const [seccoesAbertas, setSeccoesAbertas] = useState({ encontros: true, analitica: false, mentores: false });
+  const toggleSeccao = (key) => setSeccoesAbertas(prev => ({ ...prev, [key]: !prev[key] }));
 
   // Designação de mentor
   const [alunoDesignar, setAlunoDesignar] = useState(null);
@@ -152,6 +180,19 @@ export default function PainelLider() {
   const alunosAguardando = useMemo(() => {
     return (dados?.alunos || []).filter(a => !a.mentor || !a.mentorAtivo);
   }, [dados]);
+
+  // Resumo dos encontros (alimenta o header da sanfona)
+  const resumoEncontros = useMemo(() => {
+    const comPlano = alunosFiltrados.filter(a => a.encontrosEsperados !== null && a.encontrosEsperados > 0);
+    if (comPlano.length === 0) return null;
+    let atrasados = 0, emDia = 0;
+    comPlano.forEach(a => {
+      const r = (a.encontrosMesCorrente || 0) / a.encontrosEsperados;
+      if (r < 0.5) atrasados++;
+      else if (r >= 1) emDia++;
+    });
+    return { total: comPlano.length, atrasados, emDia };
+  }, [alunosFiltrados]);
 
   const abrirDesignacao = (aluno) => {
     setAlunoDesignar(aluno);
@@ -454,10 +495,19 @@ export default function PainelLider() {
         )}
 
         {/* Encontros do mês corrente */}
-        <div className={cardClass}>
-          <h3 className="text-base font-semibold text-intento-blue mb-1">Encontros do mês corrente</h3>
-          <p className="text-[11px] text-slate-400 font-medium mb-4">realizados / esperados · respeita filtros · ordenado pelos mais atrasados</p>
-
+        <SeccaoColapsavel
+          titulo="Encontros do mês corrente"
+          subtitulo="realizados / esperados · respeita filtros · ordenado pelos mais atrasados"
+          aberto={seccoesAbertas.encontros}
+          onToggle={() => toggleSeccao('encontros')}
+          resumo={resumoEncontros ? (
+            <>
+              <span><b className="text-intento-blue">{resumoEncontros.total}</b> aluno{resumoEncontros.total !== 1 ? 's' : ''}</span>
+              <span><b className="text-red-600">{resumoEncontros.atrasados}</b> atrasado{resumoEncontros.atrasados !== 1 ? 's' : ''}</span>
+              <span><b className="text-emerald-600">{resumoEncontros.emDia}</b> em dia</span>
+            </>
+          ) : <span className="text-slate-400 italic">sem alunos com plano nos filtros</span>}
+        >
           {(() => {
             const comPlano = alunosFiltrados.filter(a => a.encontrosEsperados !== null && a.encontrosEsperados > 0);
             const semPlano = alunosFiltrados.filter(a => a.encontrosEsperados === null);
@@ -512,14 +562,21 @@ export default function PainelLider() {
               </>
             );
           })()}
-        </div>
+        </SeccaoColapsavel>
 
         {/* Visão analítica — sempre visão geral, não respeita filtros */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-3 pt-4">
-          <h2 className="text-base font-semibold text-intento-blue">Visão analítica</h2>
-          <span className="text-[11px] text-slate-400 font-medium">visão geral da base · não respeita os filtros</span>
-        </div>
-
+        <SeccaoColapsavel
+          titulo="Visão analítica"
+          subtitulo="visão geral da base · não respeita os filtros"
+          aberto={seccoesAbertas.analitica}
+          onToggle={() => toggleSeccao('analitica')}
+          resumo={
+            <>
+              <span><b className="text-intento-blue">{(dados?.alunos || []).length}</b> aluno{(dados?.alunos || []).length !== 1 ? 's' : ''} na base</span>
+              <span>distribuição de horas · domínio · progresso · bem-estar</span>
+            </>
+          }
+        >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Histograma de horas */}
@@ -618,15 +675,24 @@ export default function PainelLider() {
             />
           </div>
         </div>
+        </SeccaoColapsavel>
 
         {/* Lista hierárquica — respeita filtros */}
-        <div className="space-y-3 pt-4">
-          <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-3">
-            <h2 className="text-base font-semibold text-intento-blue">Mentores e mentorados</h2>
-            <span className="text-[11px] text-slate-400 font-medium">respeita os filtros acima</span>
-          </div>
+        <SeccaoColapsavel
+          titulo="Mentores e mentorados"
+          subtitulo="respeita os filtros acima"
+          aberto={seccoesAbertas.mentores}
+          onToggle={() => toggleSeccao('mentores')}
+          resumo={
+            <>
+              <span><b className="text-intento-blue">{alunosAgrupados.length}</b> mentor{alunosAgrupados.length !== 1 ? 'es' : ''}</span>
+              <span><b className="text-intento-blue">{alunosFiltrados.length}</b> aluno{alunosFiltrados.length !== 1 ? 's' : ''}</span>
+              <span><b className={taxaRegistro >= 80 ? 'text-emerald-600' : taxaRegistro >= 50 ? 'text-amber-600' : 'text-red-500'}>{registrados}</b> registrado{registrados !== 1 ? 's' : ''} na semana</span>
+            </>
+          }
+        >
           {alunosAgrupados.length === 0 ? (
-            <div className={cardClass + ' text-center py-10'}>
+            <div className="text-center py-10">
               <p className="text-sm text-slate-400 font-medium">Nenhum aluno encontrado com os filtros atuais.</p>
             </div>
           ) : alunosAgrupados.map(grupo => {
@@ -678,7 +744,7 @@ export default function PainelLider() {
               </div>
             );
           })}
-        </div>
+        </SeccaoColapsavel>
 
         </>)}
 
